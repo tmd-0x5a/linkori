@@ -35,6 +35,17 @@ export interface FileBrowserDialogProps {
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** ZIP内部パスを除いてZIPファイルパス（またはディレクトリパス）までを返す */
+function extractZipFilePath(path: string): string {
+  const normalized = path.replace(/\\/g, "/");
+  const lower = normalized.toLowerCase();
+  for (const ext of [".zip/", ".cbz/"]) {
+    const idx = lower.indexOf(ext);
+    if (idx !== -1) return normalized.slice(0, idx + ext.length - 1);
+  }
+  return normalized;
+}
+
 /** パス文字列から Location を構築するヘルパー */
 function pathToLocation(path: string): Location {
   const normalized = path.replace(/\\/g, "/").replace(/\/+$/, "");
@@ -48,6 +59,21 @@ function pathToLocation(path: string): Location {
     lower.includes(".zip/") ||
     lower.includes(".cbz/");
   return { path: normalized, name, isZip };
+}
+
+/**
+ * パス文字列をルートから目的地まで分解して Location スタックを構築する。
+ * 直接ジャンプしたときもパンくずにフルパスが表示されるようにするため。
+ */
+function buildLocationStack(path: string): Location[] {
+  const normalized = path.replace(/\\/g, "/").replace(/\/+$/, "");
+  const segments = normalized.split("/").filter(Boolean);
+  const stack: Location[] = [];
+  for (let i = 0; i < segments.length; i++) {
+    const partial = segments.slice(0, i + 1).join("/");
+    stack.push(pathToLocation(partial));
+  }
+  return stack;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,7 +126,9 @@ export function FileBrowserDialog({
 
   useEffect(() => {
     if (currentLocation) {
-      setAddressInput(currentLocation.path);
+      // ZIP内部パスはアドレスバーに表示しない（文字化けするため）
+      // ZIPファイル自体のパスまでを表示する
+      setAddressInput(extractZipFilePath(currentLocation.path));
       loadLocation(currentLocation);
     }
   }, [currentLocation, loadLocation]);
@@ -111,7 +139,7 @@ export function FileBrowserDialog({
       listDrives().then(setDrives).catch(() => setDrives([]));
       if (initialPath) {
         setNavDir(1);
-        setLocationStack([pathToLocation(initialPath)]);
+        setLocationStack(buildLocationStack(initialPath));
       }
     } else {
       setLocationStack([]);
@@ -231,7 +259,7 @@ export function FileBrowserDialog({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -239,19 +267,19 @@ export function FileBrowserDialog({
           onClick={(e) => e.target === e.currentTarget && onClose()}
         >
           <motion.div
-            className="flex h-[88vh] w-[92vw] max-w-5xl flex-col rounded-xl border border-zinc-700 bg-zinc-900 shadow-2xl overflow-hidden"
+            className="flex h-[88vh] w-[92vw] max-w-5xl flex-col rounded-2xl border border-[#dad4c8] bg-white shadow-[rgba(0,0,0,0.1)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset,rgba(0,0,0,0.05)_0px_-0.5px_1px] overflow-hidden"
             initial={{ scale: 0.94, opacity: 0, y: 12 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.94, opacity: 0, y: 12 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
           >
-            {/* ── ツールバー（エクスプローラー風） ── */}
-            <div className="flex shrink-0 items-center gap-2 border-b border-zinc-700 bg-zinc-800/80 px-3 py-2">
+            {/* ── ツールバー ── */}
+            <div className="flex shrink-0 items-center gap-2 border-b border-[#dad4c8] bg-[#faf9f7] px-3 py-2">
               {/* 戻るボタン */}
               <button
                 onClick={goBack}
                 disabled={!canGoBack}
-                className="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-7 w-7 items-center justify-center rounded text-[#9f9b93] transition-colors hover:bg-[#eee9df] hover:text-black disabled:cursor-not-allowed disabled:opacity-30"
                 title="戻る"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -272,12 +300,12 @@ export function FileBrowserDialog({
                       if (e.key === "Escape") setAddressEditing(false);
                     }}
                     onBlur={() => setAddressEditing(false)}
-                    className="h-7 w-full rounded border border-blue-500 bg-zinc-800 px-2 text-sm text-zinc-100 focus:outline-none"
+                    className="h-7 w-full rounded-[4px] border border-[rgb(20,110,245)] bg-white px-2 text-sm text-black focus:outline-[rgb(20,110,245)_solid_2px]"
                   />
                 ) : (
                   <button
                     onClick={() => setAddressEditing(true)}
-                    className="flex h-7 min-w-0 flex-1 items-center gap-1 truncate rounded border border-zinc-700 bg-zinc-800/60 px-2 text-left text-sm text-zinc-300 transition-colors hover:border-zinc-500 hover:bg-zinc-800"
+                    className="flex h-7 min-w-0 flex-1 items-center gap-1 truncate rounded border border-[#dad4c8] bg-white px-2 text-left text-sm text-[#333333] transition-colors hover:bg-[#eee9df]"
                     title="クリックしてパスを入力"
                   >
                     {/* パンくず */}
@@ -285,13 +313,13 @@ export function FileBrowserDialog({
                       <span className="truncate">
                         {locationStack.map((loc, i) => (
                           <span key={i}>
-                            {i > 0 && <span className="mx-1 text-zinc-600">&gt;</span>}
+                            {i > 0 && <span className="mx-1 text-[#dad4c8]">&gt;</span>}
                             <span
                               className={cn(
                                 "cursor-pointer",
                                 i === locationStack.length - 1
-                                  ? "text-zinc-100"
-                                  : "text-zinc-400 hover:text-zinc-200"
+                                  ? "text-black"
+                                  : "text-[#9f9b93] hover:text-black"
                               )}
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -307,7 +335,7 @@ export function FileBrowserDialog({
                         ))}
                       </span>
                     ) : (
-                      <span className="text-zinc-500">パスを入力...</span>
+                      <span className="text-[#9f9b93]">パスを入力...</span>
                     )}
                   </button>
                 )}
@@ -320,15 +348,15 @@ export function FileBrowserDialog({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="検索..."
-                  className="h-7 w-36 rounded border border-zinc-700 bg-zinc-800 pl-7 pr-6 text-xs text-zinc-200 placeholder-zinc-500 focus:border-blue-500 focus:outline-none transition-colors"
+                  className="h-7 w-36 rounded-[4px] border border-[#dad4c8] bg-white pl-7 pr-6 text-xs text-black placeholder:text-[#9f9b93] focus:outline-[rgb(20,110,245)_solid_2px] transition-colors"
                 />
-                <svg className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="absolute left-2 top-1/2 -translate-y-1/2 text-[#9f9b93] pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#9f9b93] hover:text-black"
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -338,12 +366,12 @@ export function FileBrowserDialog({
               </div>
 
               {/* 表示モード切り替え */}
-              <div className="flex shrink-0 overflow-hidden rounded border border-zinc-700">
+              <div className="flex shrink-0 overflow-hidden rounded border border-[#dad4c8]">
                 <button
                   onClick={() => setViewMode("list")}
                   className={cn(
                     "flex h-7 w-7 items-center justify-center transition-colors",
-                    viewMode === "list" ? "bg-zinc-600 text-zinc-200" : "text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300"
+                    viewMode === "list" ? "bg-[#eee9df] text-black" : "text-[#9f9b93] hover:bg-[#eee9df] hover:text-black"
                   )}
                   title="リスト表示"
                 >
@@ -355,8 +383,8 @@ export function FileBrowserDialog({
                 <button
                   onClick={() => setViewMode("grid")}
                   className={cn(
-                    "flex h-7 w-7 items-center justify-center border-l border-zinc-700 transition-colors",
-                    viewMode === "grid" ? "bg-zinc-600 text-zinc-200" : "text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300"
+                    "flex h-7 w-7 items-center justify-center border-l border-[#dad4c8] transition-colors",
+                    viewMode === "grid" ? "bg-[#eee9df] text-black" : "text-[#9f9b93] hover:bg-[#eee9df] hover:text-black"
                   )}
                   title="グリッド表示"
                 >
@@ -373,8 +401,8 @@ export function FileBrowserDialog({
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded transition-colors",
                   showHidden
-                    ? "bg-zinc-600 text-zinc-200"
-                    : "text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300"
+                    ? "bg-[#eee9df] text-black"
+                    : "text-[#9f9b93] hover:bg-[#eee9df] hover:text-black"
                 )}
                 title={showHidden ? "隠しファイルを非表示" : "隠しファイルを表示"}
               >
@@ -396,7 +424,7 @@ export function FileBrowserDialog({
               {/* 閉じるボタン */}
               <button
                 onClick={onClose}
-                className="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-zinc-200"
+                className="flex h-7 w-7 items-center justify-center rounded text-[#9f9b93] transition-colors hover:bg-[#eee9df] hover:text-black"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -407,9 +435,9 @@ export function FileBrowserDialog({
             {/* ── メインエリア（サイドバー＋コンテンツ） ── */}
             <div className="flex min-h-0 flex-1 overflow-hidden">
 
-              {/* ── 左サイドバー（ドライブ一覧） ── */}
-              <div className="flex w-36 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-zinc-700 bg-zinc-800/40 p-2">
-                <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+              {/* ── 左サイドバー（ドライブ一覧・ダーク） ── */}
+              <div className="flex w-36 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-[#02492a] bg-[#02492a] p-2">
+                <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[#84e7a5]/60">
                   PC
                 </p>
                 {drives.map((drive) => {
@@ -421,13 +449,13 @@ export function FileBrowserDialog({
                       key={drive}
                       onClick={() => navigateToDrive(drive)}
                       className={cn(
-                        "flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors",
+                        "flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors",
                         isActive
-                          ? "bg-blue-600/30 text-zinc-100"
-                          : "text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200"
+                          ? "bg-[#078a52] text-[#84e7a5]"
+                          : "text-[#84e7a5]/70 hover:bg-[#078a52]/60 hover:text-white"
                       )}
                     >
-                      <svg className="shrink-0 text-zinc-500" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <svg className="shrink-0 text-[#84e7a5]/50" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="2" y="6" width="20" height="12" rx="2" />
                         <path d="M6 12h.01M10 12h.01" />
                         <circle cx="17" cy="12" r="1" fill="currentColor" />
@@ -445,10 +473,10 @@ export function FileBrowserDialog({
                 {!currentLocation && (
                   <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8">
                     <div className="text-center">
-                      <p className="text-base font-semibold text-zinc-100">
+                      <p className="heading-clay text-xl text-black">
                         ドライブまたはフォルダを選択
                       </p>
-                      <p className="mt-1 text-sm text-zinc-500">
+                      <p className="mt-2 text-sm text-[#9f9b93] leading-relaxed">
                         左のサイドバーからドライブを選ぶか、上部のアドレスバーにパスを入力してください
                       </p>
                     </div>
@@ -476,9 +504,9 @@ export function FileBrowserDialog({
 
                     {/* カラムヘッダー（リストモードのみ） */}
                     {viewMode === "list" && (
-                      <div className="flex shrink-0 items-center border-b border-zinc-700/60 bg-zinc-800/30 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 select-none">
+                      <div className="flex shrink-0 items-center border-b border-[#dad4c8] bg-[#faf9f7] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#9f9b93] select-none">
                         <button
-                          className="flex flex-1 items-center gap-1 hover:text-zinc-300 transition-colors"
+                          className="flex flex-1 items-center gap-1 hover:text-black transition-colors"
                           onClick={() => toggleSort("name")}
                         >
                           名前
@@ -487,7 +515,7 @@ export function FileBrowserDialog({
                           )}
                         </button>
                         <button
-                          className="flex w-36 items-center justify-end gap-1 hover:text-zinc-300 transition-colors"
+                          className="flex w-36 items-center justify-end gap-1 hover:text-black transition-colors"
                           onClick={() => toggleSort("date")}
                         >
                           {sortField === "date" && (
@@ -516,16 +544,16 @@ export function FileBrowserDialog({
                           {isLoading && (
                             <div className="flex h-40 items-center justify-center gap-3">
                               <div
-                                className="size-5 rounded-full border-2 border-zinc-600 border-t-blue-500"
+                                className="size-5 rounded-full border-2 border-[#dad4c8] border-t-[#078a52]"
                                 style={{ animation: "spin 0.8s linear infinite" }}
                               />
-                              <p className="text-xs text-zinc-500">読み込み中...</p>
+                              <p className="text-xs text-[#9f9b93]">読み込み中...</p>
                             </div>
                           )}
 
                           {/* エラー */}
                           {!isLoading && error && (
-                            <div className="m-3 rounded border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+                            <div className="m-3 rounded-xl border border-[#fc7981]/30 bg-[#fc7981]/10 p-3 text-sm text-[#e05560]">
                               {error}
                             </div>
                           )}
@@ -534,7 +562,7 @@ export function FileBrowserDialog({
                           {!isLoading && !error && (
                             <>
                               {filteredEntries.length === 0 ? (
-                                <div className="flex h-40 items-center justify-center text-sm text-zinc-500">
+                                <div className="flex h-40 items-center justify-center text-sm text-[#9f9b93]">
                                   {searchQuery ? "検索結果がありません" : "このフォルダは空です"}
                                 </div>
                               ) : viewMode === "list" ? (
@@ -569,7 +597,7 @@ export function FileBrowserDialog({
             </div>
 
             {/* ── フッター ── */}
-            <div className="flex shrink-0 items-center justify-between border-t border-zinc-700 bg-zinc-800/30 px-4 py-2.5">
+            <div className="flex shrink-0 items-center justify-between border-t border-[#dad4c8] bg-[#faf9f7] px-4 py-2.5">
               <div className="flex items-center gap-2">
                 {currentLocation && (
                   <Button
@@ -580,7 +608,7 @@ export function FileBrowserDialog({
                     {currentLocation.isZip ? "このZIPを選択" : "このフォルダを選択"}
                   </Button>
                 )}
-                <p className="text-xs text-zinc-600">
+                <p className="text-xs text-[#9f9b93]">
                   フォルダ/ZIPをダブルクリックで移動 &nbsp;·&nbsp; 画像をクリックで選択
                 </p>
               </div>
@@ -601,7 +629,7 @@ export function FileBrowserDialog({
 
 function SortIcon({ dir }: { dir: "asc" | "desc" }) {
   return (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-[#078a52]">
       {dir === "asc" ? (
         <polyline points="18 15 12 9 6 15" />
       ) : (
@@ -660,7 +688,7 @@ function FileRow({ entry, onNavigate, onSelect }: FileRowProps) {
   return (
     <div
       className={cn(
-        "group flex cursor-pointer items-center gap-3 border-b border-zinc-700/30 px-3 py-1.5 transition-colors hover:bg-zinc-700/40",
+        "group flex cursor-pointer items-center gap-3 border-b border-[#eee9df] px-3 py-1.5 transition-colors hover:bg-[#eee9df]",
         entry.is_hidden && "opacity-50"
       )}
       onClick={isNavigable ? onNavigate : onSelect}
@@ -672,18 +700,18 @@ function FileRow({ entry, onNavigate, onSelect }: FileRowProps) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imgSrc} alt={entry.name} className="h-full w-full object-contain" />
         ) : entry.is_dir ? (
-          <svg className="text-amber-400" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="text-amber-500" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
             <path d="M10.59 4.59A2 2 0 0 0 9.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-1.41-1.41z" />
           </svg>
         ) : entry.is_zip ? (
-          <svg className="text-green-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="text-green-600" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
             <polyline points="14 2 14 8 20 8" />
             <rect x="10" y="9" width="4" height="3" rx="0.5" />
             <line x1="12" y1="13" x2="12" y2="18" />
           </svg>
         ) : (
-          <svg className="text-blue-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="text-[#078a52]" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
             <polyline points="14 2 14 8 20 8" />
           </svg>
@@ -691,17 +719,17 @@ function FileRow({ entry, onNavigate, onSelect }: FileRowProps) {
       </div>
 
       {/* ファイル名 */}
-      <span className="flex-1 truncate text-sm text-zinc-200 group-hover:text-zinc-100">
+      <span className="flex-1 truncate text-sm text-[#333333] group-hover:text-black">
         {entry.name}
       </span>
 
       {/* 更新日時 */}
-      <span className="w-36 shrink-0 text-right text-xs text-zinc-500">
+      <span className="w-36 shrink-0 text-right text-xs text-[#9f9b93]">
         {formatDate(entry.modified_at)}
       </span>
 
       {/* 種類 */}
-      <span className="w-20 shrink-0 text-right text-xs text-zinc-500">
+      <span className="w-20 shrink-0 text-right text-xs text-[#9f9b93]">
         {typeLabel}
       </span>
     </div>
@@ -734,35 +762,35 @@ function GridCard({ entry, onNavigate, onSelect }: GridCardProps) {
   return (
     <div
       className={cn(
-        "group flex cursor-pointer flex-col items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/50 p-2 transition-colors hover:border-zinc-500 hover:bg-zinc-700/50",
+        "group flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-[#dad4c8] bg-white p-2 transition-colors hover:border-[#078a52] hover:bg-[#eee9df]",
         entry.is_hidden && "opacity-50"
       )}
       onClick={isNavigable ? onNavigate : onSelect}
       title={entry.path}
     >
-      <div className="flex h-24 w-full items-center justify-center overflow-hidden rounded bg-zinc-900/60">
+      <div className="flex h-24 w-full items-center justify-center overflow-hidden rounded bg-[#faf9f7]">
         {imgSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imgSrc} alt={entry.name} className="h-full w-full object-contain" />
         ) : entry.is_dir ? (
-          <svg className="text-amber-400" width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="text-amber-500" width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
             <path d="M10.59 4.59A2 2 0 0 0 9.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-1.41-1.41z" />
           </svg>
         ) : entry.is_zip ? (
-          <svg className="text-green-400" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="text-green-600" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
             <polyline points="14 2 14 8 20 8" />
             <rect x="10" y="9" width="4" height="3" rx="0.5" />
             <line x1="12" y1="13" x2="12" y2="18" />
           </svg>
         ) : (
-          <svg className="text-blue-400" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="text-[#078a52]" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
             <polyline points="14 2 14 8 20 8" />
           </svg>
         )}
       </div>
-      <span className="w-full truncate text-center text-[11px] leading-tight text-zinc-300 group-hover:text-zinc-100">
+      <span className="w-full truncate text-center text-[11px] leading-tight text-[#9f9b93] group-hover:text-black">
         {entry.name}
       </span>
     </div>

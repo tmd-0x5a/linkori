@@ -46,7 +46,7 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
     };
   }, [onClose]);
 
-  // 画面端からはみ出さないよう位置を補正
+  /* 画面端からはみ出さないよう位置を補正 */
   useEffect(() => {
     if (!menuRef.current) return;
     const rect = menuRef.current.getBoundingClientRect();
@@ -60,12 +60,12 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
     <div
       ref={menuRef}
       style={{ left: x, top: y }}
-      className="fixed z-[200] min-w-[140px] overflow-hidden rounded-lg border border-zinc-700 bg-zinc-800 py-1 shadow-xl shadow-black/40"
+      className="fixed z-[200] min-w-[140px] overflow-hidden rounded-xl border border-[#dad4c8] bg-white py-1 shadow-[rgba(0,0,0,0.1)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset,rgba(0,0,0,0.05)_0px_-0.5px_1px]"
       onContextMenu={(e) => e.preventDefault()}
     >
       {items.map((item, i) =>
         "separator" in item && item.separator ? (
-          <div key={i} className="my-1 border-t border-zinc-700" />
+          <div key={i} className="my-1 border-t border-[#eee9df]" />
         ) : (
           <button
             key={i}
@@ -74,10 +74,10 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
               onClose();
             }}
             className={cn(
-              "flex w-full items-center px-3 py-1.5 text-left text-sm transition-colors hover:bg-zinc-700",
+              "flex w-full items-center px-3 py-1.5 text-left text-sm transition-colors hover:bg-[#eee9df]",
               (item as ContextMenuItem).danger
-                ? "text-red-400 hover:text-red-300"
-                : "text-zinc-200"
+                ? "text-[#e05560] font-medium"
+                : "text-black"
             )}
           >
             {(item as ContextMenuItem).label}

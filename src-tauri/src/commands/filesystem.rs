@@ -7,6 +7,7 @@ use zip::ZipArchive;
 
 use crate::utils::sorting::{is_image_entry, is_image_file, natural_compare};
 use crate::utils::paths::find_zip_boundary;
+use crate::utils::encoding::decode_zip_path;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileEntry {
@@ -23,18 +24,6 @@ pub struct FileEntry {
     pub modified_at: Option<u64>,
 }
 
-/// ZIP エントリ名のバイト列を表示用文字列にデコードする。
-/// UTF-8 として有効ならそのまま返し、そうでなければ Shift-JIS (CP932) を試みる。
-fn decode_zip_name(raw: &[u8]) -> String {
-    if let Ok(s) = std::str::from_utf8(raw) {
-        return s.to_string();
-    }
-    let (cow, _, had_errors) = encoding_rs::SHIFT_JIS.decode(raw);
-    if !had_errors {
-        return cow.into_owned();
-    }
-    String::from_utf8_lossy(raw).into_owned()
-}
 
 fn is_zip_like(path: &Path) -> bool {
     path.extension()
@@ -186,56 +175,43 @@ pub async fn browse_zip(zip_path: String) -> Result<Vec<FileEntry>, String> {
         format!("{}/", current_dir.trim_end_matches('/'))
     };
 
-    // prefix 内の非空セグメント数 = 表示名を取り出すセグメントインデックス
-    let target_segment_idx = prefix.split('/').filter(|s| !s.is_empty()).count();
-
-    // subdirs: path_key（lossy UTF-8）→ 表示名（Shift-JIS デコード済み）
+    // subdirs: デコード済みディレクトリ名 → 表示名（同一）
     let mut subdirs: BTreeMap<String, String> = BTreeMap::new();
-    // images: (ZIP内フルパス path_key, 表示名)
+    // images: (ZIP内デコード済みフルパス, 表示名)
     let mut images: Vec<(String, String)> = Vec::new();
 
     let len = archive.len();
     for i in 0..len {
-        // by_index_raw で生バイト列と lossy UTF-8 パスの両方を取得
-        let (path_name, raw_name): (String, Vec<u8>) = match archive.by_index_raw(i) {
-            Ok(entry) => {
-                let raw = entry.name_raw().to_vec();
-                let path = entry.name().to_string();
-                (path, raw)
-            }
+        // by_index_raw で生バイト列を取得し、decode_zip_path でデコードする
+        let decoded_path: String = match archive.by_index_raw(i) {
+            Ok(entry) => decode_zip_path(entry.name_raw()),
             Err(_) => continue,
         };
 
-        // プレフィックス以下にないエントリは無視
-        if !path_name.starts_with(&prefix) {
+        // デコード済みパスでプレフィックスマッチ
+        if !decoded_path.starts_with(&prefix) {
             continue;
         }
-        let rest = &path_name[prefix.len()..];
+        let rest = &decoded_path[prefix.len()..];
 
         // 空 or ディレクトリエントリ自体（末尾 "/"）は無視
         if rest.is_empty() || rest == "/" {
             continue;
         }
 
-        // raw_name を '/' で分割し、目的セグメントを Shift-JIS デコードして表示名を得る
-        // '/' (0x2F) は UTF-8・Shift-JIS 共通の ASCII 文字なのでバイト分割が安全
-        let raw_segments: Vec<&[u8]> = raw_name.split(|&b| b == b'/').collect();
-        let display_segment = raw_segments
-            .get(target_segment_idx)
-            .map(|s| decode_zip_name(s))
-            .unwrap_or_else(|| rest.split('/').next().unwrap_or(rest).to_string());
+        // 表示名はデコード済み rest の最初のセグメント
+        let display_segment = rest.split('/').next().unwrap_or(rest).to_string();
 
         if let Some(slash_pos) = rest.find('/') {
             // スラッシュがある → このレベルのサブディレクトリ
             let dir_key = &rest[..slash_pos];
             if !dir_key.is_empty() {
-                // 先に挿入したエントリを優先（最初に見つかった表示名を使用）
                 subdirs.entry(dir_key.to_string()).or_insert(display_segment);
             }
         } else {
             // スラッシュがない → 直下のファイル
-            if is_image_entry(&path_name) {
-                images.push((path_name, display_segment));
+            if is_image_entry(&decoded_path) {
+                images.push((decoded_path, display_segment));
             }
         }
     }
@@ -244,6 +220,7 @@ pub async fn browse_zip(zip_path: String) -> Result<Vec<FileEntry>, String> {
 
     // サブディレクトリ（is_zip = true にすることでダイアログが内部として扱う）
     for (dir_key, dir_display) in &subdirs {
+        // dir_key はデコード済みなので、そのままパスに使用
         let dir_path = format!("{}/{}{}", zip_file, prefix, dir_key);
         entries.push(FileEntry {
             name: dir_display.clone(),
@@ -260,6 +237,7 @@ pub async fn browse_zip(zip_path: String) -> Result<Vec<FileEntry>, String> {
     // 画像をフルパスで自然順ソートして追加
     images.sort_by(|(a, _), (b, _)| natural_compare(a, b));
     for (entry_name, display_name) in images {
+        // entry_name はデコード済み ZIP 内フルパス（例: "日本語フォルダ/001.jpg"）
         let entry_path = format!("{}/{}", zip_file, entry_name);
         entries.push(FileEntry {
             name: display_name,

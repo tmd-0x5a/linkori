@@ -54,31 +54,6 @@ export function SortableChunkList({
     }
   }
 
-  if (chunks.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-700 px-6 py-12 text-center">
-        <svg
-          width="48"
-          height="48"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          className="mb-4 text-zinc-600"
-        >
-          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-          <polyline points="17 21 17 13 7 13 7 21" />
-          <polyline points="7 3 7 8 15 8" />
-        </svg>
-        <p className="text-sm text-zinc-500 text-pretty">
-          チャンクがまだありません。
-          <br />
-          下の「チャンクを追加」ボタンから始めましょう。
-        </p>
-      </div>
-    );
-  }
-
   return (
     <DndContext
       sensors={sensors}

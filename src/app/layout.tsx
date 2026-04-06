@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "マンガビューア",
-  description: "ローカルマンガビューアアプリケーション",
+  title: "Linkori",
+  description: "チャンクリンクで読むマンガビューア",
 };
 
 export default function RootLayout({
@@ -25,9 +25,9 @@ export default function RootLayout({
   return (
     <html
       lang="ja"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-zinc-950 text-zinc-100">{children}</body>
+      <body className="min-h-full bg-[#faf9f7] text-black">{children}</body>
     </html>
   );
 }

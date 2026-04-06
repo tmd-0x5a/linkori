@@ -2002,6 +2002,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "linkori"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "encoding_rs",
+ "imagesize",
+ "log",
+ "mime_guess",
+ "natord",
+ "percent-encoding",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-log",
+ "tauri-plugin-store",
+ "urlencoding",
+ "uuid",
+ "walkdir",
+ "zip",
+]
+
+[[package]]
 name = "litemap"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2051,30 +2075,6 @@ name = "mac"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c41e0c4fef86961ac6d6f8a82609f55f31b05e4fce149ac5710e439df7619ba4"
-
-[[package]]
-name = "manga-viewer"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "encoding_rs",
- "imagesize",
- "log",
- "mime_guess",
- "natord",
- "percent-encoding",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-log",
- "tauri-plugin-store",
- "urlencoding",
- "uuid",
- "walkdir",
- "zip",
-]
 
 [[package]]
 name = "markup5ever"

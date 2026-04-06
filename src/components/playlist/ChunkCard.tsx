@@ -12,7 +12,6 @@ import { ImageFilePicker } from "@/components/ImageFilePicker";
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "tif"];
 
-/** パスの親ディレクトリを返す（ファイル選択後に終了パスを同フォルダから開くため） */
 function getParentPath(path: string): string | undefined {
   if (!path.trim()) return undefined;
   const normalized = path.replace(/\\/g, "/").replace(/\/+$/, "");
@@ -41,12 +40,7 @@ interface ChunkCardProps {
   onRemove: (chunkId: string) => void;
 }
 
-export function ChunkCard({
-  chunk,
-  index,
-  onUpdate,
-  onRemove,
-}: ChunkCardProps) {
+export function ChunkCard({ chunk, index, onUpdate, onRemove }: ChunkCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(chunk.name ?? "");
   const [editStart, setEditStart] = useState(chunk.startPath);
@@ -54,20 +48,9 @@ export function ChunkCard({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: chunk.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: chunk.id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
+  const style = { transform: CSS.Transform.toString(transform), transition };
   const editStartIsDir = isDirectoryLike(editStart);
 
   function handleSave() {
@@ -93,7 +76,6 @@ export function ChunkCard({
     setIsEditing(true);
   }
 
-  // 表示名: name があればそれ、なければ #n
   const displayName = chunk.name?.trim() || `#${index + 1}`;
 
   return (
@@ -102,18 +84,16 @@ export function ChunkCard({
         ref={setNodeRef}
         style={style}
         className={cn(
-          "relative rounded-lg border border-zinc-700 bg-zinc-800/50 p-4",
-          isDragging && "z-10 opacity-80 shadow-xl shadow-black/30"
+          "relative rounded-2xl border border-[#dad4c8] bg-white p-4",
+          "shadow-[rgba(0,0,0,0.1)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset,rgba(0,0,0,0.05)_0px_-0.5px_1px]",
+          isDragging && "z-10 opacity-80 shadow-[rgb(0,0,0)_-4px_4px]"
         )}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          setContextMenu({ x: e.clientX, y: e.clientY });
-        }}
+        onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY }); }}
       >
-        {/* ヘッダー: ドラッグハンドル + 表示名 */}
+        {/* ヘッダー */}
         <div className="mb-3 flex items-center gap-3">
           <button
-            className="flex size-8 shrink-0 cursor-grab items-center justify-center rounded text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300 active:cursor-grabbing"
+            className="flex size-8 shrink-0 cursor-grab items-center justify-center rounded-lg text-[#dad4c8] hover:bg-[#eee9df] hover:text-[#9f9b93] active:cursor-grabbing transition-colors"
             aria-label="ドラッグして並び替え"
             {...attributes}
             {...listeners}
@@ -129,35 +109,32 @@ export function ChunkCard({
           </button>
 
           <span className={cn(
-            "truncate text-sm font-medium",
-            chunk.name?.trim() ? "text-zinc-200" : "tabular-nums text-zinc-500"
+            "truncate",
+            chunk.name?.trim()
+              ? "heading-clay text-base text-black"
+              : "tabular-nums text-sm text-[#9f9b93]"
           )}>
             {displayName}
           </span>
         </div>
 
-        {/* パス表示 / 編集フォーム */}
+        {/* パス表示 / 編集 */}
         {isEditing ? (
           <div className="space-y-3">
-            {/* チャンク名 */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-zinc-400">チャンク名（省略可）</label>
+              <label className="label-clay text-[#55534e]">チャンク名（省略可）</label>
               <input
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 placeholder={`チャンク #${index + 1}`}
-                className="h-9 w-full rounded border border-zinc-700 bg-zinc-800 px-3 text-sm text-zinc-100 placeholder-zinc-600 focus:border-blue-500 focus:outline-none transition-colors"
+                className="h-9 w-full rounded-[4px] border border-[#717989] bg-white px-3 text-sm text-black placeholder:text-[#9f9b93] focus:outline-[rgb(20,110,245)_solid_2px] transition-colors"
               />
             </div>
-
             <ImageFilePicker
               label="開始パス"
               value={editStart}
-              onChange={(v) => {
-                setEditStart(v);
-                if (isDirectoryLike(v)) setEditEnd("");
-              }}
+              onChange={(v) => { setEditStart(v); if (isDirectoryLike(v)) setEditEnd(""); }}
               placeholder="D:/manga/vol1/001.jpg  または  D:/manga/vol1/"
             />
             <ImageFilePicker
@@ -169,27 +146,21 @@ export function ChunkCard({
               initialBrowsePath={getParentPath(editStart)}
             />
             <div className="flex justify-end gap-2">
-              <Button variant="secondary" size="sm" onClick={handleCancel}>
-                キャンセル
-              </Button>
-              <Button variant="primary" size="sm" onClick={handleSave}>
-                保存
-              </Button>
+              <Button variant="ghost" size="sm" onClick={handleCancel}>キャンセル</Button>
+              <Button variant="primary" size="sm" onClick={handleSave}>保存</Button>
             </div>
           </div>
         ) : (
           <div className="space-y-1.5">
             <div className="flex items-baseline gap-2">
-              <span className="shrink-0 text-xs text-zinc-500">開始:</span>
-              <span className="truncate text-sm text-zinc-300">
-                {chunk.startPath || "(未設定)"}
-              </span>
+              <span className="label-clay shrink-0 text-[#9f9b93]">開始</span>
+              <span className="truncate text-sm text-[#333333]">{chunk.startPath || "(未設定)"}</span>
             </div>
             {!isDirectoryLike(chunk.startPath) && (
               <div className="flex items-baseline gap-2">
-                <span className="shrink-0 text-xs text-zinc-500">終了:</span>
-                <span className="truncate text-sm text-zinc-300">
-                  {chunk.endPath || <span className="text-zinc-500">(フォルダ全体)</span>}
+                <span className="label-clay shrink-0 text-[#9f9b93]">終了</span>
+                <span className="truncate text-sm text-[#333333]">
+                  {chunk.endPath || <span className="text-[#9f9b93]">(フォルダ全体)</span>}
                 </span>
               </div>
             )}
@@ -203,16 +174,9 @@ export function ChunkCard({
           y={contextMenu.y}
           onClose={() => setContextMenu(null)}
           items={[
-            {
-              label: "編集",
-              onClick: openEdit,
-            },
+            { label: "編集", onClick: openEdit },
             { separator: true },
-            {
-              label: "削除",
-              danger: true,
-              onClick: () => setShowDeleteDialog(true),
-            },
+            { label: "削除", danger: true, onClick: () => setShowDeleteDialog(true) },
           ]}
         />
       )}

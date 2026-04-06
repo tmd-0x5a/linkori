@@ -11,21 +11,22 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize;
 }
 
+/* Clay デザインシステム: ホバー時に回転 + ハードシャドウ */
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700 disabled:bg-blue-600/50",
+    "bg-[#078a52] text-white hover:bg-[#02492a] hover:text-[#84e7a5]",
   secondary:
-    "bg-zinc-700 text-zinc-100 hover:bg-zinc-600 active:bg-zinc-800 disabled:bg-zinc-700/50",
+    "bg-white text-black border border-[#dad4c8] hover:bg-[#fbbd41] hover:border-[#fbbd41] hover:text-black",
   danger:
-    "bg-red-600 text-white hover:bg-red-500 active:bg-red-700 disabled:bg-red-600/50",
+    "bg-[#fc7981] text-black hover:bg-[#e05560] hover:text-white",
   ghost:
-    "bg-transparent text-zinc-300 hover:bg-zinc-800 active:bg-zinc-700 disabled:text-zinc-600",
+    "bg-transparent text-black border border-[#dad4c8] hover:bg-[#3bd3fd] hover:border-[#3bd3fd] hover:text-black",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "px-2.5 py-1 text-xs",
-  md: "px-4 py-2 text-sm",
-  lg: "px-6 py-2.5 text-base",
+  sm: "px-3 py-1 text-[12.8px] font-medium tracking-[-0.128px]",
+  md: "px-[12.8px] py-[6.4px] text-[16px] font-medium tracking-[-0.16px]",
+  lg: "px-5 py-2.5 text-[24px] font-normal",
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -34,9 +35,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-lg font-medium",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500",
-          "disabled:cursor-not-allowed disabled:opacity-60",
+          "btn-clay inline-flex items-center justify-center gap-2 rounded-xl",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgb(20,110,245)]",
+          "disabled:cursor-not-allowed disabled:opacity-50 disabled:transform-none disabled:shadow-none",
           "select-none cursor-pointer",
           variantStyles[variant],
           sizeStyles[size],

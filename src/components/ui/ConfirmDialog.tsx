@@ -30,7 +30,7 @@ export function ConfirmDialog({
       <AlertDialogPrimitive.Portal>
         <AlertDialogPrimitive.Overlay
           className={cn(
-            "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm",
+            "fixed inset-0 z-50 bg-black/30 backdrop-blur-sm",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0",
             "data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
           )}
@@ -38,20 +38,21 @@ export function ConfirmDialog({
         <AlertDialogPrimitive.Content
           className={cn(
             "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
-            "w-full max-w-md rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-2xl",
+            "w-full max-w-md rounded-2xl border border-[#dad4c8] bg-white p-6",
+            "shadow-[rgba(0,0,0,0.1)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset,rgba(0,0,0,0.05)_0px_-0.5px_1px]",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
             "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
           )}
         >
-          <AlertDialogPrimitive.Title className="text-lg font-semibold text-zinc-100 text-balance">
+          <AlertDialogPrimitive.Title className="heading-clay text-xl text-black text-balance">
             {title}
           </AlertDialogPrimitive.Title>
-          <AlertDialogPrimitive.Description className="mt-2 text-sm text-zinc-400 text-pretty">
+          <AlertDialogPrimitive.Description className="mt-3 text-sm text-[#55534e] leading-relaxed text-pretty">
             {description}
           </AlertDialogPrimitive.Description>
           <div className="mt-6 flex justify-end gap-3">
             <AlertDialogPrimitive.Cancel asChild>
-              <Button variant="secondary" size="md">
+              <Button variant="ghost" size="md">
                 {cancelLabel}
               </Button>
             </AlertDialogPrimitive.Cancel>
