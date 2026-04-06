@@ -8,8 +8,8 @@
 
 | ファイル | 説明 |
 |---|---|
-| `Linkori_x.x.x_x64-setup.exe` | インストーラー（推奨） |
-| `Linkori_x.x.x_x64_en-US.msi` | MSI インストーラー |
+| `Linkori_x.x.x_x64-setup.zip` | インストーラー（推奨）— 解凍後 `setup.exe` を実行 |
+| `Linkori_x.x.x_x64_en-US.zip` | MSI インストーラー — 解凍後 `.msi` を実行 |
 
 ### 動作環境
 - Windows 10 / 11（x64）
