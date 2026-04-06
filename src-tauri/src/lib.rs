@@ -1,0 +1,42 @@
+mod commands;
+mod protocol;
+mod reader;
+mod utils;
+
+use commands::chunk::{validate_chunk, resolve_chunk_images};
+use commands::filesystem::{browse_directory, browse_zip, list_drives};
+use commands::image::read_image_as_data_url;
+use commands::validate_image_file::validate_image_file;
+use protocol::manga::convert_to_manga_urls;
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(tauri_plugin_dialog::init())
+        .setup(|app| {
+            if cfg!(debug_assertions) {
+                app.handle().plugin(
+                    tauri_plugin_log::Builder::default()
+                        .level(log::LevelFilter::Info)
+                        .build(),
+                )?;
+            }
+            Ok(())
+        })
+        .register_uri_scheme_protocol("manga", |_ctx, request| {
+            protocol::manga::handle_manga_request(&request)
+        })
+        .invoke_handler(tauri::generate_handler![
+            validate_chunk,
+            resolve_chunk_images,
+            browse_directory,
+            browse_zip,
+            list_drives,
+            convert_to_manga_urls,
+            validate_image_file,
+            read_image_as_data_url,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
