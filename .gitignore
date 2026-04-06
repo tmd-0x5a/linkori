@@ -51,6 +51,6 @@ CLAUDE.md
 .claude/
 
 # ドキュメント・作業ファイル
-/docs/
+
 implementation_plan.md
 _empty/
