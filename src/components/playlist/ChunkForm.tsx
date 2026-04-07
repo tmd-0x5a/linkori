@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { ImageFilePicker } from "@/components/ImageFilePicker";
+import { useT } from "@/hooks/useT";
 
 interface ChunkFormProps {
   onAdd: (startPath: string, endPath: string, name?: string) => void;
@@ -35,6 +36,7 @@ function isDirectoryLike(path: string): boolean {
 }
 
 export function ChunkForm({ onAdd, addTrigger, onCancel, initialBrowsePath }: ChunkFormProps) {
+  const t = useT();
   const [name, setName] = useState("");
   const [startPath, setStartPath] = useState("");
   const [endPath, setEndPath] = useState("");
@@ -76,7 +78,7 @@ export function ChunkForm({ onAdd, addTrigger, onCancel, initialBrowsePath }: Ch
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <path d="M8 2a1 1 0 011 1v4h4a1 1 0 110 2H9v4a1 1 0 11-2 0V9H3a1 1 0 010-2h4V3a1 1 0 011-1z" />
         </svg>
-        チャンクを追加
+        {t.addChunk}
       </button>
     );
   }
@@ -86,32 +88,32 @@ export function ChunkForm({ onAdd, addTrigger, onCancel, initialBrowsePath }: Ch
       onSubmit={handleSubmit}
       className="rounded-2xl border border-[#dad4c8] bg-white p-5 space-y-4 shadow-[rgba(0,0,0,0.1)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset,rgba(0,0,0,0.05)_0px_-0.5px_1px]"
     >
-      <p className="heading-clay text-lg text-black">新しいチャンクを追加</p>
+      <p className="heading-clay text-lg text-black">{t.addNewChunk}</p>
 
       <div className="flex flex-col gap-1.5">
-        <label className="label-clay text-[#55534e]">チャンク名（省略可）</label>
+        <label className="label-clay text-[#55534e]">{t.chunkNameLabel}</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="例: 第1巻"
+          placeholder={t.chunkNamePlaceholder}
           className="h-9 w-full rounded-[4px] border border-[#717989] bg-white px-3 text-sm text-black placeholder:text-[#9f9b93] focus:outline-[rgb(20,110,245)_solid_2px] transition-colors"
         />
       </div>
 
       <ImageFilePicker
-        label="開始パス"
+        label={t.startPath}
         value={startPath}
         onChange={(v) => { setStartPath(v); if (isDirectoryLike(v)) setEndPath(""); }}
-        placeholder="D:/manga/vol1/001.jpg  または  D:/manga/vol1/"
+        placeholder={t.startPathPlaceholder}
         initialBrowsePath={startInitialPath}
       />
 
       <ImageFilePicker
-        label={startIsDir ? "終了パス（フォルダ選択時は不要）" : "終了パス（省略するとフォルダ全体）"}
+        label={startIsDir ? t.endPathDir : t.endPathFile}
         value={startIsDir ? "" : endPath}
         onChange={setEndPath}
-        placeholder={startIsDir ? "（フォルダ全体が対象）" : "D:/manga/vol1/050.jpg  （省略可）"}
+        placeholder={startIsDir ? t.endPathDirPlaceholder : t.endPathFilePlaceholder}
         disabled={startIsDir}
         initialBrowsePath={getParentPath(startPath)}
       />
@@ -129,10 +131,10 @@ export function ChunkForm({ onAdd, addTrigger, onCancel, initialBrowsePath }: Ch
             onCancel?.();
           }}
         >
-          キャンセル
+          {t.cancel}
         </Button>
         <Button type="submit" variant="primary" size="sm" disabled={!startPath.trim()}>
-          追加
+          {t.add}
         </Button>
       </div>
     </form>

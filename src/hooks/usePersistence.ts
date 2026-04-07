@@ -3,10 +3,13 @@ import { Store } from "@tauri-apps/plugin-store";
 import { usePlaylistStore } from "@/stores/playlistStore";
 import type { Playlist, ViewerSettings } from "@/types";
 import { useViewerStore } from "@/stores/viewerStore";
+import { useSettingsStore } from "@/stores/settingsStore";
+import type { Lang } from "@/lib/i18n";
 
 const STORE_FILE = "playlists.json";
 const PLAYLISTS_KEY = "playlists";
 const VIEWER_SETTINGS_KEY = "viewerSettings";
+const LANG_KEY = "lang";
 
 let storeInstance: Store | null = null;
 
@@ -27,6 +30,8 @@ export function usePersistence() {
   const hydrate = usePlaylistStore((s) => s.hydrate);
   const settings = useViewerStore((s) => s.settings);
   const updateSettings = useViewerStore((s) => s.updateSettings);
+  const lang = useSettingsStore((s) => s.lang);
+  const setLang = useSettingsStore((s) => s.setLang);
   const isHydrated = useRef(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -49,6 +54,12 @@ export function usePersistence() {
           await store.get<ViewerSettings>(VIEWER_SETTINGS_KEY);
         if (savedSettings && mounted) {
           updateSettings(savedSettings);
+        }
+
+        // 言語設定読み込み
+        const savedLang = await store.get<Lang>(LANG_KEY);
+        if (savedLang && mounted) {
+          setLang(savedLang);
         }
 
         if (mounted) {
@@ -111,4 +122,21 @@ export function usePersistence() {
 
     saveSettings();
   }, [settings]);
+
+  // --- 言語設定変更時の自動保存 ---
+  useEffect(() => {
+    if (!isHydrated.current) return;
+
+    async function saveLang() {
+      try {
+        const store = await getStore();
+        await store.set(LANG_KEY, lang);
+        await store.save();
+      } catch (error) {
+        console.error("言語設定の保存に失敗:", error);
+      }
+    }
+
+    saveLang();
+  }, [lang]);
 }

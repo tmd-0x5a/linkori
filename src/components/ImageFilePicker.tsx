@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { readImageAsDataUrl } from "@/lib/tauri";
 import { FileBrowserDialog } from "@/components/playlist/FileBrowserDialog";
+import { useT } from "@/hooks/useT";
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "tif"];
 
@@ -33,6 +34,7 @@ export interface ImageFilePickerProps {
 }
 
 export function ImageFilePicker({ label, value, onChange, placeholder, disabled, initialBrowsePath }: ImageFilePickerProps) {
+  const t = useT();
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [browserOpen, setBrowserOpen] = useState(false);
 
@@ -84,7 +86,7 @@ export function ImageFilePicker({ label, value, onChange, placeholder, disabled,
           type="button"
           onClick={() => setBrowserOpen(true)}
           disabled={disabled}
-          title="ファイル・フォルダを選択"
+          title={t.browseTitle}
           className="btn-clay flex shrink-0 items-center justify-center h-9 w-9 rounded-lg border border-[#dad4c8] bg-white text-[#9f9b93] hover:border-[#078a52] hover:bg-[#84e7a5] hover:text-[#02492a] disabled:cursor-not-allowed disabled:opacity-40"
         >
           <BrowseIcon />

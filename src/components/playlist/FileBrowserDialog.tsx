@@ -7,6 +7,7 @@ import type { FileEntry } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/cn";
+import { useT } from "@/hooks/useT";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -86,6 +87,7 @@ export function FileBrowserDialog({
   onSelect,
   initialPath,
 }: FileBrowserDialogProps) {
+  const t = useT();
   const [locationStack, setLocationStack] = useState<Location[]>([]);
   const [entries, setEntries] = useState<FileEntry[]>([]);
   const [addressInput, setAddressInput] = useState("");
@@ -280,7 +282,7 @@ export function FileBrowserDialog({
                 onClick={goBack}
                 disabled={!canGoBack}
                 className="flex h-7 w-7 items-center justify-center rounded text-[#9f9b93] transition-colors hover:bg-[#eee9df] hover:text-black disabled:cursor-not-allowed disabled:opacity-30"
-                title="戻る"
+                title={t.back}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="15 18 9 12 15 6" />
@@ -306,7 +308,7 @@ export function FileBrowserDialog({
                   <button
                     onClick={() => setAddressEditing(true)}
                     className="flex h-7 min-w-0 flex-1 items-center gap-1 truncate rounded border border-[#dad4c8] bg-white px-2 text-left text-sm text-[#333333] transition-colors hover:bg-[#eee9df]"
-                    title="クリックしてパスを入力"
+                    title={t.clickToEnterPath}
                   >
                     {/* パンくず */}
                     {currentLocation ? (
@@ -335,7 +337,7 @@ export function FileBrowserDialog({
                         ))}
                       </span>
                     ) : (
-                      <span className="text-[#9f9b93]">パスを入力...</span>
+                      <span className="text-[#9f9b93]">{t.addressBarPlaceholder}</span>
                     )}
                   </button>
                 )}
@@ -347,7 +349,7 @@ export function FileBrowserDialog({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="検索..."
+                  placeholder={t.searchPlaceholder}
                   className="h-7 w-36 rounded-[4px] border border-[#dad4c8] bg-white pl-7 pr-6 text-xs text-black placeholder:text-[#9f9b93] focus:outline-[rgb(20,110,245)_solid_2px] transition-colors"
                 />
                 <svg className="absolute left-2 top-1/2 -translate-y-1/2 text-[#9f9b93] pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -373,7 +375,7 @@ export function FileBrowserDialog({
                     "flex h-7 w-7 items-center justify-center transition-colors",
                     viewMode === "list" ? "bg-[#eee9df] text-black" : "text-[#9f9b93] hover:bg-[#eee9df] hover:text-black"
                   )}
-                  title="リスト表示"
+                  title={t.listView}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
@@ -386,7 +388,7 @@ export function FileBrowserDialog({
                     "flex h-7 w-7 items-center justify-center border-l border-[#dad4c8] transition-colors",
                     viewMode === "grid" ? "bg-[#eee9df] text-black" : "text-[#9f9b93] hover:bg-[#eee9df] hover:text-black"
                   )}
-                  title="グリッド表示"
+                  title={t.gridView}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
@@ -404,7 +406,7 @@ export function FileBrowserDialog({
                     ? "bg-[#eee9df] text-black"
                     : "text-[#9f9b93] hover:bg-[#eee9df] hover:text-black"
                 )}
-                title={showHidden ? "隠しファイルを非表示" : "隠しファイルを表示"}
+                title={showHidden ? t.hideHiddenFiles : t.showHiddenFiles}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   {showHidden ? (
@@ -438,7 +440,7 @@ export function FileBrowserDialog({
               {/* ── 左サイドバー（ドライブ一覧・ダーク） ── */}
               <div className="flex w-36 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-[#02492a] bg-[#02492a] p-2">
                 <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-[#84e7a5]/60">
-                  PC
+                  {t.pc}
                 </p>
                 {drives.map((drive) => {
                   const drivePath = drive.replace(/\/$/, "");
@@ -474,10 +476,10 @@ export function FileBrowserDialog({
                   <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8">
                     <div className="text-center">
                       <p className="heading-clay text-xl text-black">
-                        ドライブまたはフォルダを選択
+                        {t.selectDriveOrFolder}
                       </p>
                       <p className="mt-2 text-sm text-[#9f9b93] leading-relaxed">
-                        左のサイドバーからドライブを選ぶか、上部のアドレスバーにパスを入力してください
+                        {t.selectDriveDesc}
                       </p>
                     </div>
                     <div className="flex w-full max-w-md gap-2">
@@ -485,14 +487,14 @@ export function FileBrowserDialog({
                         value={addressInput}
                         onChange={(e) => setAddressInput(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleAddressSubmit()}
-                        placeholder="パスを入力 (例: D:/manga)"
+                        placeholder={t.pathInputPlaceholder}
                       />
                       <Button
                         variant="primary"
                         onClick={handleAddressSubmit}
                         disabled={!addressInput.trim()}
                       >
-                        開く
+                        {t.open}
                       </Button>
                     </div>
                   </div>
@@ -509,7 +511,7 @@ export function FileBrowserDialog({
                           className="flex flex-1 items-center gap-1 hover:text-black transition-colors"
                           onClick={() => toggleSort("name")}
                         >
-                          名前
+                          {t.colName}
                           {sortField === "name" && (
                             <SortIcon dir={sortDir} />
                           )}
@@ -521,9 +523,9 @@ export function FileBrowserDialog({
                           {sortField === "date" && (
                             <SortIcon dir={sortDir} />
                           )}
-                          更新日時
+                          {t.colModified}
                         </button>
-                        <span className="w-20 text-right">種類</span>
+                        <span className="w-20 text-right">{t.colType}</span>
                       </div>
                     )}
 
@@ -547,7 +549,7 @@ export function FileBrowserDialog({
                                 className="size-5 rounded-full border-2 border-[#dad4c8] border-t-[#078a52]"
                                 style={{ animation: "spin 0.8s linear infinite" }}
                               />
-                              <p className="text-xs text-[#9f9b93]">読み込み中...</p>
+                              <p className="text-xs text-[#9f9b93]">{t.loading}</p>
                             </div>
                           )}
 
@@ -563,7 +565,7 @@ export function FileBrowserDialog({
                             <>
                               {filteredEntries.length === 0 ? (
                                 <div className="flex h-40 items-center justify-center text-sm text-[#9f9b93]">
-                                  {searchQuery ? "検索結果がありません" : "このフォルダは空です"}
+                                  {searchQuery ? t.noResults : t.emptyFolder}
                                 </div>
                               ) : viewMode === "list" ? (
                                 filteredEntries.map((entry) => (
@@ -605,15 +607,15 @@ export function FileBrowserDialog({
                     size="sm"
                     onClick={() => confirmSelect(currentLocation.path)}
                   >
-                    {currentLocation.isZip ? "このZIPを選択" : "このフォルダを選択"}
+                    {currentLocation.isZip ? t.selectThisZip : t.selectThisFolder}
                   </Button>
                 )}
                 <p className="text-xs text-[#9f9b93]">
-                  フォルダ/ZIPをダブルクリックで移動 &nbsp;·&nbsp; 画像をクリックで選択
+                  {t.helpText}
                 </p>
               </div>
               <Button variant="ghost" size="sm" onClick={onClose}>
-                キャンセル
+                {t.cancel}
               </Button>
             </div>
           </motion.div>
@@ -665,6 +667,7 @@ interface FileRowProps {
 }
 
 function FileRow({ entry, onNavigate, onSelect }: FileRowProps) {
+  const t = useT();
   const isNavigable = entry.is_dir || entry.is_zip;
   const [imgSrc, setImgSrc] = useState<string | null>(null);
 
@@ -678,11 +681,11 @@ function FileRow({ entry, onNavigate, onSelect }: FileRowProps) {
   }, [entry.path, entry.is_image]);
 
   const typeLabel = entry.is_dir
-    ? "フォルダ"
+    ? t.folderType
     : entry.is_zip
-    ? "ZIPアーカイブ"
+    ? t.zipType
     : entry.is_image
-    ? (entry.name.split(".").pop()?.toUpperCase() ?? "画像")
+    ? (entry.name.split(".").pop()?.toUpperCase() ?? t.imageType)
     : "";
 
   return (

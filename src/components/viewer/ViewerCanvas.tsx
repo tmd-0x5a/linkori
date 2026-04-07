@@ -4,12 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useViewerStore } from "@/stores/viewerStore";
 import { cn } from "@/lib/cn";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useT } from "@/hooks/useT";
 
 interface ViewerCanvasProps {
   onBack: () => void;
 }
 
 export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
+  const t = useT();
   const {
     flatImageList,
     currentPageIndex,
@@ -177,7 +179,7 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
       <div className="flex h-dvh items-center justify-center bg-black">
         <div className="flex flex-col items-center gap-4">
           <div className="size-8 rounded-full border-2 border-zinc-600 border-t-blue-500" style={{ animation: "spin 1s linear infinite" }} />
-          <p className="text-sm text-zinc-400">画像を読み込んでいます...</p>
+          <p className="text-sm text-zinc-400">{t.viewerLoading}</p>
         </div>
       </div>
     );
@@ -194,7 +196,7 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
           onClick={onBack}
           className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700"
         >
-          戻る
+          {t.back}
         </button>
       </div>
     );
@@ -269,11 +271,11 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
             e.stopPropagation();
             onBack();
           }}
-          title="ホームに戻る（Esc）"
+          title={t.homeTitle}
           className="flex items-center gap-1.5 rounded-lg bg-black/40 px-3 py-1.5 text-xs text-zinc-400 opacity-0 backdrop-blur-sm transition-all duration-200 group-hover/top:opacity-100 hover:bg-black/70 hover:text-zinc-100"
         >
           <HomeIcon />
-          ホーム
+          {t.home}
         </button>
 
         {/* 1枚 / 2枚 トグル */}
@@ -283,7 +285,7 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
               e.stopPropagation();
               updateSettings({ spreadMode: false });
             }}
-            title="1枚表示（S）"
+            title={t.singlePageTitle}
             className={cn(
               "px-3 py-1.5 text-xs transition-colors",
               !settings.spreadMode
@@ -291,14 +293,14 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
                 : "text-zinc-500 hover:text-zinc-300"
             )}
           >
-            1枚
+            {t.singlePage}
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               updateSettings({ spreadMode: true });
             }}
-            title="2枚表示（S）"
+            title={t.spreadPageTitle}
             className={cn(
               "px-3 py-1.5 text-xs transition-colors border-l border-white/10",
               settings.spreadMode
@@ -306,7 +308,7 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
                 : "text-zinc-500 hover:text-zinc-300"
             )}
           >
-            2枚
+            {t.spreadPage}
           </button>
         </div>
       </div>
@@ -323,7 +325,7 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
             <div className="flex items-center justify-between text-xs">
               {/* 残りページ（左） */}
               <span className="tabular-nums text-zinc-500">
-                残り <span className="text-zinc-300">{remaining}</span> ページ
+                {t.remaining(remaining)}
               </span>
 
               {/* 現在ページ / 全ページ（右） */}

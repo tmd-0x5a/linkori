@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { usePlaylistStore } from "@/stores/playlistStore";
 import { useViewerStore } from "@/stores/viewerStore";
+import { useSettingsStore } from "@/stores/settingsStore";
+import { useT } from "@/hooks/useT";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -15,6 +17,7 @@ interface PlaylistPanelProps {
 }
 
 export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
+  const t = useT();
   const {
     playlists,
     activePlaylistId,
@@ -31,6 +34,7 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
   const loadImagesForPlaylist = useViewerStore(
     (s) => s.loadImagesForPlaylist
   );
+  const toggleLang = useSettingsStore((s) => s.toggleLang);
 
   const [addTrigger, setAddTrigger] = useState(0);
   const [showEmptyForm, setShowEmptyForm] = useState(false);
@@ -71,27 +75,33 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
   }
 
   const chunkCount = activePlaylist?.chunks.length ?? 0;
-
-  // 最後のチャンクのパス（2件目以降のエクスプローラー初期位置として使用）
   const lastChunkPath = activePlaylist?.chunks.at(-1)?.startPath;
 
   return (
     <div className="flex h-dvh">
-      {/* サイドバー: Matcha 800（Clay スウォッチカラー） */}
+      {/* サイドバー */}
       <aside className="flex w-64 shrink-0 flex-col border-r border-[#02492a] bg-[#02492a]">
         <div className="flex items-center justify-between border-b border-[#078a52]/40 px-4 py-3">
-          <h2 className="heading-clay text-base text-white">
-            Linkori
-          </h2>
-          <button
-            onClick={() => setIsCreating(true)}
-            aria-label="新規プレイリスト作成"
-            className="btn-clay flex h-7 w-7 items-center justify-center rounded-lg text-[#84e7a5] hover:bg-[#078a52] hover:text-white"
-          >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 2a1 1 0 011 1v4h4a1 1 0 110 2H9v4a1 1 0 11-2 0V9H3a1 1 0 010-2h4V3a1 1 0 011-1z" />
-            </svg>
-          </button>
+          <h2 className="heading-clay text-base text-white">Linkori</h2>
+          <div className="flex items-center gap-1">
+            {/* 言語切り替えボタン */}
+            <button
+              onClick={toggleLang}
+              className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-[#84e7a5]/70 hover:bg-[#078a52] hover:text-white transition-colors"
+            >
+              {t.langToggle}
+            </button>
+            {/* 新規プレイリスト作成ボタン */}
+            <button
+              onClick={() => setIsCreating(true)}
+              aria-label={t.newPlaylistAriaLabel}
+              className="btn-clay flex h-7 w-7 items-center justify-center rounded-lg text-[#84e7a5] hover:bg-[#078a52] hover:text-white"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 2a1 1 0 011 1v4h4a1 1 0 110 2H9v4a1 1 0 11-2 0V9H3a1 1 0 010-2h4V3a1 1 0 011-1z" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* 新規作成フォーム */}
@@ -100,7 +110,7 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
             <input
               value={newPlaylistName}
               onChange={(e) => setNewPlaylistName(e.target.value)}
-              placeholder="プレイリスト名"
+              placeholder={t.playlistNamePlaceholder}
               autoFocus
               className="h-8 w-full rounded-[4px] border border-[#078a52] bg-[#02492a] px-2 text-sm text-white placeholder:text-[#84e7a5]/50 focus:outline-[rgb(20,110,245)_solid_2px]"
             />
@@ -110,14 +120,14 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
                 onClick={() => { setIsCreating(false); setNewPlaylistName(""); }}
                 className="rounded px-2 py-0.5 text-xs text-[#84e7a5] hover:text-white transition-colors"
               >
-                中止
+                {t.stopCreating}
               </button>
               <button
                 type="submit"
                 disabled={!newPlaylistName.trim()}
                 className="btn-clay rounded-lg bg-[#84e7a5] px-2.5 py-0.5 text-xs font-medium text-[#02492a] hover:bg-[#fbbd41] hover:text-black disabled:opacity-50 disabled:transform-none"
               >
-                作成
+                {t.create}
               </button>
             </div>
           </form>
@@ -127,7 +137,7 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
         <nav className="flex-1 overflow-y-auto p-2">
           {playlists.length === 0 && !isCreating && (
             <p className="px-2 py-8 text-center text-xs text-[#84e7a5]/60 text-pretty">
-              プレイリストを作成しましょう
+              {t.noPlaylists}
             </p>
           )}
           {playlists.map((pl) => (
@@ -169,18 +179,17 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
         </nav>
       </aside>
 
-      {/* メインコンテンツ: ウォームクリーム */}
+      {/* メインコンテンツ */}
       <main className="flex flex-1 flex-col overflow-hidden bg-[#faf9f7]">
         {activePlaylist ? (
           <>
-            {/* ヘッダー */}
             <header className="flex items-center justify-between border-b border-[#dad4c8] bg-white px-6 py-4">
               <div>
                 <h1 className="heading-clay text-2xl text-black text-balance">
                   {activePlaylist.name}
                 </h1>
                 <p className="label-clay mt-1 text-[#9f9b93]">
-                  {chunkCount} チャンク
+                  {chunkCount} {t.chunkUnit}
                 </p>
               </div>
               <Button
@@ -189,25 +198,19 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
                 onClick={handleStartViewer}
                 disabled={chunkCount === 0}
               >
-                ビューアで開く
+                {t.openInViewer}
               </Button>
             </header>
 
-            {/* チャンクリスト */}
             <div className="flex-1 overflow-y-auto p-6">
               {activePlaylist.chunks.length === 0 && !showEmptyForm ? (
-                /* 空状態：クリックでフォームを開く */
                 <button
                   onClick={() => setShowEmptyForm(true)}
                   className="group flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-[#dad4c8] bg-transparent px-6 py-16 text-center transition-colors hover:border-[#078a52] hover:bg-white"
                 >
                   <svg
-                    width="48"
-                    height="48"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
+                    width="48" height="48" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" strokeWidth="1.5"
                     className="mb-4 text-[#dad4c8] transition-colors group-hover:text-[#84e7a5]"
                   >
                     <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
@@ -215,9 +218,9 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
                     <polyline points="7 3 7 8 15 8" />
                   </svg>
                   <p className="text-sm text-[#9f9b93] text-pretty transition-colors group-hover:text-[#078a52]">
-                    チャンクがまだありません。
+                    {t.noChunksLine1}
                     <br />
-                    クリックして追加しましょう。
+                    {t.noChunksLine2}
                   </p>
                 </button>
               ) : (
@@ -225,12 +228,8 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
                   {activePlaylist.chunks.length > 0 && (
                     <SortableChunkList
                       chunks={activePlaylist.chunks}
-                      onReorder={(from, to) =>
-                        reorderChunks(activePlaylist.id, from, to)
-                      }
-                      onUpdate={(chunkId, updates) =>
-                        updateChunk(activePlaylist.id, chunkId, updates)
-                      }
+                      onReorder={(from, to) => reorderChunks(activePlaylist.id, from, to)}
+                      onUpdate={(chunkId, updates) => updateChunk(activePlaylist.id, chunkId, updates)}
                       onRemove={(chunkId) => removeChunk(activePlaylist.id, chunkId)}
                     />
                   )}
@@ -253,22 +252,14 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
           </>
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
-            <svg
-              width="64"
-              height="64"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-              className="mb-6 text-[#dad4c8]"
-            >
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="mb-6 text-[#dad4c8]">
               <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
             </svg>
             <p className="text-sm text-[#9f9b93] text-pretty leading-relaxed">
-              左のサイドバーからプレイリストを選択、
+              {t.selectOrCreate}
               <br />
-              または新規作成してください。
+              {t.selectOrCreateSub}
             </p>
           </div>
         )}
@@ -282,7 +273,7 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
           onClose={() => setContextMenu(null)}
           items={[
             {
-              label: "名前変更",
+              label: t.rename,
               onClick: () => {
                 const pl = playlists.find((p) => p.id === contextMenu.id);
                 if (pl) handleStartRename(pl.id, pl.name);
@@ -290,7 +281,7 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
             },
             { separator: true },
             {
-              label: "削除",
+              label: t.delete,
               danger: true,
               onClick: () => setDeleteTarget(contextMenu.id),
             },
@@ -302,9 +293,9 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
       <ConfirmDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-        title="プレイリストを削除"
-        description="このプレイリストとすべてのチャンクが削除されます。この操作は元に戻せません。"
-        confirmLabel="削除する"
+        title={t.deletePlaylistTitle}
+        description={t.deletePlaylistDesc}
+        confirmLabel={t.deleteConfirm}
         onConfirm={() => {
           if (deleteTarget) {
             deletePlaylist(deleteTarget);

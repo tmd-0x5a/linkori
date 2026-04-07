@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ContextMenu } from "@/components/ui/ContextMenu";
 import { ImageFilePicker } from "@/components/ImageFilePicker";
+import { useT } from "@/hooks/useT";
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "tif"];
 
@@ -41,6 +42,7 @@ interface ChunkCardProps {
 }
 
 export function ChunkCard({ chunk, index, onUpdate, onRemove }: ChunkCardProps) {
+  const t = useT();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(chunk.name ?? "");
   const [editStart, setEditStart] = useState(chunk.startPath);
@@ -94,7 +96,7 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove }: ChunkCardProps) 
         <div className="mb-3 flex items-center gap-3">
           <button
             className="flex size-8 shrink-0 cursor-grab items-center justify-center rounded-lg text-[#dad4c8] hover:bg-[#eee9df] hover:text-[#9f9b93] active:cursor-grabbing transition-colors"
-            aria-label="ドラッグして並び替え"
+            aria-label={t.dragToReorder}
             {...attributes}
             {...listeners}
           >
@@ -122,45 +124,45 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove }: ChunkCardProps) 
         {isEditing ? (
           <div className="space-y-3">
             <div className="flex flex-col gap-1.5">
-              <label className="label-clay text-[#55534e]">チャンク名（省略可）</label>
+              <label className="label-clay text-[#55534e]">{t.chunkNameLabel}</label>
               <input
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                placeholder={`チャンク #${index + 1}`}
+                placeholder={`#${index + 1}`}
                 className="h-9 w-full rounded-[4px] border border-[#717989] bg-white px-3 text-sm text-black placeholder:text-[#9f9b93] focus:outline-[rgb(20,110,245)_solid_2px] transition-colors"
               />
             </div>
             <ImageFilePicker
-              label="開始パス"
+              label={t.startPath}
               value={editStart}
               onChange={(v) => { setEditStart(v); if (isDirectoryLike(v)) setEditEnd(""); }}
-              placeholder="D:/manga/vol1/001.jpg  または  D:/manga/vol1/"
+              placeholder={t.startPathPlaceholder}
             />
             <ImageFilePicker
-              label={editStartIsDir ? "終了パス（フォルダ選択時は不要）" : "終了パス（省略するとフォルダ全体）"}
+              label={editStartIsDir ? t.endPathDir : t.endPathFile}
               value={editStartIsDir ? "" : editEnd}
               onChange={setEditEnd}
-              placeholder={editStartIsDir ? "（フォルダ全体が対象）" : "D:/manga/vol1/050.jpg  （省略可）"}
+              placeholder={editStartIsDir ? t.endPathDirPlaceholder : t.endPathFilePlaceholder}
               disabled={editStartIsDir}
               initialBrowsePath={getParentPath(editStart)}
             />
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={handleCancel}>キャンセル</Button>
-              <Button variant="primary" size="sm" onClick={handleSave}>保存</Button>
+              <Button variant="ghost" size="sm" onClick={handleCancel}>{t.cancel}</Button>
+              <Button variant="primary" size="sm" onClick={handleSave}>{t.save}</Button>
             </div>
           </div>
         ) : (
           <div className="space-y-1.5">
             <div className="flex items-baseline gap-2">
-              <span className="label-clay shrink-0 text-[#9f9b93]">開始</span>
-              <span className="truncate text-sm text-[#333333]">{chunk.startPath || "(未設定)"}</span>
+              <span className="label-clay shrink-0 text-[#9f9b93]">{t.startLabel}</span>
+              <span className="truncate text-sm text-[#333333]">{chunk.startPath || t.notSet}</span>
             </div>
             {!isDirectoryLike(chunk.startPath) && (
               <div className="flex items-baseline gap-2">
-                <span className="label-clay shrink-0 text-[#9f9b93]">終了</span>
+                <span className="label-clay shrink-0 text-[#9f9b93]">{t.endLabel}</span>
                 <span className="truncate text-sm text-[#333333]">
-                  {chunk.endPath || <span className="text-[#9f9b93]">(フォルダ全体)</span>}
+                  {chunk.endPath || <span className="text-[#9f9b93]">{t.wholeFolder}</span>}
                 </span>
               </div>
             )}
@@ -174,9 +176,9 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove }: ChunkCardProps) 
           y={contextMenu.y}
           onClose={() => setContextMenu(null)}
           items={[
-            { label: "編集", onClick: openEdit },
+            { label: t.edit, onClick: openEdit },
             { separator: true },
-            { label: "削除", danger: true, onClick: () => setShowDeleteDialog(true) },
+            { label: t.delete, danger: true, onClick: () => setShowDeleteDialog(true) },
           ]}
         />
       )}
@@ -184,9 +186,9 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove }: ChunkCardProps) 
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        title="チャンクを削除"
-        description={`「${displayName}」を削除しますか？この操作は元に戻せません。`}
-        confirmLabel="削除する"
+        title={t.deleteChunkTitle}
+        description={t.deleteChunkDesc(displayName)}
+        confirmLabel={t.deleteConfirm}
         onConfirm={() => onRemove(chunk.id)}
       />
     </>
