@@ -1,8 +1,8 @@
 # Linkori
 
-A local manga and image viewer. Read multiple folders and ZIP archives in sequence using a playlist system.
+**English** | [日本語](README.ja.md)
 
-[日本語版はこちら](README.ja.md)
+A local manga and image viewer. Read multiple folders and ZIP archives in sequence using a playlist system.
 
 ## Screenshots
 
@@ -58,6 +58,10 @@ Download the latest installer from the [**Releases**](https://github.com/tmd-0x5
 - Correct display of Shift-JIS (CP932) encoded filenames in Japanese ZIPs
 - Lazy thumbnail loading; hidden files are hidden by default
 - "Select this folder" / "Select this ZIP" buttons for whole-folder selection
+
+### Language
+- Switch UI language between **English** and **Japanese** from the settings menu
+- Language preference is saved and restored on next launch
 
 ### Viewer
 - Toggle between single-page and two-page spread view
