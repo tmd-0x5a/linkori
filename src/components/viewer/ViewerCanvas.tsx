@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useViewerStore } from "@/stores/viewerStore";
+import { readImageAsDataUrl } from "@/lib/tauri";
 import { cn } from "@/lib/cn";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useT } from "@/hooks/useT";
@@ -31,6 +32,40 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
   const [direction, setDirection] = useState(0);
   const prevIndexRef = useRef(currentPageIndex);
   const shouldReduceMotion = useReducedMotion();
+
+  // path → data URL のキャッシュ（ページ移動時に都度読み込まないよう保持）
+  const imageCacheRef = useRef<Map<string, string>>(new Map());
+  const [, forceUpdate] = useState(0);
+
+  // 現在ページ（見開き含む）+ 先読みページを非同期で読み込む
+  useEffect(() => {
+    if (flatImageList.length === 0) return;
+
+    const step = settings.spreadMode ? 2 : 1;
+    // 現在ページ + 先読み2スプレッド分のインデックスを対象にする
+    const indices = new Set<number>();
+    for (let i = currentPageIndex; i < Math.min(currentPageIndex + step * 3, flatImageList.length); i++) {
+      indices.add(i);
+    }
+
+    let cancelled = false;
+    (async () => {
+      for (const idx of indices) {
+        const path = flatImageList[idx];
+        if (!path || imageCacheRef.current.has(path)) continue;
+        try {
+          const url = await readImageAsDataUrl(path);
+          if (cancelled) return;
+          imageCacheRef.current.set(path, url);
+          forceUpdate((n) => n + 1);
+        } catch {
+          // 読み込み失敗はスキップ
+        }
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [currentPageIndex, flatImageList, settings.spreadMode]);
 
   useEffect(() => {
     if (currentPageIndex !== prevIndexRef.current) {
@@ -149,25 +184,30 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
     }
   }
 
-  // 現在表示すべき画像を決定
+  // パスから読み込み済み data URL を取得（未読み込みは空文字）
+  function resolveUrl(path: string): string {
+    return imageCacheRef.current.get(path) ?? "";
+  }
+
+  // 現在表示すべき画像 URL を決定（キャッシュから取得）
   function getCurrentImages(): string[] {
     if (totalPages === 0) return [];
 
     if (settings.spreadMode) {
       // 見開きモード: 2枚表示
       const images: string[] = [];
-      if (flatImageList[currentPageIndex]) {
-        images.push(flatImageList[currentPageIndex]);
-      }
-      if (currentPageIndex + 1 < totalPages && flatImageList[currentPageIndex + 1]) {
-        images.push(flatImageList[currentPageIndex + 1]);
-      }
+      const url0 = flatImageList[currentPageIndex] ? resolveUrl(flatImageList[currentPageIndex]) : "";
+      if (url0) images.push(url0);
+      const url1 = currentPageIndex + 1 < totalPages && flatImageList[currentPageIndex + 1]
+        ? resolveUrl(flatImageList[currentPageIndex + 1])
+        : "";
+      if (url1) images.push(url1);
       return settings.rightToLeft ? images.reverse() : images;
     } else {
       // 単ページモード
-      return flatImageList[currentPageIndex]
-        ? [flatImageList[currentPageIndex]]
-        : [];
+      const path = flatImageList[currentPageIndex];
+      const url = path ? resolveUrl(path) : "";
+      return url ? [url] : [];
     }
   }
 

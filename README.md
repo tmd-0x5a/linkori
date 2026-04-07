@@ -68,6 +68,7 @@ Download the latest installer from the [**Releases**](https://github.com/tmd-0x5
 - Right-to-left reading direction (Japanese manga)
 - Page transition animation
 - Full-screen display
+- **Fast open**: viewer opens instantly — images load on demand as you read (lazy loading), so large playlists and ZIPs no longer cause a delay
 
 #### Controls
 

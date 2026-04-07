@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { resolveChunkImages, readImageAsDataUrl } from "@/lib/tauri";
+import { resolveChunkImages, convertToMangaUrls } from "@/lib/tauri";
 
 interface UseChunkImagesReturn {
   images: string[];
@@ -24,7 +24,7 @@ export function useChunkImages(): UseChunkImagesReturn {
 
       try {
         const paths = await resolveChunkImages(startPath, endPath);
-        const urls = await Promise.all(paths.map((p) => readImageAsDataUrl(p)));
+        const urls = await convertToMangaUrls(paths);
         setImages(urls);
       } catch (err) {
         setError(

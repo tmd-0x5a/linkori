@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { ViewerSettings } from "@/types";
-import { resolveChunkImages, readImageAsDataUrl } from "@/lib/tauri";
+import { resolveChunkImages } from "@/lib/tauri";
 import { usePlaylistStore } from "./playlistStore";
 
 interface ViewerState {
@@ -81,32 +81,10 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
         return;
       }
 
-      // 各画像パスを base64 data URL に変換（manga:// プロトコルを使わない）
-      const dataUrls = await Promise.all(
-        allImagePaths.map(async (path) => {
-          try {
-            return await readImageAsDataUrl(path);
-          } catch (e) {
-            console.warn(`[Viewer] 画像読み込み失敗: ${path}`, e);
-            return "";
-          }
-        })
-      );
-
-      // 読み込みに失敗した画像（空文字）を除外
-      const validUrls = dataUrls.filter((url) => url !== "");
-
-      if (validUrls.length === 0) {
-        set({
-          isLoading: false,
-          loadError: "画像の読み込みに失敗しました",
-        });
-        return;
-      }
-
+      // パスリストをそのまま保存（遅延読み込みのため事前変換しない）
       set({
-        flatImageList: validUrls,
-        totalPages: validUrls.length,
+        flatImageList: allImagePaths,
+        totalPages: allImagePaths.length,
         currentPageIndex: 0,
         isLoading: false,
         loadError: null,
