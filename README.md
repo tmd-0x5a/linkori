@@ -1,150 +1,144 @@
 # Linkori
 
-ローカル動作のマンガ・画像ビューアアプリ。プレイリスト形式で複数フォルダ・ZIPを連結して読める。
+A local manga and image viewer. Read multiple folders and ZIP archives in sequence using a playlist system.
 
-## スクリーンショット
+[日本語版はこちら](README.ja.md)
 
-**プレイリスト画面**
-![プレイリスト画面](docs/プレイリスト画面.png)
+## Screenshots
 
-**ファイルブラウザ**
-![ファイルブラウザ](docs/ファイルブラウザ.png)
+**Playlist Screen**
+![Playlist Screen](docs/プレイリスト画面.png)
 
-**ビューア画面**
-![ビューア画面](docs/ビューア画面.png)
+**File Browser**
+![File Browser](docs/ファイルブラウザ.png)
 
-## ダウンロード
+**Viewer**
+![Viewer](docs/ビューア画面.png)
 
-[**Releases**](https://github.com/tmd-0x5a/linkori/releases) ページから最新の `Linkori_x.x.x_x64-setup.exe` をダウンロードしてください。
+## Download
 
-| ファイル | 説明 |
+Download the latest installer from the [**Releases**](https://github.com/tmd-0x5a/linkori/releases) page.
+
+| File | Description |
 |---|---|
-| `Linkori_x.x.x_x64-setup.zip` | インストーラー（推奨）— 解凍後 `setup.exe` を実行 |
-| `Linkori_x.x.x_x64_en-US.zip` | MSI インストーラー — 解凍後 `.msi` を実行 |
+| `Linkori_x.x.x_x64-setup.zip` | Installer (recommended) — extract and run `setup.exe` |
+| `Linkori_x.x.x_x64_en-US.zip` | MSI installer — extract and run `.msi` |
 
-### 動作環境
-- Windows 10 / 11（x64）
-- WebView2 ランタイム（Windows 11 は標準搭載、Windows 10 は自動インストール）
+### Requirements
+- Windows 10 / 11 (x64)
+- WebView2 runtime (built into Windows 11; auto-installed on Windows 10)
 
 ---
 
-## 機能
+## Features
 
-### プレイリスト管理
-- プレイリストの作成・削除・名前変更
-- プレイリストはローカルストレージに自動保存（アプリ再起動後も維持）
-- 複数プレイリストの切り替え
-- **右クリックで名前変更・削除メニューを表示**
-- ダブルクリックでその場で名前変更
+### Playlist Management
+- Create, delete, and rename playlists
+- Playlists are saved locally and persist across restarts
+- Switch between multiple playlists
+- Right-click for rename / delete context menu
+- Double-click to rename in place
 
-### チャンク（読書範囲）
-- 開始ファイル〜終了ファイルの範囲を「チャンク」として登録
-- チャンクをドラッグ＆ドロップで並び替え
-- ディレクトリ内の画像・ZIPファイル内の画像どちらも対応
-- 複数チャンクを連結して1つのプレイリストとして閲覧可能
-- **開始パスにフォルダ・ZIPを指定すると、そのフォルダ/ZIP全体を対象にできる**（終了パス不要）
-- ZIP内サブディレクトリの指定にも対応
-- **右クリックで編集・削除メニューを表示**（常時表示ボタンを廃止してUIをすっきりさせた）
+### Chunks (Reading Ranges)
+- Register a range from a start file to an end file as a "chunk"
+- Reorder chunks with drag and drop
+- Supports images in directories and inside ZIP archives
+- Chain multiple chunks into a single continuous playlist
+- Set a folder or ZIP as the start path to include the entire contents (no end path needed)
+- Supports ZIP subdirectories
+- Right-click context menu for edit / delete
 
-### ファイルブラウザ（オリジナルエクスプローラー）
-- OS準拠のネイティブダイアログを使わず、アプリ内蔵のエクスプローラーでファイル選択
-- **左サイドバー**にPC上の全ドライブを動的表示（実在するドライブのみ）
-- アドレスバー（パンくずリスト）をクリックして直接パス入力可能
-- **表示モード切り替え**：リスト表示 / グリッド表示（サムネイル大）
-- **ソート**：名前順・更新日時順、昇順/降順をカラムヘッダークリックで切り替え
-- 更新日時をリスト表示の列として表示
-- ディレクトリ・ZIPファイル（.zip / .cbz）の階層ナビゲーション
-- ZIP内サブディレクトリへの入り込みに対応
-- Shift-JIS（CP932）エンコードのファイル名を正しく表示（日本語 ZIP 対応）
-- サムネイル遅延読み込み（隠しファイルはデフォルト非表示）
-- 「このフォルダを選択」「このZIPを選択」ボタンでフォルダ・ZIP丸ごと選択可能
+### File Browser (Built-in Explorer)
+- Custom in-app file browser — no OS native dialog
+- Left sidebar shows all available drives dynamically
+- Click the address bar (breadcrumb) to type a path directly
+- **View modes**: List / Grid (large thumbnails)
+- **Sorting**: by name or date, ascending / descending — click column headers
+- Navigate into directories and ZIP files (.zip / .cbz)
+- Correct display of Shift-JIS (CP932) encoded filenames in Japanese ZIPs
+- Lazy thumbnail loading; hidden files are hidden by default
+- "Select this folder" / "Select this ZIP" buttons for whole-folder selection
 
-### ビューア
-- **1枚表示 / 2枚見開き表示** を切替可能
-- 右→左読み（日本の漫画）固定
-- ページ遷移アニメーション
-- フルスクリーン表示
+### Viewer
+- Toggle between single-page and two-page spread view
+- Right-to-left reading direction (Japanese manga)
+- Page transition animation
+- Full-screen display
 
-#### 操作方法
+#### Controls
 
-| 操作 | 動作 |
-|------|------|
-| マウスホイール ↓ | 次ページ |
-| マウスホイール ↑ | 前ページ |
-| `←` / `↑` | 次ページ |
-| `→` / `↓` | 前ページ |
-| `Space` | 次ページ |
-| `Shift + Space` | 前ページ |
-| `PageDown` | 次ページ |
-| `PageUp` | 前ページ |
-| `Home` | 最初のページへ |
-| `End` | 最後のページへ |
-| `S` | 1枚 / 2枚 切替 |
-| `Esc` | ホームに戻る |
-| 画面右半分クリック | 前ページ |
-| 画面左半分クリック | 次ページ |
+| Input | Action |
+|---|---|
+| Scroll ↓ / `←` / `↑` / `Space` / `PageDown` | Next page |
+| Scroll ↑ / `→` / `↓` / `Shift+Space` / `PageUp` | Previous page |
+| `Home` | First page |
+| `End` | Last page |
+| `S` | Toggle single / spread view |
+| `Esc` | Return to home |
+| Click right half | Previous page |
+| Click left half | Next page |
 
-#### ページバー（下部・ホバーで表示）
-- 残りページ数・現在ページ / 全ページ数 を表示
-- プログレスバー（右→左方向）をドラッグ or クリックでシーク
+#### Page Bar (bottom, visible on hover)
+- Shows current page / total pages and remaining count
+- Drag or click the progress bar (right-to-left) to seek
 
-## 対応画像フォーマット
+## Supported Image Formats
 
 JPEG / PNG / GIF / WebP / BMP / TIFF
 
-## 対応アーカイブ
+## Supported Archives
 
-`.zip` / `.cbz`（ZIP内画像・ZIP内ディレクトリに対応）
+`.zip` / `.cbz` (including images inside ZIP subdirectories)
 
-## セキュリティ
+## Security
 
-- **Zip Slip 対策**: ZIPエントリパスの `..` トラバーサルを検出・拒否
-- **パストラバーサル対策**: `manga://` プロトコルハンドラーおよびチャンク解決時にパス検証を実施
-- **ファイルサイズ上限**: ZIP展開時に 200MB の上限を設定（DoS対策）
-- **CSP**: `manga://` プロトコルのみを `img-src` に許可
+- **Zip Slip protection**: Rejects ZIP entries containing `..` path traversal
+- **Path traversal protection**: Validated in the `manga://` protocol handler and chunk resolution
+- **File size limit**: 200 MB cap per ZIP entry to prevent DoS
+- **CSP**: `img-src` restricted to the `manga://` protocol only
 
-## データ保存場所
+## Data Storage
 
-プレイリスト・チャンクデータはローカルに保存されます。
+Playlist and chunk data is stored locally at:
 
 ```
-C:\Users\<ユーザー名>\AppData\Roaming\com.linkori.app\
+C:\Users\<username>\AppData\Roaming\com.linkori.app\
 ```
 
-アンインストール後もデータは残ります。完全に削除したい場合は上記フォルダを手動で削除してください。
+Data persists after uninstalling. To reset completely, delete the folder above manually.
 
 ---
 
-## 免責事項
+## Disclaimer
 
-- 本ソフトウェアは現状有姿（AS IS）で提供されます。
-- 使用によって生じたいかなる損害についても、作者は責任を負いません。
-- 著作権で保護されたコンテンツの取り扱いは、ユーザー自身の責任において適法に行ってください。
-- 本ソフトウェアはローカル環境のみで動作し、外部サーバーへのデータ送信は一切行いません。
+- This software is provided "as is" without any warranty.
+- The author is not liable for any damages arising from its use.
+- You are solely responsible for ensuring that your use of any content complies with applicable copyright laws.
+- This application runs entirely locally and never transmits data to external servers.
 
 ---
 
-## ライセンス
+## License
 
 MIT License
 
 ---
 
-## 開発
+## Development
 
 ```bash
-# フロントエンド開発サーバー
+# Frontend dev server
 npm run dev
 
-# Tauri 開発（ホットリロードあり）
+# Tauri dev (with hot reload)
 npm run tauri dev
 
-# プロダクションビルド
+# Production build
 npm run build
 npm run tauri build
 ```
 
-### 必要環境
+### Prerequisites
 - Node.js
 - Rust / Cargo
 - Tauri v2 CLI
