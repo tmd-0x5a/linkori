@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linkori — Local Manga & Image Viewer</title>
+<meta name="description" content="Linkori is a local manga and image viewer with playlist system. Read multiple folders and ZIP archives in sequence.">
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { font-family: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif; color: #1d1d1f; background: #000; }
+img { max-width: 100%; height: auto; display: block; }
+a { text-decoration: none; }
+
+/* ===== Navigation (Glass) ===== */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 48px;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  display: flex; align-items: center; justify-content: center;
+}
+.nav-inner {
+  max-width: 980px; width: 100%; padding: 0 22px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand {
+  font-family: 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 21px; font-weight: 600; color: #f5f5f7;
+  letter-spacing: -0.2px;
+}
+.nav-links { display: flex; gap: 20px; align-items: center; }
+.nav-links a, .nav-links button {
+  font-size: 12px; color: rgba(255,255,255,0.8);
+  letter-spacing: -0.08px; transition: color 0.2s;
+  background: none; border: none; cursor: pointer; font-family: inherit;
+}
+.nav-links a:hover, .nav-links button:hover { color: #fff; }
+.lang-switch {
+  display: flex; gap: 0; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; overflow: hidden;
+}
+.lang-switch button {
+  padding: 3px 8px; font-size: 11px; font-weight: 500;
+  color: rgba(255,255,255,0.5); background: transparent;
+  border: none; cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.lang-switch button.active {
+  color: #fff; background: rgba(255,255,255,0.15);
+}
+
+/* ===== Hero Section (Dark) ===== */
+.hero {
+  min-height: 100vh; background: #000; color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 120px 22px 80px;
+}
+.hero-icon {
+  width: 80px; height: 80px; border-radius: 18px;
+  margin-bottom: 24px;
+  box-shadow: rgba(0,0,0,0.22) 3px 5px 30px 0px;
+}
+.hero h1 {
+  font-family: 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 56px; font-weight: 600; line-height: 1.07;
+  letter-spacing: -0.28px; margin-bottom: 12px;
+}
+.hero .subtitle {
+  font-size: 21px; font-weight: 400; line-height: 1.19;
+  letter-spacing: 0.231px; color: rgba(255,255,255,0.7);
+  margin-bottom: 8px;
+}
+.hero .version-badge {
+  display: inline-block;
+  font-size: 12px; font-weight: 600; letter-spacing: -0.08px;
+  color: #2997ff; background: rgba(41,151,255,0.12);
+  padding: 4px 12px; border-radius: 980px;
+  margin-bottom: 32px;
+}
+.hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #0071e3; color: #fff;
+  font-size: 17px; font-weight: 400; letter-spacing: -0.374px;
+  padding: 12px 24px; border-radius: 980px; border: none; cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-primary:hover { background: #0077ed; }
+.btn-primary svg { width: 16px; height: 16px; }
+.btn-outline {
+  display: inline-flex; align-items: center;
+  color: #2997ff; font-size: 17px; font-weight: 400;
+  padding: 12px 24px; border-radius: 980px;
+  border: 1px solid rgba(255,255,255,0.25);
+  transition: border-color 0.2s, color 0.2s; cursor: pointer; background: transparent;
+}
+.btn-outline:hover { border-color: #2997ff; }
+.hero-note {
+  margin-top: 16px; font-size: 12px; color: rgba(255,255,255,0.36);
+  letter-spacing: -0.08px;
+}
+
+/* ===== Screenshot Section (Dark) ===== */
+.screenshots {
+  background: #000; padding: 80px 22px 100px; text-align: center;
+}
+.screenshots h2 {
+  font-family: 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 40px; font-weight: 600; line-height: 1.10;
+  color: #f5f5f7; margin-bottom: 48px;
+}
+.screenshot-grid {
+  max-width: 1080px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr; gap: 32px;
+}
+.screenshot-card {
+  background: #1d1d1f; border-radius: 12px; overflow: hidden;
+  box-shadow: rgba(0,0,0,0.22) 3px 5px 30px 0px;
+}
+.screenshot-card img { width: 100%; display: block; }
+.screenshot-card .caption {
+  padding: 16px 20px;
+  font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.7);
+  letter-spacing: -0.224px;
+}
+
+/* ===== Features Section (Light) ===== */
+.features {
+  background: #f5f5f7; padding: 100px 22px; text-align: center;
+}
+.features h2 {
+  font-family: 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 40px; font-weight: 600; line-height: 1.10;
+  color: #1d1d1f; margin-bottom: 12px;
+}
+.features .section-sub {
+  font-size: 17px; color: rgba(0,0,0,0.56);
+  letter-spacing: -0.374px; line-height: 1.47;
+  margin-bottom: 56px;
+}
+.feature-grid {
+  max-width: 980px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  text-align: left;
+}
+.feature-card {
+  background: #fff; border-radius: 12px; padding: 28px 24px;
+}
+.feature-card .icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: #000; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px; font-size: 18px;
+}
+.feature-card h3 {
+  font-family: 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 17px; font-weight: 600; line-height: 1.24;
+  letter-spacing: -0.374px; color: #1d1d1f;
+  margin-bottom: 8px;
+}
+.feature-card p {
+  font-size: 14px; color: rgba(0,0,0,0.56);
+  letter-spacing: -0.224px; line-height: 1.43;
+}
+
+/* ===== New in v0.3.0 Section (Dark) ===== */
+.whats-new {
+  background: #000; color: #fff; padding: 100px 22px; text-align: center;
+}
+.whats-new h2 {
+  font-family: 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 40px; font-weight: 600; line-height: 1.10;
+  margin-bottom: 12px;
+}
+.whats-new .section-sub {
+  font-size: 17px; color: rgba(255,255,255,0.56);
+  letter-spacing: -0.374px; margin-bottom: 56px;
+}
+.new-grid {
+  max-width: 980px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;
+  text-align: left;
+}
+.new-card {
+  background: #1d1d1f; border-radius: 12px; padding: 28px 24px;
+}
+.new-card .tag {
+  display: inline-block; font-size: 12px; font-weight: 600;
+  color: #2997ff; background: rgba(41,151,255,0.12);
+  padding: 3px 10px; border-radius: 980px;
+  margin-bottom: 12px; letter-spacing: -0.08px;
+}
+.new-card h3 {
+  font-family: 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 21px; font-weight: 600; line-height: 1.19;
+  letter-spacing: 0.231px; margin-bottom: 8px;
+}
+.new-card p {
+  font-size: 14px; color: rgba(255,255,255,0.56);
+  letter-spacing: -0.224px; line-height: 1.43;
+}
+
+/* ===== System Requirements (Light) ===== */
+.requirements {
+  background: #f5f5f7; padding: 80px 22px; text-align: center;
+}
+.requirements h2 {
+  font-family: 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 28px; font-weight: 600; line-height: 1.14;
+  letter-spacing: 0.196px; color: #1d1d1f; margin-bottom: 32px;
+}
+.req-grid {
+  max-width: 640px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
+  text-align: left;
+}
+.req-item h4 {
+  font-size: 14px; font-weight: 600; color: #1d1d1f;
+  letter-spacing: -0.224px; margin-bottom: 4px;
+}
+.req-item p {
+  font-size: 14px; color: rgba(0,0,0,0.56);
+  letter-spacing: -0.224px; line-height: 1.43;
+}
+
+/* ===== Download Section (Dark) ===== */
+.download {
+  background: #000; color: #fff; padding: 100px 22px; text-align: center;
+}
+.download h2 {
+  font-family: 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 40px; font-weight: 600; line-height: 1.10;
+  margin-bottom: 12px;
+}
+.download .section-sub {
+  font-size: 17px; color: rgba(255,255,255,0.56);
+  letter-spacing: -0.374px; margin-bottom: 40px;
+}
+.download-ctas {
+  display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+  margin-bottom: 24px;
+}
+.download .note {
+  font-size: 12px; color: rgba(255,255,255,0.36);
+  letter-spacing: -0.08px; max-width: 480px; margin: 0 auto; line-height: 1.5;
+}
+
+/* ===== Footer ===== */
+.footer {
+  background: #f5f5f7; padding: 32px 22px; text-align: center;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+.footer-inner { max-width: 980px; margin: 0 auto; }
+.footer p {
+  font-size: 12px; color: rgba(0,0,0,0.48);
+  letter-spacing: -0.08px; line-height: 1.6;
+}
+.footer a { color: #0066cc; transition: color 0.2s; }
+.footer a:hover { text-decoration: underline; }
+
+/* ===== Responsive ===== */
+@media (max-width: 834px) {
+  .hero h1 { font-size: 40px; }
+  .hero .subtitle { font-size: 17px; }
+  .feature-grid { grid-template-columns: repeat(2, 1fr); }
+  .new-grid { grid-template-columns: 1fr; }
+  .screenshots h2, .features h2, .whats-new h2, .download h2 { font-size: 32px; }
+}
+@media (max-width: 480px) {
+  .hero h1 { font-size: 28px; }
+  .hero .subtitle { font-size: 14px; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .req-grid { grid-template-columns: 1fr; }
+  .nav-links a[href] { display: none; }
+  .hero-ctas { flex-direction: column; align-items: center; }
+  .btn-primary, .btn-outline { width: 100%; max-width: 280px; justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-inner">
+    <span class="nav-brand">Linkori</span>
+    <div class="nav-links">
+      <a href="#features" data-en="Features" data-ja="機能">Features</a>
+      <a href="#whats-new" data-en="What's New" data-ja="新機能">What's New</a>
+      <a href="#download" data-en="Download" data-ja="ダウンロード">Download</a>
+      <a href="https://github.com/tmd-0x5a/linkori" target="_blank" rel="noopener">GitHub</a>
+      <div class="lang-switch">
+        <button onclick="setLang('en')" id="btn-en" class="active">EN</button>
+        <button onclick="setLang('ja')" id="btn-ja">JA</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero" id="top">
+  <img src="https://raw.githubusercontent.com/tmd-0x5a/linkori/main/src-tauri/icons/icon.ico" alt="Linkori" class="hero-icon">
+  <h1>Linkori</h1>
+  <p class="subtitle" data-en="Local manga &amp; image viewer with playlist system." data-ja="プレイリストで複数フォルダ・ZIPを連続閲覧できる漫画ビューア。">Local manga &amp; image viewer with playlist system.</p>
+  <span class="version-badge">v0.3.0</span>
+  <div class="hero-ctas">
+    <a href="https://github.com/user-attachments/files/26654421/Linkori_0.3.0_x64-setup.zip" class="btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span data-en="Download for Windows" data-ja="Windows 版をダウンロード">Download for Windows</span>
+    </a>
+    <a href="https://github.com/tmd-0x5a/linkori" class="btn-outline" target="_blank" rel="noopener" data-en="View on GitHub" data-ja="GitHub で見る">View on GitHub</a>
+  </div>
+  <p class="hero-note" data-en="Windows 10 / 11 (x64) — Free &amp; Open Source (MIT)" data-ja="Windows 10 / 11 (x64) — 無料・オープンソース (MIT)">Windows 10 / 11 (x64) — Free &amp; Open Source (MIT)</p>
+</section>
+
+<!-- Screenshots -->
+<section class="screenshots" id="screenshots">
+  <h2 data-en="See it in action." data-ja="スクリーンショット。">See it in action.</h2>
+  <div class="screenshot-grid">
+    <div class="screenshot-card">
+      <img src="ビューア画面.png" alt="Viewer" loading="lazy">
+      <p class="caption" data-en="Viewer — Spread mode with right-to-left reading" data-ja="ビューア — 見開き表示・右から左読み">Viewer — Spread mode with right-to-left reading</p>
+    </div>
+    <div class="screenshot-card">
+      <img src="プレイリスト画面.png" alt="Playlist" loading="lazy">
+      <p class="caption" data-en="Playlist — Organize your reading with chunks" data-ja="プレイリスト — チャンクで読書範囲を管理">Playlist — Organize your reading with chunks</p>
+    </div>
+    <div class="screenshot-card">
+      <img src="ファイルブラウザ.png" alt="File Browser" loading="lazy">
+      <p class="caption" data-en="File Browser — Navigate folders and ZIPs" data-ja="ファイルブラウザ — フォルダ・ZIPを自由に探索">File Browser — Navigate folders and ZIPs</p>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features" id="features">
+  <h2 data-en="Everything you need to read." data-ja="読むために必要な、すべて。">Everything you need to read.</h2>
+  <p class="section-sub" data-en="Folders, ZIPs, and playlists — all in one app." data-ja="フォルダ、ZIP、プレイリスト — ひとつのアプリで。">Folders, ZIPs, and playlists — all in one app.</p>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <h3 data-en="Spread &amp; Single View" data-ja="見開き・1枚表示">Spread &amp; Single View</h3>
+      <p data-en="Toggle between two-page spread and single-page mode. Right-to-left reading for manga." data-ja="2枚見開きと1枚表示をワンタッチで切替。漫画に最適な右から左読み。">Toggle between two-page spread and single-page mode. Right-to-left reading for manga.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <h3 data-en="Playlist System" data-ja="プレイリスト">Playlist System</h3>
+      <p data-en="Chain multiple folders and ZIPs into a single continuous reading session with chunks." data-ja="複数のフォルダ・ZIPをチャンクで連結し、1つの連続した読書セッションに。">Chain multiple folders and ZIPs into a single continuous reading session with chunks.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+      </div>
+      <h3 data-en="Built-in File Browser" data-ja="内蔵ファイルブラウザ">Built-in File Browser</h3>
+      <p data-en="Navigate drives, folders, and ZIP archives with sorting, thumbnails, and grid view." data-ja="ドライブ・フォルダ・ZIPをサムネイル付きで探索。ソートやグリッド表示にも対応。">Navigate drives, folders, and ZIP archives with sorting, thumbnails, and grid view.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <h3 data-en="Instant Open" data-ja="即座に開く">Instant Open</h3>
+      <p data-en="Viewer opens immediately. Images load on demand as you read — no waiting." data-ja="ビューアは一瞬で起動。画像は読み進めながら必要な分だけ読み込む遅延方式。">Viewer opens immediately. Images load on demand as you read — no waiting.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <h3 data-en="ZIP &amp; CBZ Support" data-ja="ZIP・CBZ 対応">ZIP &amp; CBZ Support</h3>
+      <p data-en="Read directly from ZIP archives including subdirectories. Shift-JIS filenames handled correctly." data-ja="ZIPアーカイブ内のサブディレクトリも直接読み込み。Shift-JIS ファイル名にも対応。">Read directly from ZIP archives including subdirectories. Shift-JIS filenames handled correctly.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </div>
+      <h3 data-en="EN / JA Language" data-ja="日本語 / English">EN / JA Language</h3>
+      <p data-en="Switch UI language between English and Japanese. Preference is saved across sessions." data-ja="UIの言語を日本語・英語に切り替え可能。設定は次回起動時にも引き継ぎ。">Switch UI language between English and Japanese. Preference is saved across sessions.</p>
+    </div>
+  </div>
+</section>
+
+<!-- What's New -->
+<section class="whats-new" id="whats-new">
+  <h2 data-en="What's new in v0.3.0." data-ja="v0.3.0 の新機能。">What's new in v0.3.0.</h2>
+  <p class="section-sub" data-en="Resume reading &amp; snappy seek." data-ja="続きから読める。サクサクシーク。">Resume reading &amp; snappy seek.</p>
+  <div class="new-grid">
+    <div class="new-card">
+      <span class="tag" data-en="New" data-ja="新機能">New</span>
+      <h3 data-en="Reading Position Memory" data-ja="閲覧位置の記憶">Reading Position Memory</h3>
+      <p data-en="Automatically saves and restores your last viewed page and display settings (single / spread) per playlist. Persists across app restarts." data-ja="プレイリストごとに最後に見たページと表示設定（1枚/見開き）を自動保存。アプリを閉じても次回起動時に復元。">Automatically saves and restores your last viewed page and display settings (single / spread) per playlist. Persists across app restarts.</p>
+    </div>
+    <div class="new-card">
+      <span class="tag" data-en="Improved" data-ja="改善">Improved</span>
+      <h3 data-en="Faster Seek-bar Thumbnails" data-ja="シークバーサムネイル高速化">Faster Seek-bar Thumbnails</h3>
+      <p data-en="Thumbnails now generate outward from the current page. Already-loaded images are resized instantly in the browser — no IPC overhead." data-ja="現在ページ付近から優先的にサムネイルを生成。読み込み済み画像はブラウザ側で即座にリサイズ。">Thumbnails now generate outward from the current page. Already-loaded images are resized instantly in the browser — no IPC overhead.</p>
+    </div>
+    <div class="new-card">
+      <span class="tag" data-en="New" data-ja="新機能">New</span>
+      <h3 data-en="manga:// Protocol" data-ja="manga:// プロトコル">manga:// Protocol</h3>
+      <p data-en="Images are now served via a custom protocol handler instead of base64 IPC. Lower memory usage and faster rendering." data-ja="カスタムプロトコルで画像を直接配信。base64 IPC を廃止し、メモリ使用量削減と描画高速化を実現。">Images are now served via a custom protocol handler instead of base64 IPC. Lower memory usage and faster rendering.</p>
+    </div>
+    <div class="new-card">
+      <span class="tag" data-en="New" data-ja="新機能">New</span>
+      <h3 data-en="Chunk Preview" data-ja="チャンクプレビュー">Chunk Preview</h3>
+      <p data-en="Click the eye icon on a chunk card to browse its images as thumbnails before opening the viewer. Image count badges on every card." data-ja="チャンクカードの目のアイコンでサムネイル一覧を表示。各カードに画像枚数バッジも追加。">Click the eye icon on a chunk card to browse its images as thumbnails before opening the viewer. Image count badges on every card.</p>
+    </div>
+  </div>
+</section>
+
+<!-- System Requirements -->
+<section class="requirements">
+  <h2 data-en="System Requirements" data-ja="動作環境">System Requirements</h2>
+  <div class="req-grid">
+    <div class="req-item">
+      <h4>OS</h4>
+      <p>Windows 10 / 11 (x64)</p>
+    </div>
+    <div class="req-item">
+      <h4 data-en="Runtime" data-ja="ランタイム">Runtime</h4>
+      <p data-en="WebView2 (built into Win 11, auto-installed on Win 10)" data-ja="WebView2（Win 11 標準搭載、Win 10 は自動インストール）">WebView2 (built into Win 11, auto-installed on Win 10)</p>
+    </div>
+    <div class="req-item">
+      <h4 data-en="Images" data-ja="画像形式">Images</h4>
+      <p>JPEG, PNG, GIF, WebP, BMP, TIFF</p>
+    </div>
+    <div class="req-item">
+      <h4 data-en="Archives" data-ja="アーカイブ">Archives</h4>
+      <p data-en=".zip / .cbz (including subdirectories)" data-ja=".zip / .cbz（サブディレクトリ対応）">.zip / .cbz (including subdirectories)</p>
+    </div>
+  </div>
+</section>
+
+<!-- Download -->
+<section class="download" id="download">
+  <h2 data-en="Ready to read." data-ja="さあ、読もう。">Ready to read.</h2>
+  <p class="section-sub" data-en="Free, open source, and runs entirely locally." data-ja="無料・オープンソース。すべてローカルで動作。">Free, open source, and runs entirely locally.</p>
+  <div class="download-ctas">
+    <a href="https://github.com/user-attachments/files/26654421/Linkori_0.3.0_x64-setup.zip" class="btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span data-en="Download v0.3.0" data-ja="v0.3.0 をダウンロード">Download v0.3.0</span>
+    </a>
+    <a href="https://github.com/tmd-0x5a/linkori" class="btn-outline" target="_blank" rel="noopener" data-en="Source Code" data-ja="ソースコード">Source Code</a>
+  </div>
+  <p class="note" data-en="Download the installer (.exe) or MSI from the GitHub Releases page. No data is ever sent to external servers. Everything stays on your machine." data-ja="GitHub Releases ページからインストーラー (.exe) または MSI をダウンロードしてください。外部サーバーへのデータ送信は一切ありません。すべてお使いのPC内で完結します。">Download the installer (.exe) or MSI from the GitHub Releases page.<br>No data is ever sent to external servers. Everything stays on your machine.</p>
+</section>
+
+<!-- Disclaimer -->
+<section class="requirements">
+  <h2 data-en="Disclaimer" data-ja="免責事項">Disclaimer</h2>
+  <div style="max-width:640px; margin:0 auto; text-align:left;">
+    <p style="font-size:13px; color:rgba(0,0,0,0.56); letter-spacing:-0.16px; line-height:1.6;">
+      <span data-en="This software is provided &quot;as is&quot; without warranty of any kind, express or implied. The author shall not be liable for any damages arising from the use of this software. You are solely responsible for ensuring that your use of any content complies with applicable copyright laws. This application runs entirely locally and never transmits data to external servers." data-ja="本ソフトウェアは現状有姿（AS IS）で提供され、明示・暗示を問わずいかなる保証もありません。本ソフトウェアの使用によって生じたいかなる損害についても、作者は一切の責任を負いません。著作権で保護されたコンテンツの取り扱いは、ユーザー自身の責任において適法に行ってください。本アプリケーションはローカル環境のみで動作し、外部サーバーへのデータ送信は一切行いません。">This software is provided &quot;as is&quot; without warranty of any kind, express or implied. The author shall not be liable for any damages arising from the use of this software. You are solely responsible for ensuring that your use of any content complies with applicable copyright laws. This application runs entirely locally and never transmits data to external servers.</span>
+    </p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-inner">
+    <p>
+      <span data-en="Linkori is open source under the" data-ja="Linkori は">Linkori is open source under the</span>
+      <a href="https://github.com/tmd-0x5a/linkori/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a><span data-en="." data-ja=" のオープンソースです。">.</span><br>
+      &copy; 2025 tmd-0x5a &mdash;
+      <a href="https://github.com/tmd-0x5a/linkori" target="_blank" rel="noopener">GitHub</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// 言語切り替え
+function setLang(lang) {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-en][data-ja]').forEach(el => {
+    const text = el.getAttribute('data-' + lang);
+    if (text) el.innerHTML = text;
+  });
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-ja').classList.toggle('active', lang === 'ja');
+  try { localStorage.setItem('linkori-lang', lang); } catch {}
+}
+
+// 初期化：ブラウザの言語設定に合わせる
+(function() {
+  var saved = null;
+  try { saved = localStorage.getItem('linkori-lang'); } catch {}
+  if (saved === 'ja' || saved === 'en') {
+    setLang(saved);
+  } else if (navigator.language && navigator.language.startsWith('ja')) {
+    setLang('ja');
+  }
+})();
+</script>
+
+</body>
+</html>
