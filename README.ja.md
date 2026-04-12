@@ -2,6 +2,10 @@
 
 [English](README.md) | **日本語**
 
+プレイリストで複数フォルダ・ZIPを連続閲覧できるローカル漫画ビューア。
+
+**[公式サイト](https://tmd-0x5a.github.io/linkori/)** | **[ダウンロード](https://github.com/tmd-0x5a/linkori/releases/latest)**
+
 ## スクリーンショット
 
 **プレイリスト画面**

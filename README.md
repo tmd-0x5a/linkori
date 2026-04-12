@@ -4,6 +4,8 @@
 
 A local manga and image viewer. Read multiple folders and ZIP archives in sequence using a playlist system.
 
+**[Website](https://tmd-0x5a.github.io/linkori/)** | **[Download](https://github.com/tmd-0x5a/linkori/releases/latest)**
+
 ## Screenshots
 
 **Playlist Screen**
