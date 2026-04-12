@@ -4,6 +4,7 @@ export const translations = {
   ja: {
     // --- 共通 ---
     cancel:      "キャンセル",
+    confirm:     "確認",
     delete:      "削除",
     rename:      "名前変更",
     save:        "保存",
@@ -75,8 +76,20 @@ export const translations = {
     zipType:             "ZIPアーカイブ",
     imageType:           "画像",
 
-    // --- ViewerCanvas ---
-    viewerLoading:    "画像を読み込んでいます...",
+    // --- ViewerCanvas / viewerStore ---
+    chunkOf:             (ci: number, total: number) => `チャンク ${ci}/${total}`,
+    prevChunk:           "前のチャンクへ（]）",
+    nextChunk:           "次のチャンクへ（[）",
+    fullscreen:          "フルスクリーン（F）",
+    exitFullscreen:      "フルスクリーン終了（F / Esc）",
+    viewerLoading:       "画像を読み込んでいます...",
+    noImages:            "表示できる画像がありません",
+    imageLoadFailed:     "読み込み失敗",
+    playlistNotFound:    "プレイリストが見つかりません",
+    noImagesInPlaylist:  "表示可能な画像がありません",
+    chunkLoadErrors:     (s: string) => `画像を読み込めませんでした:\n${s}`,
+    chunkPartialErrors:  (s: string) => `一部のチャンクを読み込めませんでした（他のチャンクは表示できます）:\n${s}`,
+    viewerLoadFailed:    "画像の読み込みに失敗しました",
     home:             "ホーム",
     homeTitle:        "ホームに戻る（Esc）",
     singlePage:       "1枚",
@@ -88,6 +101,16 @@ export const translations = {
     // --- ImageFilePicker ---
     browseTitle: "ファイル・フォルダを選択",
 
+    // --- ChunkCard プレビュー ---
+    chunkImageCount:  (n: number) => `${n}枚`,
+    previewChunk:     "画像を確認",
+    previewClose:     "閉じる",
+    imagesCount:      (n: number) => `全 ${n} 枚`,
+    previewFailed:    "プレビューの読み込みに失敗しました",
+
+    // --- FileBrowserDialog: フォルダ制限 ---
+    restrictedFolder: "このフォルダ内のみ",
+
     // --- 言語切り替え ---
     langToggle: "English",
   },
@@ -95,6 +118,7 @@ export const translations = {
   en: {
     // --- Common ---
     cancel:      "Cancel",
+    confirm:     "Confirm",
     delete:      "Delete",
     rename:      "Rename",
     save:        "Save",
@@ -166,8 +190,20 @@ export const translations = {
     zipType:             "ZIP archive",
     imageType:           "Image",
 
-    // --- ViewerCanvas ---
-    viewerLoading:   "Loading images...",
+    // --- ViewerCanvas / viewerStore ---
+    chunkOf:             (ci: number, total: number) => `Chunk ${ci}/${total}`,
+    prevChunk:           "Prev chunk (])",
+    nextChunk:           "Next chunk ([)",
+    fullscreen:          "Fullscreen (F)",
+    exitFullscreen:      "Exit fullscreen (F / Esc)",
+    viewerLoading:       "Loading images...",
+    noImages:            "No images to display",
+    imageLoadFailed:     "Load failed",
+    playlistNotFound:    "Playlist not found",
+    noImagesInPlaylist:  "No images available",
+    chunkLoadErrors:     (s: string) => `Failed to load images:\n${s}`,
+    chunkPartialErrors:  (s: string) => `Some chunks could not be loaded (others are still viewable):\n${s}`,
+    viewerLoadFailed:    "Failed to load images",
     home:            "Home",
     homeTitle:       "Back to home (Esc)",
     singlePage:      "1-up",
@@ -178,6 +214,16 @@ export const translations = {
 
     // --- ImageFilePicker ---
     browseTitle: "Browse files and folders",
+
+    // --- ChunkCard preview ---
+    chunkImageCount:  (n: number) => `${n} images`,
+    previewChunk:     "Preview images",
+    previewClose:     "Close",
+    imagesCount:      (n: number) => `${n} images`,
+    previewFailed:    "Failed to load preview",
+
+    // --- FileBrowserDialog: folder restriction ---
+    restrictedFolder: "This folder only",
 
     // --- Language toggle ---
     langToggle: "日本語",

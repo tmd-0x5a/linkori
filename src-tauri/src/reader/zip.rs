@@ -73,7 +73,10 @@ pub fn list_images_in_zip_range(
     };
 
     if start_idx > end_idx {
-        return Err("開始エントリが終了エントリより後にあります（自然順ソート順）".to_string());
+        // 逆順チャンク: end→start の範囲を逆順で返す（例: 027.jpg→001.jpg）
+        let mut range = all_images[end_idx..=start_idx].to_vec();
+        range.reverse();
+        return Ok(range);
     }
 
     Ok(all_images[start_idx..=end_idx].to_vec())

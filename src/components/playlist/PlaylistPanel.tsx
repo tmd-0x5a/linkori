@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePlaylistStore } from "@/stores/playlistStore";
 import { useViewerStore } from "@/stores/viewerStore";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -67,6 +67,24 @@ export function PlaylistPanel({ onStartViewer }: PlaylistPanelProps) {
     }
     setRenamingId(null);
   }
+
+  // プレイリスト操作のキーボードショートカット（入力中は無視）
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (!activePlaylistId) return;
+      if (e.key === "F2") {
+        e.preventDefault();
+        const pl = playlists.find((p) => p.id === activePlaylistId);
+        if (pl) handleStartRename(pl.id, pl.name);
+      } else if (e.key === "Delete") {
+        e.preventDefault();
+        setDeleteTarget(activePlaylistId);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activePlaylistId, playlists]);
 
   async function handleStartViewer() {
     if (!activePlaylistId) return;

@@ -70,6 +70,17 @@ pub async fn validate_chunk(
     start_path: String,
     end_path: String,
 ) -> Result<ChunkValidationResult, String> {
+    // end_path が空 → resolve_from_start_only と同じ挙動（フォルダ/ZIP全体）
+    if end_path.trim().is_empty() {
+        let paths = resolve_from_start_only(&start_path)?;
+        return Ok(ChunkValidationResult {
+            is_valid: true,
+            image_count: paths.len(),
+            error_message: None,
+            image_paths: paths,
+        });
+    }
+
     let start_type = classify_path(&start_path);
     let end_type = classify_path(&end_path);
 

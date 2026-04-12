@@ -1,6 +1,6 @@
 [package]
 name = "linkori"
-version = "0.2.0"
+version = "0.3.0"
 description = "A manga reader with playlist and chunk linking"
 authors = ["you"]
 license = ""
@@ -32,4 +32,5 @@ uuid = { version = "1.0", features = ["v4"] }
 percent-encoding = "2.3"
 urlencoding = "2.1"
 imagesize = "0.13"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "gif", "bmp"] }
 encoding_rs = "0.8"

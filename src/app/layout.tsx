@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Linkori",
-  description: "チャンクリンクで読むマンガビューア",
+  description: "Local manga and image viewer with playlist and chunk linking",
 };
 
 export default function RootLayout({

@@ -31,9 +31,11 @@ export interface ImageFilePickerProps {
   placeholder?: string;
   disabled?: boolean;
   initialBrowsePath?: string;
+  /** このパス内のみ選択を許可する（終了パス選択時など） */
+  restrictToDir?: string;
 }
 
-export function ImageFilePicker({ label, value, onChange, placeholder, disabled, initialBrowsePath }: ImageFilePickerProps) {
+export function ImageFilePicker({ label, value, onChange, placeholder, disabled, initialBrowsePath, restrictToDir }: ImageFilePickerProps) {
   const t = useT();
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [browserOpen, setBrowserOpen] = useState(false);
@@ -105,6 +107,7 @@ export function ImageFilePicker({ label, value, onChange, placeholder, disabled,
         onClose={() => setBrowserOpen(false)}
         onSelect={(path) => { onChange(path); setBrowserOpen(false); }}
         initialPath={initialBrowsePath}
+        restrictToDir={restrictToDir}
       />
     </div>
   );

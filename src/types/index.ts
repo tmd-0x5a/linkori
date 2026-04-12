@@ -33,6 +33,14 @@ export interface ImageFileInfo {
   height?: number;
 }
 
+/** validate_chunk の戻り値 */
+export interface ChunkValidationResult {
+  is_valid: boolean;
+  image_count: number;
+  error_message: string | null;
+  image_paths: string[];
+}
+
 /** ファイルエントリ（browse_directory / browse_zip の戻り値） */
 export interface FileEntry {
   name: string;

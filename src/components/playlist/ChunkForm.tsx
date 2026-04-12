@@ -25,6 +25,18 @@ function getParentPath(path: string): string | undefined {
   return normalized.slice(0, lastSlash);
 }
 
+/** 終了パス選択を制限するディレクトリを開始パスから算出する */
+function getRestrictDir(startPath: string): string | undefined {
+  if (!startPath.trim()) return undefined;
+  const norm = startPath.replace(/\\/g, "/");
+  const lower = norm.toLowerCase();
+  for (const ext of [".zip/", ".cbz/"]) {
+    const idx = lower.indexOf(ext);
+    if (idx !== -1) return norm.slice(0, idx + ext.length - 1);
+  }
+  return getParentPath(norm);
+}
+
 function isDirectoryLike(path: string): boolean {
   if (!path.trim()) return false;
   const normalized = path.replace(/\\/g, "/").replace(/\/+$/, "");
@@ -116,6 +128,7 @@ export function ChunkForm({ onAdd, addTrigger, onCancel, initialBrowsePath }: Ch
         placeholder={startIsDir ? t.endPathDirPlaceholder : t.endPathFilePlaceholder}
         disabled={startIsDir}
         initialBrowsePath={getParentPath(startPath)}
+        restrictToDir={startPath.trim() && !startIsDir ? getRestrictDir(startPath) : undefined}
       />
 
       <div className="flex justify-end gap-2">

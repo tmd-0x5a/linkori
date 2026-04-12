@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useViewerStore } from "@/stores/viewerStore";
-import { readImageAsDataUrl } from "@/lib/tauri";
+import { readImageAsDataUrl, readImageThumbnail } from "@/lib/tauri";
 import { cn } from "@/lib/cn";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useT } from "@/hooks/useT";
@@ -19,53 +20,203 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
     totalPages,
     isLoading,
     loadError,
+    chunkWarning,
     settings,
+    chunkBoundaries,
     nextSpread,
     prevSpread,
     goToPage,
     goToFirst,
     goToLast,
+    nextChunk,
+    prevChunk,
     updateSettings,
+    dismissWarning,
   } = useViewerStore();
+
+  // 現在いるチャンクのインデックスを算出
+  const currentChunkBoundary = [...chunkBoundaries].reverse().find(
+    (b) => b.startPage <= currentPageIndex
+  ) ?? chunkBoundaries[0];
+
+  // フルスクリーン状態
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const isFullscreenRef = useRef(false);
+
+  const toggleFullscreen = useCallback(async () => {
+    const win = getCurrentWindow();
+    const next = !isFullscreenRef.current;
+    await win.setFullscreen(next);
+    isFullscreenRef.current = next;
+    setIsFullscreen(next);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (isFullscreenRef.current) {
+        getCurrentWindow().setFullscreen(false).catch(() => {});
+        isFullscreenRef.current = false;
+      }
+    };
+  }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [direction, setDirection] = useState(0);
   const prevIndexRef = useRef(currentPageIndex);
   const shouldReduceMotion = useReducedMotion();
 
-  // path → data URL のキャッシュ（ページ移動時に都度読み込まないよう保持）
+  // シークバーホバー
+  const [hoverInfo, setHoverInfo] = useState<{ pageIndex: number; x: number } | null>(null);
+
+  // path → data URL キャッシュ（ビューア画像用）
   const imageCacheRef = useRef<Map<string, string>>(new Map());
+  const failedPathsRef = useRef<Set<string>>(new Set());
+  const loadingPathsRef = useRef<Set<string>>(new Set());
   const [, forceUpdate] = useState(0);
 
-  // 現在ページ（見開き含む）+ 先読みページを非同期で読み込む
+  // サムネイル専用キャッシュ（低品質・小サイズで高速）
+  const thumbCacheRef = useRef<Map<string, string>>(new Map());
+  const thumbLoadingRef = useRef<Set<string>>(new Set());
+  const [thumbTick, setThumbTick] = useState(0);
+
+  // キャッシュ保持ウィンドウ
+  const CACHE_BEHIND = 6;
+  const CACHE_AHEAD = 10;
+
+  // flatImageList が変わったらキャッシュクリア
+  const prevListIdRef = useRef("");
+  const listId = flatImageList.length > 0 ? `${flatImageList.length}:${flatImageList[0]}` : "";
+  if (listId !== prevListIdRef.current) {
+    if (prevListIdRef.current !== "") {
+      imageCacheRef.current.clear();
+      failedPathsRef.current.clear();
+      loadingPathsRef.current.clear();
+      thumbCacheRef.current.clear();
+      thumbLoadingRef.current.clear();
+    }
+    prevListIdRef.current = listId;
+  }
+
+  // メイン画像読み込み（ガード付きで毎レンダー実行）
+  // loadingPathsRef で重複リクエスト防止
+  if (flatImageList.length > 0) {
+    const step = settings.spreadMode ? 2 : 1;
+    for (let i = currentPageIndex; i < Math.min(currentPageIndex + step * 3, flatImageList.length); i++) {
+      const path = flatImageList[i];
+      if (!path || imageCacheRef.current.has(path) || failedPathsRef.current.has(path) || loadingPathsRef.current.has(path)) continue;
+      loadingPathsRef.current.add(path);
+      readImageAsDataUrl(path)
+        .then((url) => {
+          imageCacheRef.current.set(path, url);
+          loadingPathsRef.current.delete(path);
+          // キャッシュウィンドウ外を削除
+          const ci = useViewerStore.getState().currentPageIndex;
+          for (const [p] of imageCacheRef.current) {
+            const pIdx = flatImageList.indexOf(p);
+            if (pIdx !== -1 && (pIdx < ci - CACHE_BEHIND || pIdx > ci + CACHE_AHEAD)) {
+              imageCacheRef.current.delete(p);
+            }
+          }
+          forceUpdate(n => n + 1);
+        })
+        .catch(() => {
+          failedPathsRef.current.add(path);
+          loadingPathsRef.current.delete(path);
+          forceUpdate(n => n + 1);
+        });
+    }
+  }
+
+  // メイン画像キャッシュからcanvasリサイズでサムネ即時生成
+  const generateThumbFromCache = useCallback((path: string, dataUrl: string, size: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(size / img.width, size / img.height, 1);
+        const w = Math.round(img.width * scale) || 1;
+        const h = Math.round(img.height * scale) || 1;
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("canvas")); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.3));
+      };
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+  }, []);
+
+  // サムネイルを現在ページ付近から外側に向かってプリフェッチ
+  const thumbPrefetchPageRef = useRef(0);
+  useEffect(() => {
+    thumbPrefetchPageRef.current = currentPageIndex;
+  }, [currentPageIndex]);
+
   useEffect(() => {
     if (flatImageList.length === 0) return;
 
-    const step = settings.spreadMode ? 2 : 1;
-    // 現在ページ + 先読み2スプレッド分のインデックスを対象にする
-    const indices = new Set<number>();
-    for (let i = currentPageIndex; i < Math.min(currentPageIndex + step * 3, flatImageList.length); i++) {
-      indices.add(i);
-    }
+    let stopped = false;
+    const THUMB_SIZE = 80;
+    const BATCH = 4;
 
-    let cancelled = false;
-    (async () => {
-      for (const idx of indices) {
-        const path = flatImageList[idx];
-        if (!path || imageCacheRef.current.has(path)) continue;
-        try {
-          const url = await readImageAsDataUrl(path);
-          if (cancelled) return;
-          imageCacheRef.current.set(path, url);
-          forceUpdate((n) => n + 1);
-        } catch {
-          // 読み込み失敗はスキップ
+    // 現在ページから外側に広がるインデックス順を生成
+    function buildOrder(center: number, total: number): number[] {
+      const order: number[] = [];
+      const seen = new Set<number>();
+      // まず中心付近を優先
+      for (let d = 0; d < total; d++) {
+        for (const idx of [center + d, center - d]) {
+          if (idx >= 0 && idx < total && !seen.has(idx)) {
+            seen.add(idx);
+            order.push(idx);
+          }
         }
       }
-    })();
+      return order;
+    }
 
-    return () => { cancelled = true; };
-  }, [currentPageIndex, flatImageList, settings.spreadMode]);
+    async function run() {
+      const center = thumbPrefetchPageRef.current;
+      const order = buildOrder(center, flatImageList.length);
+
+      for (let bStart = 0; bStart < order.length; bStart += BATCH) {
+        if (stopped) break;
+        const batch: string[] = [];
+        for (let j = bStart; j < Math.min(bStart + BATCH, order.length); j++) {
+          const p = flatImageList[order[j]];
+          if (p && !thumbCacheRef.current.has(p) && !thumbLoadingRef.current.has(p)) {
+            batch.push(p);
+          }
+        }
+        if (batch.length === 0) continue;
+        batch.forEach(p => thumbLoadingRef.current.add(p));
+        await Promise.all(batch.map(async (p) => {
+          try {
+            // メイン画像キャッシュにあればcanvasリサイズ（即時、IPC不要）
+            const cached = imageCacheRef.current.get(p);
+            if (cached) {
+              const url = await generateThumbFromCache(p, cached, THUMB_SIZE);
+              if (!stopped) thumbCacheRef.current.set(p, url);
+            } else {
+              const url = await readImageThumbnail(p, THUMB_SIZE);
+              if (!stopped) thumbCacheRef.current.set(p, url);
+            }
+          } catch {
+            // サムネ失敗は無視
+          } finally {
+            thumbLoadingRef.current.delete(p);
+          }
+        }));
+        if (!stopped) setThumbTick(n => n + 1);
+      }
+    }
+
+    run();
+    return () => { stopped = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listId, generateThumbFromCache]);
 
   useEffect(() => {
     if (currentPageIndex !== prevIndexRef.current) {
@@ -91,28 +242,23 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
   // キーボードナビゲーション
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      // 入力中は無視
       if (e.target instanceof HTMLInputElement) return;
       switch (e.key) {
-        // 次ページ
         case "ArrowLeft":
         case "ArrowUp":
           e.preventDefault();
           nextSpread();
           break;
-        // 前ページ
         case "ArrowRight":
         case "ArrowDown":
           e.preventDefault();
           prevSpread();
           break;
-        // スペース: 次ページ / Shift+スペース: 前ページ
         case " ":
           e.preventDefault();
           if (e.shiftKey) prevSpread();
           else nextSpread();
           break;
-        // PageDown: 次ページ / PageUp: 前ページ
         case "PageDown":
           e.preventDefault();
           nextSpread();
@@ -129,22 +275,37 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
           e.preventDefault();
           goToLast();
           break;
-        case "Escape":
-          e.preventDefault();
-          onBack();
-          break;
-        // S: 1枚 / 2枚 切替
         case "s":
         case "S":
           e.preventDefault();
           updateSettings({ spreadMode: !settings.spreadMode });
           break;
+        case "[":
+          e.preventDefault();
+          nextChunk();
+          break;
+        case "]":
+          e.preventDefault();
+          prevChunk();
+          break;
+        case "f":
+        case "F":
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        case "Escape":
+          e.preventDefault();
+          if (isFullscreenRef.current) {
+            toggleFullscreen();
+          } else {
+            onBack();
+          }
+          break;
       }
     },
-    [settings, nextSpread, prevSpread, goToFirst, goToLast, onBack, updateSettings]
+    [settings, nextSpread, prevSpread, goToFirst, goToLast, onBack, updateSettings, prevChunk, nextChunk, toggleFullscreen]
   );
 
-  // マウスホイールナビゲーション（スロットル付き）
   const lastWheelTime = useRef(0);
   const handleWheel = useCallback(
     (e: WheelEvent) => {
@@ -160,7 +321,6 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
-    // passive: false でスクロールのデフォルト動作をキャンセル
     window.addEventListener("wheel", handleWheel, { passive: false });
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
@@ -168,7 +328,6 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
     };
   }, [handleKeyDown, handleWheel]);
 
-  // クリックナビゲーション（左半分 ← / 右半分 →）
   function handleClick(e: React.MouseEvent) {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -184,36 +343,36 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
     }
   }
 
-  // パスから読み込み済み data URL を取得（未読み込みは空文字）
-  function resolveUrl(path: string): string {
-    return imageCacheRef.current.get(path) ?? "";
+  type SlotState = { url: string } | { failed: true } | { loading: true };
+
+  function resolveSlot(path: string | undefined): SlotState | null {
+    if (!path) return null;
+    if (failedPathsRef.current.has(path)) return { failed: true };
+    const url = imageCacheRef.current.get(path);
+    if (url) return { url };
+    return { loading: true };
   }
 
-  // 現在表示すべき画像 URL を決定（キャッシュから取得）
-  function getCurrentImages(): string[] {
+  function getCurrentSlots(): SlotState[] {
     if (totalPages === 0) return [];
 
     if (settings.spreadMode) {
-      // 見開きモード: 2枚表示
-      const images: string[] = [];
-      const url0 = flatImageList[currentPageIndex] ? resolveUrl(flatImageList[currentPageIndex]) : "";
-      if (url0) images.push(url0);
-      const url1 = currentPageIndex + 1 < totalPages && flatImageList[currentPageIndex + 1]
-        ? resolveUrl(flatImageList[currentPageIndex + 1])
-        : "";
-      if (url1) images.push(url1);
-      return settings.rightToLeft ? images.reverse() : images;
+      const slots: SlotState[] = [];
+      const s0 = resolveSlot(flatImageList[currentPageIndex]);
+      if (s0 !== null) slots.push(s0);
+      const s1 = currentPageIndex + 1 < totalPages
+        ? resolveSlot(flatImageList[currentPageIndex + 1])
+        : null;
+      if (s1 !== null) slots.push(s1);
+      return settings.rightToLeft ? slots.reverse() : slots;
     } else {
-      // 単ページモード
-      const path = flatImageList[currentPageIndex];
-      const url = path ? resolveUrl(path) : "";
-      return url ? [url] : [];
+      const s = resolveSlot(flatImageList[currentPageIndex]);
+      return s !== null ? [s] : [];
     }
   }
 
-  const currentImages = getCurrentImages();
+  const currentSlots = getCurrentSlots();
 
-  // ローディング
   if (isLoading) {
     return (
       <div className="flex h-dvh items-center justify-center bg-black">
@@ -225,7 +384,6 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
     );
   }
 
-  // エラー
   if (loadError) {
     return (
       <div className="flex h-dvh flex-col items-center justify-center bg-black">
@@ -246,12 +404,10 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
     ? `${currentPageIndex + 1}–${Math.min(currentPageIndex + 2, totalPages)}`
     : `${currentPageIndex + 1}`;
 
-  // 残りページ数（見開きモードは2枚単位）
   const remaining = settings.spreadMode
     ? Math.max(0, Math.ceil((totalPages - currentPageIndex - 2) / 2))
     : Math.max(0, totalPages - currentPageIndex - 1);
 
-  // プログレスバーの幅（%）
   const progressPct = totalPages > 1
     ? (currentPageIndex / (totalPages - 1)) * 100
     : 100;
@@ -264,7 +420,7 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
         onClick={handleClick}
       >
         <AnimatePresence initial={false} custom={direction}>
-          {currentImages.length === 0 ? (
+          {currentSlots.length === 0 ? (
             <motion.p
               key="empty"
               className="text-sm text-zinc-500 absolute"
@@ -272,7 +428,7 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              表示できる画像がありません
+              {t.noImages}
             </motion.p>
           ) : (
             <motion.div
@@ -285,26 +441,48 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
               transition={{ duration: 0.15, ease: "easeOut" }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              {currentImages.map((url, i) => (
-                <img
-                  key={`${currentPageIndex}-${i}`}
-                  src={url}
-                  alt={`Page ${currentPageIndex + i + 1}`}
-                  className={cn(
-                    "object-contain",
-                    settings.spreadMode
-                      ? "max-h-dvh max-w-[50%]"
-                      : "max-h-dvh max-w-full w-auto h-full"
-                  )}
-                  draggable={false}
-                />
+              {(currentSlots.filter((s) => s !== null) as NonNullable<SlotState>[]).map((slot, i) => (
+                "failed" in slot ? (
+                  <div
+                    key={`${currentPageIndex}-${i}-err`}
+                    className={cn(
+                      "flex items-center justify-center bg-zinc-900/40",
+                      settings.spreadMode ? "h-full w-[50%]" : "h-full w-full"
+                    )}
+                  >
+                    <span className="text-xs text-zinc-600">{t.imageLoadFailed}</span>
+                  </div>
+                ) : "loading" in slot ? (
+                  <div
+                    key={`${currentPageIndex}-${i}-loading`}
+                    className={cn(
+                      "flex items-center justify-center",
+                      settings.spreadMode ? "h-full w-[50%]" : "h-full w-full"
+                    )}
+                  >
+                    <div className="size-6 rounded-full border-2 border-zinc-700 border-t-blue-500" style={{ animation: "spin 1s linear infinite" }} />
+                  </div>
+                ) : (
+                  <img
+                    key={`${currentPageIndex}-${i}`}
+                    src={slot.url}
+                    alt={`Page ${currentPageIndex + i + 1}`}
+                    className={cn(
+                      "object-contain",
+                      settings.spreadMode
+                        ? "max-h-dvh max-w-[50%]"
+                        : "max-h-dvh max-w-full w-auto h-full"
+                    )}
+                    draggable={false}
+                  />
+                )
               ))}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* 左上: ホームボタン + 表示モード切替（マウスオフ時は完全透明） */}
+      {/* 左上: ホームボタン + 表示モード切替 */}
       <div className="group/top absolute left-4 top-4 z-10 flex items-center gap-2">
         <button
           onClick={(e) => {
@@ -318,7 +496,17 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
           {t.home}
         </button>
 
-        {/* 1枚 / 2枚 トグル */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFullscreen();
+          }}
+          title={isFullscreen ? t.exitFullscreen : t.fullscreen}
+          className="flex items-center gap-1.5 rounded-lg bg-black/40 px-2.5 py-1.5 text-xs text-zinc-400 opacity-0 backdrop-blur-sm transition-all duration-200 group-hover/top:opacity-100 hover:bg-black/70 hover:text-zinc-100"
+        >
+          {isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
+        </button>
+
         <div className="flex overflow-hidden rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm opacity-0 group-hover/top:opacity-100 transition-opacity duration-200">
           <button
             onClick={(e) => {
@@ -353,47 +541,161 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
         </div>
       </div>
 
-      {/* ページバー（ホバーエリア + コンテンツ） */}
+      {/* 一部チャンク失敗時の警告バナー */}
+      {chunkWarning && (
+        <div className="absolute inset-x-0 top-0 z-20 flex items-start gap-2 bg-amber-900/80 px-4 py-2.5 text-xs text-amber-200 backdrop-blur-sm">
+          <svg className="mt-0.5 shrink-0" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span className="flex-1 whitespace-pre-wrap">{chunkWarning}</span>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); dismissWarning(); }}
+            className="shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* ページバー */}
       <div className="group absolute inset-x-0 bottom-0 z-10 h-20">
-        {/* コンテンツ: マウスが乗ったときのみ表示 */}
         <div
           className="absolute inset-x-0 bottom-0 translate-y-full opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="bg-black/85 backdrop-blur-sm px-5 py-3 flex flex-col gap-2">
-            {/* 上段: ページ情報テキスト */}
             <div className="flex items-center justify-between text-xs">
-              {/* 残りページ（左） */}
               <span className="tabular-nums text-zinc-500">
                 {t.remaining(remaining)}
               </span>
 
-              {/* 現在ページ / 全ページ（右） */}
+              {chunkBoundaries.length > 1 && currentChunkBoundary && (
+                <span className="truncate max-w-[40%] text-center text-zinc-400">
+                  {currentChunkBoundary.name
+                    ? currentChunkBoundary.name
+                    : t.chunkOf(currentChunkBoundary.chunkIndex + 1, chunkBoundaries.length)}
+                </span>
+              )}
+
               <span className="tabular-nums font-medium text-zinc-200">
                 {displayPageNum}
                 <span className="ml-1 font-normal text-zinc-500">/ {totalPages}</span>
               </span>
             </div>
 
-            {/* 下段: プログレスバー（クリック＆ドラッグでシーク） */}
-            <div className="relative flex items-center">
-              {/* 背景トラック */}
-              <div className="absolute inset-0 rounded-full bg-zinc-700/60" />
-              {/* 進捗（右から伸びる） */}
-              <div
-                className="absolute right-0 top-0 h-full rounded-full bg-blue-500/70 transition-all duration-100"
-                style={{ width: `${progressPct}%` }}
-              />
-              {/* シークスライダー（透明・手前に重ねる・RTL方向） */}
-              <input
-                type="range"
-                min={0}
-                max={Math.max(0, totalPages - 1)}
-                value={currentPageIndex}
-                onChange={(e) => goToPage(Number(e.target.value))}
-                className="relative z-10 h-3 w-full cursor-pointer appearance-none bg-transparent accent-blue-400"
-                style={{ direction: "rtl" }}
-              />
+            <div className="flex items-center gap-2">
+              {chunkBoundaries.length > 1 && (
+                <button
+                  type="button"
+                  onClick={prevChunk}
+                  title={t.prevChunk}
+                  className="shrink-0 text-zinc-500 hover:text-zinc-200 transition-colors"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="19 20 9 12 19 4" /><line x1="5" y1="19" x2="5" y2="5" />
+                  </svg>
+                </button>
+              )}
+
+              <div className="relative flex flex-1 items-center" onMouseLeave={() => setHoverInfo(null)}>
+                <div className="absolute inset-0 rounded-full bg-zinc-700/60" />
+                <div
+                  className="absolute right-0 top-0 h-full rounded-full bg-blue-500/70 transition-all duration-100"
+                  style={{ width: `${progressPct}%` }}
+                />
+                {totalPages > 1 && chunkBoundaries.slice(1).map((b) => {
+                  const pct = (b.startPage / (totalPages - 1)) * 100;
+                  const isCurrentChunk = currentChunkBoundary?.chunkIndex === b.chunkIndex;
+                  return (
+                    <button
+                      key={b.chunkIndex}
+                      type="button"
+                      onClick={() => goToPage(b.startPage)}
+                      title={b.name ?? t.chunkOf(b.chunkIndex + 1, chunkBoundaries.length)}
+                      className="absolute z-20 h-3 w-0.5 -translate-x-1/2 cursor-pointer rounded-full transition-colors"
+                      style={{
+                        right: `${pct}%`,
+                        backgroundColor: isCurrentChunk ? "rgb(96 165 250)" : "rgba(255,255,255,0.4)",
+                      }}
+                    />
+                  );
+                })}
+                <input
+                  type="range"
+                  min={0}
+                  max={Math.max(0, totalPages - 1)}
+                  value={currentPageIndex}
+                  onChange={(e) => goToPage(Number(e.target.value))}
+                  onMouseMove={(e) => {
+                    if (totalPages <= 1) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const relX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                    const pageIndex = Math.round((1 - relX) * (totalPages - 1));
+                    setHoverInfo({ pageIndex, x: relX });
+                    // サムネイルキャッシュになければ即座に読み込み（プリフェッチ漏れ対策）
+                    const path = flatImageList[pageIndex];
+                    if (path && !thumbCacheRef.current.has(path) && !thumbLoadingRef.current.has(path)) {
+                      thumbLoadingRef.current.add(path);
+                      const cached = imageCacheRef.current.get(path);
+                      const thumbPromise = cached
+                        ? generateThumbFromCache(path, cached, 80)
+                        : readImageThumbnail(path, 80);
+                      thumbPromise
+                        .then((url) => { thumbCacheRef.current.set(path, url); setThumbTick(n => n + 1); })
+                        .catch(() => {})
+                        .finally(() => thumbLoadingRef.current.delete(path));
+                    }
+                  }}
+                  className="relative z-10 h-3 w-full cursor-pointer appearance-none bg-transparent accent-blue-400"
+                  style={{ direction: "rtl" }}
+                />
+
+                {/* ホバーサムネイル（プリフェッチ済みの低品質サムネイルを即座に表示） */}
+                {hoverInfo && thumbTick >= 0 && (
+                  <div
+                    className="pointer-events-none absolute bottom-full z-30 mb-3 -translate-x-1/2"
+                    style={{ left: `${hoverInfo.x * 100}%` }}
+                  >
+                    <div className="overflow-hidden rounded-lg border border-white/15 bg-black/90 shadow-xl">
+                      {(() => {
+                        const path = flatImageList[hoverInfo.pageIndex];
+                        const url = path ? thumbCacheRef.current.get(path) : undefined;
+                        return url ? (
+                          <img
+                            src={url}
+                            alt=""
+                            className="block max-h-24 w-auto max-w-[72px] object-contain"
+                            draggable={false}
+                          />
+                        ) : (
+                          <div className="flex h-20 w-14 items-center justify-center text-xs text-zinc-500">
+                            {hoverInfo.pageIndex + 1}
+                          </div>
+                        );
+                      })()}
+                      <p className="py-1 text-center tabular-nums text-[10px] text-zinc-400">
+                        {hoverInfo.pageIndex + 1}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {chunkBoundaries.length > 1 && (
+                <button
+                  type="button"
+                  onClick={nextChunk}
+                  title={t.nextChunk}
+                  className="shrink-0 text-zinc-500 hover:text-zinc-200 transition-colors"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="5 4 15 12 5 20" /><line x1="19" y1="5" x2="19" y2="19" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -407,6 +709,24 @@ function HomeIcon() {
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
       <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+  );
+}
+
+function FullscreenIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" />
+      <line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" />
+    </svg>
+  );
+}
+
+function ExitFullscreenIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" />
+      <line x1="10" y1="14" x2="3" y2="21" /><line x1="21" y1="3" x2="14" y2="10" />
     </svg>
   );
 }

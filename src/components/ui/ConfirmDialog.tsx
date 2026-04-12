@@ -3,6 +3,7 @@
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import { cn } from "@/lib/cn";
 import { Button } from "./Button";
+import { useT } from "@/hooks/useT";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -20,11 +21,14 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "確認",
-  cancelLabel = "キャンセル",
+  confirmLabel,
+  cancelLabel,
   onConfirm,
   variant = "danger",
 }: ConfirmDialogProps) {
+  const t = useT();
+  const resolvedConfirmLabel = confirmLabel ?? t.confirm;
+  const resolvedCancelLabel  = cancelLabel  ?? t.cancel;
   return (
     <AlertDialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <AlertDialogPrimitive.Portal>
@@ -53,7 +57,7 @@ export function ConfirmDialog({
           <div className="mt-6 flex justify-end gap-3">
             <AlertDialogPrimitive.Cancel asChild>
               <Button variant="ghost" size="md">
-                {cancelLabel}
+                {resolvedCancelLabel}
               </Button>
             </AlertDialogPrimitive.Cancel>
             <AlertDialogPrimitive.Action asChild>
@@ -62,7 +66,7 @@ export function ConfirmDialog({
                 size="md"
                 onClick={onConfirm}
               >
-                {confirmLabel}
+                {resolvedConfirmLabel}
               </Button>
             </AlertDialogPrimitive.Action>
           </div>

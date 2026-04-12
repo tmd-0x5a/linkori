@@ -34,6 +34,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
+        type="button"
         className={cn(
           "btn-clay inline-flex items-center justify-center gap-2 rounded-xl",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgb(20,110,245)]",

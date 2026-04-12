@@ -1,3 +1,4 @@
+use std::io::Cursor;
 use std::path::Path;
 
 use crate::reader::directory;
@@ -59,6 +60,52 @@ fn process_request(
     log::info!("[manga protocol] セグメント: {:?}", segments);
 
     match segments.first().copied() {
+        // サムネイル: /thumb/{maxSize}/{元のmanga URL パス}
+        // 例: /thumb/200/dir/{base64}  or  /thumb/200/zip/{b64zip}/{b64entry}
+        Some("thumb") => {
+            let rest = segments.get(1).unwrap_or(&"");
+            // rest = "200/dir/xxx" or "200/zip/xxx/yyy"
+            let (max_size_str, inner_path) = rest.split_once('/')
+                .ok_or("サムネイルサイズが指定されていません")?;
+            // segments[2] があれば結合（splitn(3) で切れた残り）
+            let full_inner = if let Some(s2) = segments.get(2) {
+                format!("{}/{}", inner_path, s2)
+            } else {
+                inner_path.to_string()
+            };
+            let max_size: u32 = max_size_str.parse().map_err(|_| "無効なサムネイルサイズ")?;
+
+            // inner をさらにパースして画像バイトを取得
+            let inner_segments: Vec<&str> = full_inner.splitn(3, '/').collect();
+            let raw_bytes = match inner_segments.first().copied() {
+                Some("dir") => {
+                    let encoded = inner_segments.get(1).ok_or("パスが指定されていません")?;
+                    let image_path_str = decode_base64(encoded)?;
+                    let image_path = Path::new(&image_path_str);
+                    if image_path.components().any(|c| c == std::path::Component::ParentDir) {
+                        return Err("不正なパスです".into());
+                    }
+                    directory::read_image_from_directory(image_path)
+                        .map_err(|e| format!("ファイル読み取り失敗: {e}"))?
+                }
+                Some("zip") => {
+                    let encoded_zip = inner_segments.get(1).ok_or("ZIPパスが指定されていません")?;
+                    let encoded_entry = inner_segments.get(2).ok_or("ZIPエントリが指定されていません")?;
+                    let zip_path_str = decode_base64(encoded_zip)?;
+                    let entry_name = decode_base64(encoded_entry)?;
+                    let zip_path = Path::new(&zip_path_str);
+                    if zip_path.components().any(|c| c == std::path::Component::ParentDir) {
+                        return Err("不正なZIPパスです".into());
+                    }
+                    zip_reader::read_image_from_zip(zip_path, &entry_name)
+                        .map_err(|e| format!("ZIP読み取り失敗: {e}"))?
+                }
+                _ => return Err("不明なサムネイル種別".into()),
+            };
+
+            let thumb_bytes = generate_thumbnail(&raw_bytes, max_size)?;
+            Ok(build_ok_response(thumb_bytes, "image/jpeg".to_string()))
+        }
         Some("dir") => {
             let encoded_path = segments.get(1).ok_or("パスが指定されていません")?;
             let image_path_str = decode_base64(encoded_path)?;
@@ -130,6 +177,27 @@ fn decode_base64(encoded: &str) -> Result<String, String> {
     String::from_utf8(bytes).map_err(|e| format!("UTF-8デコード失敗: {}", e))
 }
 
+/// 画像バイト列を max_size に縮小して JPEG で返す
+fn generate_thumbnail(raw_bytes: &[u8], max_size: u32) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let img = image::load_from_memory(raw_bytes)
+        .map_err(|e| format!("画像デコードエラー: {e}"))?;
+
+    let (w, h) = (img.width(), img.height());
+    let scale = (max_size as f32 / w.max(h) as f32).min(1.0);
+    let nw = ((w as f32 * scale).round() as u32).max(1);
+    let nh = ((h as f32 * scale).round() as u32).max(1);
+    let thumb = img.resize_exact(nw, nh, image::imageops::FilterType::Nearest);
+
+    let mut out: Vec<u8> = Vec::new();
+    {
+        use image::codecs::jpeg::JpegEncoder;
+        let mut enc = JpegEncoder::new_with_quality(Cursor::new(&mut out), 40);
+        enc.encode_image(&thumb)
+            .map_err(|e| format!("サムネイル生成エラー: {e}"))?;
+    }
+    Ok(out)
+}
+
 fn guess_content_type(path: &str) -> String {
     mime_guess::from_path(path)
         .first_or_octet_stream()
@@ -176,10 +244,32 @@ pub fn image_path_to_manga_url(image_path: &str) -> String {
     format!("https://manga.localhost/dir/{}", encoded)
 }
 
+/// 画像パスをサムネイル用 manga プロトコル URL に変換する。
+/// `/thumb/{maxSize}/dir/{base64}` or `/thumb/{maxSize}/zip/{b64zip}/{b64entry}`
+pub fn image_path_to_manga_thumb_url(image_path: &str, max_size: u32) -> String {
+    // 通常の manga URL を生成し、ホスト部分の直後に thumb/{maxSize}/ を挿入
+    let full_url = image_path_to_manga_url(image_path);
+    // full_url = "https://manga.localhost/dir/..." or "https://manga.localhost/zip/..."
+    let prefix = "https://manga.localhost/";
+    if let Some(rest) = full_url.strip_prefix(prefix) {
+        format!("{}thumb/{}/{}", prefix, max_size, rest)
+    } else {
+        full_url
+    }
+}
+
 #[tauri::command]
 pub fn convert_to_manga_urls(image_paths: Vec<String>) -> Vec<String> {
     image_paths
         .iter()
         .map(|path| image_path_to_manga_url(path))
+        .collect()
+}
+
+#[tauri::command]
+pub fn convert_to_manga_thumb_urls(image_paths: Vec<String>, max_size: u32) -> Vec<String> {
+    image_paths
+        .iter()
+        .map(|path| image_path_to_manga_thumb_url(path, max_size))
         .collect()
 }

@@ -3,12 +3,14 @@ import { Store } from "@tauri-apps/plugin-store";
 import { usePlaylistStore } from "@/stores/playlistStore";
 import type { Playlist, ViewerSettings } from "@/types";
 import { useViewerStore } from "@/stores/viewerStore";
+import type { PlaylistProgress } from "@/stores/viewerStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import type { Lang } from "@/lib/i18n";
 
 const STORE_FILE = "playlists.json";
 const PLAYLISTS_KEY = "playlists";
 const VIEWER_SETTINGS_KEY = "viewerSettings";
+const PROGRESS_KEY = "viewerProgress";
 const LANG_KEY = "lang";
 
 let storeInstance: Store | null = null;
@@ -30,6 +32,8 @@ export function usePersistence() {
   const hydrate = usePlaylistStore((s) => s.hydrate);
   const settings = useViewerStore((s) => s.settings);
   const updateSettings = useViewerStore((s) => s.updateSettings);
+  const progressMap = useViewerStore((s) => s.progressMap);
+  const hydrateProgress = useViewerStore((s) => s.hydrateProgress);
   const lang = useSettingsStore((s) => s.lang);
   const setLang = useSettingsStore((s) => s.setLang);
   const isHydrated = useRef(false);
@@ -54,6 +58,12 @@ export function usePersistence() {
           await store.get<ViewerSettings>(VIEWER_SETTINGS_KEY);
         if (savedSettings && mounted) {
           updateSettings(savedSettings);
+        }
+
+        // 閲覧位置読み込み
+        const savedProgress = await store.get<Record<string, PlaylistProgress>>(PROGRESS_KEY);
+        if (savedProgress && mounted) {
+          hydrateProgress(savedProgress);
         }
 
         // 言語設定読み込み
@@ -122,6 +132,32 @@ export function usePersistence() {
 
     saveSettings();
   }, [settings]);
+
+  // --- 閲覧位置変更時の自動保存（デバウンス） ---
+  const progressSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!isHydrated.current) return;
+
+    if (progressSaveRef.current) {
+      clearTimeout(progressSaveRef.current);
+    }
+
+    progressSaveRef.current = setTimeout(async () => {
+      try {
+        const store = await getStore();
+        await store.set(PROGRESS_KEY, progressMap);
+        await store.save();
+      } catch (error) {
+        console.error("閲覧位置の保存に失敗:", error);
+      }
+    }, 1000);
+
+    return () => {
+      if (progressSaveRef.current) {
+        clearTimeout(progressSaveRef.current);
+      }
+    };
+  }, [progressMap]);
 
   // --- 言語設定変更時の自動保存 ---
   useEffect(() => {

@@ -5,9 +5,9 @@ mod utils;
 
 use commands::chunk::{validate_chunk, resolve_chunk_images};
 use commands::filesystem::{browse_directory, browse_zip, list_drives};
-use commands::image::read_image_as_data_url;
+use commands::image::{read_image_as_data_url, read_image_thumbnail};
 use commands::validate_image_file::validate_image_file;
-use protocol::manga::convert_to_manga_urls;
+use protocol::manga::{convert_to_manga_urls, convert_to_manga_thumb_urls};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -34,8 +34,10 @@ pub fn run() {
             browse_zip,
             list_drives,
             convert_to_manga_urls,
+            convert_to_manga_thumb_urls,
             validate_image_file,
             read_image_as_data_url,
+            read_image_thumbnail,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
