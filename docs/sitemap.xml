@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://tmd-0x5a.github.io/linkori/</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tmd-0x5a.github.io/linkori/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://tmd-0x5a.github.io/linkori/"/>
+  </url>
+  <url>
+    <loc>https://tmd-0x5a.github.io/linkori/codebase.html</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>
