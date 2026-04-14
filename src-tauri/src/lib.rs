@@ -5,8 +5,7 @@ mod utils;
 
 use commands::chunk::{validate_chunk, resolve_chunk_images};
 use commands::filesystem::{browse_directory, browse_zip, list_drives};
-use commands::image::{read_image_as_data_url, read_image_thumbnail};
-use commands::validate_image_file::validate_image_file;
+use commands::image::{read_image_as_data_url, read_image_thumbnail, validate_image_file};
 use protocol::manga::{convert_to_manga_urls, convert_to_manga_thumb_urls};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
