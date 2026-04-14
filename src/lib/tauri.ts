@@ -134,6 +134,13 @@ export function imagePathToMangaUrl(imagePath: string): string {
   return `https://manga.localhost/dir/${urlSafeBase64(normalized)}`;
 }
 
+/**
+ * ファイルを base64 文字列として読み込む（PDF など、フロントで処理するファイル用）
+ */
+export async function readFileAsBase64(path: string): Promise<string> {
+  return invoke<string>("read_file_as_base64", { path });
+}
+
 /** 画像パスをサムネイル用 manga URL に同期変換（IPC 不要） */
 export function imagePathToMangaThumbUrl(imagePath: string, maxSize: number): string {
   const fullUrl = imagePathToMangaUrl(imagePath);

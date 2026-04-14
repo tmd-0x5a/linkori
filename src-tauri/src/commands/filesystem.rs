@@ -253,3 +253,20 @@ pub async fn browse_zip(zip_path: String) -> Result<Vec<FileEntry>, String> {
 
     Ok(entries)
 }
+
+/// ファイルをバイト列として読み込み、Base64 文字列で返す。
+/// pdf.js など、フロントエンド側でバイト列が必要なファイル（PDF等）に使用する。
+#[tauri::command]
+pub async fn read_file_as_base64(path: String) -> Result<String, String> {
+    use base64::Engine;
+    let bytes = fs::read(&path).map_err(|e| {
+        if e.kind() == std::io::ErrorKind::PermissionDenied {
+            "ファイルへのアクセス権限がありません".to_string()
+        } else if e.kind() == std::io::ErrorKind::NotFound {
+            "ファイルが見つかりません".to_string()
+        } else {
+            format!("ファイル読み込みエラー: {e}")
+        }
+    })?;
+    Ok(base64::engine::general_purpose::STANDARD.encode(&bytes))
+}

@@ -17,6 +17,11 @@ interface ChunkFormProps {
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "tif"];
 
+/** PDF ファイルかどうか判定 */
+function isPdfFile(path: string): boolean {
+  return path.trim().toLowerCase().endsWith(".pdf");
+}
+
 function getParentPath(path: string): string | undefined {
   if (!path.trim()) return undefined;
   const normalized = path.replace(/\\/g, "/").replace(/\/+$/, "");
@@ -60,7 +65,8 @@ export function ChunkForm({ onAdd, addTrigger, onCancel, initialBrowsePath }: Ch
     }
   }, [addTrigger]);
 
-  const startIsDir = isDirectoryLike(startPath);
+  // PDF またはディレクトリの場合は endPath 不要
+  const startIsDir = isDirectoryLike(startPath) || isPdfFile(startPath);
 
   // 開始パスのエクスプローラー初期位置：
   // - startPath 入力済み → その親ディレクトリ

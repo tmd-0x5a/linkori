@@ -4,6 +4,7 @@ import { resolveChunkImages } from "@/lib/tauri";
 import { usePlaylistStore } from "./playlistStore";
 import { useSettingsStore } from "./settingsStore";
 import { translations } from "@/lib/i18n";
+import { getPdfPageCount, makePdfPagePath } from "@/lib/pdf";
 
 /** チャンク境界情報（ビューア内でのチャンク可視化用） */
 export interface ChunkBoundary {
@@ -103,13 +104,31 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
       for (let ci = 0; ci < playlist.chunks.length; ci++) {
         const chunk = playlist.chunks[ci];
         try {
-          const paths = await resolveChunkImages(chunk.startPath, chunk.endPath);
-          boundaries.push({
-            chunkIndex: ci,
-            name: chunk.name?.trim() || undefined,
-            startPage: allImagePaths.length,
-          });
-          allImagePaths.push(...paths);
+          // PDF ファイルかどうかを判定（.pdf 拡張子で判断）
+          const isPdf = chunk.startPath.toLowerCase().endsWith(".pdf");
+
+          if (isPdf) {
+            // PDF チャンク: pdf.js でページ数を取得して仮想パスに展開
+            const pageCount = await getPdfPageCount(chunk.startPath);
+            const pdfPaths = Array.from({ length: pageCount }, (_, i) =>
+              makePdfPagePath(chunk.startPath, i + 1)
+            );
+            boundaries.push({
+              chunkIndex: ci,
+              name: chunk.name?.trim() || undefined,
+              startPage: allImagePaths.length,
+            });
+            allImagePaths.push(...pdfPaths);
+          } else {
+            // 通常チャンク（画像ファイル / ディレクトリ / ZIP）
+            const paths = await resolveChunkImages(chunk.startPath, chunk.endPath);
+            boundaries.push({
+              chunkIndex: ci,
+              name: chunk.name?.trim() || undefined,
+              startPage: allImagePaths.length,
+            });
+            allImagePaths.push(...paths);
+          }
         } catch (error) {
           const msg = error instanceof Error ? error.message : String(error);
           chunkErrors.push(`[${chunk.startPath}]: ${msg}`);

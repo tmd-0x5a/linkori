@@ -4,7 +4,7 @@ mod reader;
 mod utils;
 
 use commands::chunk::{validate_chunk, resolve_chunk_images};
-use commands::filesystem::{browse_directory, browse_zip, list_drives};
+use commands::filesystem::{browse_directory, browse_zip, list_drives, read_file_as_base64};
 use commands::image::{read_image_as_data_url, read_image_thumbnail, validate_image_file};
 use protocol::manga::{convert_to_manga_urls, convert_to_manga_thumb_urls};
 
@@ -37,6 +37,7 @@ pub fn run() {
             validate_image_file,
             read_image_as_data_url,
             read_image_thumbnail,
+            read_file_as_base64,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useViewerStore } from "@/stores/viewerStore";
 import { readImageAsDataUrl, readImageThumbnail } from "@/lib/tauri";
+import { isPdfPagePath, parsePdfPagePath, renderPdfPage, renderPdfThumbnail, clearPdfCache } from "@/lib/pdf";
 import { cn } from "@/lib/cn";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useT } from "@/hooks/useT";
@@ -57,6 +58,8 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
         getCurrentWindow().setFullscreen(false).catch(() => {});
         isFullscreenRef.current = false;
       }
+      // PDF ドキュメントキャッシュをクリア
+      clearPdfCache();
     };
   }, []);
 
@@ -105,7 +108,17 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
       const path = flatImageList[i];
       if (!path || imageCacheRef.current.has(path) || failedPathsRef.current.has(path) || loadingPathsRef.current.has(path)) continue;
       loadingPathsRef.current.add(path);
-      readImageAsDataUrl(path)
+
+      // PDF ページか通常画像かで読み込み方法を分岐
+      const loadPromise = isPdfPagePath(path)
+        ? (() => {
+            const parsed = parsePdfPagePath(path);
+            if (!parsed) return Promise.reject(new Error("PDFパスの解析に失敗しました"));
+            return renderPdfPage(parsed.pdfPath, parsed.pageNum);
+          })()
+        : readImageAsDataUrl(path);
+
+      loadPromise
         .then((url) => {
           imageCacheRef.current.set(path, url);
           loadingPathsRef.current.delete(path);
@@ -199,6 +212,13 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
             if (cached) {
               const url = await generateThumbFromCache(p, cached, THUMB_SIZE);
               if (!stopped) thumbCacheRef.current.set(p, url);
+            } else if (isPdfPagePath(p)) {
+              // PDF ページのサムネイルは pdf.js で直接レンダリング
+              const parsed = parsePdfPagePath(p);
+              if (parsed) {
+                const url = await renderPdfThumbnail(parsed.pdfPath, parsed.pageNum, THUMB_SIZE);
+                if (!stopped) thumbCacheRef.current.set(p, url);
+              }
             } else {
               const url = await readImageThumbnail(p, THUMB_SIZE);
               if (!stopped) thumbCacheRef.current.set(p, url);
@@ -642,7 +662,12 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
                       const cached = imageCacheRef.current.get(path);
                       const thumbPromise = cached
                         ? generateThumbFromCache(path, cached, 80)
-                        : readImageThumbnail(path, 80);
+                        : isPdfPagePath(path)
+                          ? (() => {
+                              const parsed = parsePdfPagePath(path);
+                              return parsed ? renderPdfThumbnail(parsed.pdfPath, parsed.pageNum, 80) : Promise.reject(new Error("invalid pdf path"));
+                            })()
+                          : readImageThumbnail(path, 80);
                       thumbPromise
                         .then((url) => { thumbCacheRef.current.set(path, url); setThumbTick(n => n + 1); })
                         .catch(() => {})
