@@ -44,6 +44,7 @@ Download the latest installer from the [**Releases**](https://github.com/tmd-0x5
 - `F2` to rename the selected playlist; `Delete` to delete it
 - **Favorites**: star any playlist; filter the list to show only favorites (★ button)
 - **Custom tags**: add arbitrary text tags to each playlist; click a tag in the filter bar to narrow the list
+- **Reading status**: mark a playlist as Unread / Read; accessible from the right-click context menu
 - **Reading progress bar**: each playlist item shows a progress bar indicating how far you've read
 
 ### Chunks (Reading Ranges)
@@ -65,12 +66,15 @@ Download the latest installer from the [**Releases**](https://github.com/tmd-0x5
 ### File Browser (Built-in Explorer)
 - Custom in-app file browser — no OS native dialog
 - Left sidebar shows all available drives dynamically
+- **Quick access**: Desktop, Downloads, Documents, Pictures, Videos, Music shortcuts in the sidebar
 - Click the address bar (breadcrumb) to type a path directly
+- **Search**: filter visible files by name with the search box
 - **View modes**: List / Grid (large thumbnails)
 - **Sorting**: by name or date, ascending / descending — click column headers; sort order and view mode are remembered across navigations and dialog reopens
+- **Hidden files toggle**: show / hide hidden files
 - Navigate into directories and ZIP files (.zip / .cbz)
 - Correct display of Shift-JIS (CP932) encoded filenames in Japanese ZIPs
-- Lazy thumbnail loading; hidden files are hidden by default
+- Lazy thumbnail loading
 - "Select this folder" / "Select this ZIP" buttons for whole-folder selection
 - **End-path restriction**: the end path picker is locked to the same folder or ZIP as the start path
 
@@ -113,7 +117,7 @@ Download the latest installer from the [**Releases**](https://github.com/tmd-0x5
 
 ## Supported Image Formats
 
-JPEG / PNG / GIF / WebP / BMP / TIFF
+JPEG / PNG / GIF / WebP / BMP / TIFF / **PDF**
 
 ## Supported Archives
 
