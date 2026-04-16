@@ -30,8 +30,10 @@
 <style>
 /* ── Reset ── */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-body{font-family:'SF Pro Text','SF Pro Icons','Helvetica Neue',Helvetica,Arial,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,sans-serif;color:#1d1d1f;background:#000}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden}
+body{font-family:'SF Pro Text','SF Pro Icons','Helvetica Neue',Helvetica,Arial,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,sans-serif;color:#1d1d1f;background:#000;
+  overflow-x:hidden}
 img{max-width:100%;height:auto;display:block}
 a{text-decoration:none}
 
@@ -39,7 +41,7 @@ a{text-decoration:none}
 .nav{position:fixed;top:0;left:0;right:0;z-index:100;height:48px;
   background:rgba(0,0,0,.8);backdrop-filter:saturate(180%) blur(20px);
   -webkit-backdrop-filter:saturate(180%) blur(20px);
-  display:flex;align-items:center;justify-content:center}
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
 .nav-inner{max-width:980px;width:100%;padding:0 22px;
   display:flex;align-items:center;justify-content:space-between}
 .nav-brand{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;
@@ -102,7 +104,7 @@ a{text-decoration:none}
   line-height:1.5;text-align:center}
 
 /* ── Screenshots ── */
-.ss-wrap{max-width:1080px;margin:0 auto}
+.ss-wrap{max-width:1080px;margin:0 auto;width:100%}
 .ss-head{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;
   font-size:40px;font-weight:600;line-height:1.10;color:#f5f5f7;
   text-align:center;margin-bottom:48px}
@@ -123,37 +125,41 @@ a{text-decoration:none}
   display:flex;align-items:center;justify-content:center;margin-bottom:16px;flex-shrink:0}
 
 /* ── Card: dark ── */
-.cd{background:#1d1d1f;border-radius:12px;padding:28px 24px;text-align:left}
+.cd{background:#1d1d1f;border-radius:12px;padding:28px 24px;text-align:left;
+  min-width:0;overflow:hidden}
 .cd h3{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;
   font-size:19px;font-weight:600;line-height:1.24;letter-spacing:-.374px;
   color:#f5f5f7;margin-bottom:8px}
 .cd p{font-size:14px;color:rgba(255,255,255,.5);letter-spacing:-.224px;line-height:1.43;
-  word-break:keep-all;overflow-wrap:break-word}
+  word-break:keep-all;overflow-wrap:anywhere}
 .cd ul{list-style:none;padding:0;margin-top:10px}
 .cd ul li{font-size:14px;color:rgba(255,255,255,.5);letter-spacing:-.224px;
   line-height:1.43;padding:3px 0 3px 14px;position:relative;
-  word-break:keep-all;overflow-wrap:break-word}
+  word-break:keep-all;overflow-wrap:anywhere}
 .cd ul li::before{content:"–";position:absolute;left:0;color:rgba(255,255,255,.2)}
-.cd ul li strong{color:rgba(255,255,255,.85);font-weight:600;white-space:nowrap}
+.cd ul li strong{color:rgba(255,255,255,.85);font-weight:600}
 
 /* ── Card: light ── */
-.cl{background:#fff;border-radius:12px;padding:28px 24px;text-align:left}
+.cl{background:#fff;border-radius:12px;padding:28px 24px;text-align:left;
+  min-width:0;overflow:hidden}
 .cl h3{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;
   font-size:19px;font-weight:600;line-height:1.24;letter-spacing:-.374px;
   color:#1d1d1f;margin-bottom:8px}
 .cl p{font-size:14px;color:rgba(0,0,0,.56);letter-spacing:-.224px;line-height:1.43;
-  word-break:keep-all;overflow-wrap:break-word}
+  word-break:keep-all;overflow-wrap:anywhere}
 .cl ul{list-style:none;padding:0;margin-top:10px}
 .cl ul li{font-size:14px;color:rgba(0,0,0,.56);letter-spacing:-.224px;
   line-height:1.43;padding:3px 0 3px 14px;position:relative;
-  word-break:keep-all;overflow-wrap:break-word}
+  word-break:keep-all;overflow-wrap:anywhere}
 .cl ul li::before{content:"–";position:absolute;left:0;color:rgba(0,0,0,.2)}
-.cl ul li strong{color:#1d1d1f;font-weight:600;white-space:nowrap}
+.cl ul li strong{color:#1d1d1f;font-weight:600}
 
 /* ── Grids ── */
 .g2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+/* グリッドの親にも min-width:0 を強制 */
+.g2>*,.g3>*,.g4>*{min-width:0}
 
 /* ── new-card badge ── */
 .tag-new{display:inline-block;font-size:11px;font-weight:600;
@@ -172,13 +178,15 @@ a{text-decoration:none}
 /* ── Keyboard shortcut cards ── */
 .kbd-list{margin-top:14px}
 .kbd-row{display:flex;align-items:flex-start;justify-content:space-between;
-  padding:9px 0;border-bottom:1px solid rgba(0,0,0,.06);gap:16px}
+  padding:9px 0;border-bottom:1px solid rgba(0,0,0,.06);gap:12px;min-width:0}
 .kbd-row:last-child{border-bottom:none;padding-bottom:0}
-.kbd-keys{display:flex;flex-wrap:wrap;gap:3px;flex-shrink:0}
+.kbd-keys{display:flex;flex-wrap:wrap;gap:3px;flex-shrink:0;max-width:60%}
 .kbd-act{font-size:13px;color:rgba(0,0,0,.56);letter-spacing:-.16px;
-  line-height:1.4;text-align:right;flex-shrink:0;padding-top:2px;white-space:nowrap}
+  line-height:1.4;text-align:right;padding-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kbd-mouse{font-size:11px;color:rgba(0,0,0,.4);letter-spacing:-.08px;
-  padding:2px 7px;background:#ebebeb;border-radius:5px;white-space:nowrap}
+  padding:2px 7px;background:#ebebeb;border-radius:5px;white-space:nowrap;
+  display:inline-block;max-width:100%}
 kbd{display:inline-block;background:#ebebeb;border-radius:5px;
   padding:2px 7px;font-size:11px;font-family:inherit;font-weight:600;
   color:#1d1d1f;letter-spacing:-.08px;white-space:nowrap}
@@ -217,58 +225,37 @@ kbd{display:inline-block;background:#ebebeb;border-radius:5px;
   .g2,.g3{grid-template-columns:repeat(2,1fr)}
   .g4{grid-template-columns:repeat(2,1fr);gap:16px}
   .ss-grid{grid-template-columns:repeat(2,1fr)}
-  .w{padding:0}
 }
 
-/* 大きめスマホ (≤600px) */
+/* スマホ (≤600px) */
 @media(max-width:600px){
   .nav-inner{padding:0 16px}
-  .nav-links{gap:10px}
-  .nav-links a:not([onclick]):not([href*="github"]){display:none}
+  .nav-links{gap:8px}
+  .nav-links a:not([onclick]){display:none}
   .sd,.sl{padding:64px 16px}
   .ss-section{padding:48px 16px 64px}
   .hero{padding:88px 16px 56px}
   .hero-icon{width:64px;height:64px;border-radius:14px}
-  .hero h1{font-size:34px;letter-spacing:-.17px}
+  .hero h1{font-size:32px;letter-spacing:-.16px}
   .hero-sub{font-size:15px}
-  .sd h2,.sl h2,.ss-head,.spotlight h2{font-size:28px}
-  .sub{font-size:15px;margin-bottom:36px}
+  .hero-ctas{flex-direction:column;align-items:stretch;gap:12px}
+  .btn-dl,.btn-gh{justify-content:center;width:100%;font-size:16px;padding:12px 20px}
+  .sd h2,.sl h2,.ss-head,.spotlight h2{font-size:26px;line-height:1.12}
+  .sub{font-size:14px;margin-bottom:32px}
   .g2,.g3,.g4{grid-template-columns:1fr}
   .ss-grid{grid-template-columns:1fr}
-  .cd{padding:22px 18px}
-  .cl{padding:22px 18px}
-  .spotlight p{font-size:15px}
-  .hero-ctas{flex-direction:column;align-items:stretch;gap:12px}
-  .btn-dl,.btn-gh{justify-content:center;width:100%}
-  /* kbd カード内の行 */
-  .kbd-row{gap:8px}
-  .kbd-act{white-space:normal}
-}
-
-/* 小型スマホ (≤480px) */
-@media(max-width:480px){
-  .nav-links a:not([onclick]){display:none}
-  .sd,.sl{padding:56px 16px}
-  .ss-section{padding:40px 16px 56px}
-  .hero{padding:80px 16px 48px}
-  .hero-icon{width:56px;height:56px;border-radius:12px;margin-bottom:18px}
-  .hero h1{font-size:28px;letter-spacing:-.14px;margin-bottom:8px}
-  .hero-sub{font-size:14px}
-  .hero-badge{font-size:11px;padding:3px 10px;margin-bottom:22px}
-  .hero-note{font-size:11px}
-  .sd h2,.sl h2,.ss-head,.spotlight h2{font-size:24px;line-height:1.12}
-  .sub{font-size:14px;margin-bottom:28px}
   .cd,.cl{padding:20px 16px}
   .cd h3,.cl h3{font-size:17px}
   .ico-d,.ico-l{width:36px;height:36px;border-radius:8px;margin-bottom:12px}
   .ico-d svg,.ico-l svg{width:16px;height:16px}
+  .spotlight{padding:0 4px}
+  .spotlight p{font-size:14px}
   .tag-new,.tag-imp{font-size:10px;padding:2px 8px}
-  /* フォーマットバッジ */
   .fmt{font-size:13px;padding:6px 14px}
-  /* kbd: 行を縦積み */
-  .kbd-row{flex-direction:column;gap:4px;padding:10px 0}
+  /* kbd: 縦積みレイアウト */
+  .kbd-row{flex-direction:column;align-items:flex-start;gap:5px;padding:10px 0}
+  .kbd-keys{max-width:100%}
   .kbd-act{text-align:left;white-space:normal;font-size:12px;padding-top:0}
-  /* フッター */
   .footer{padding:24px 16px}
 }
 </style>
