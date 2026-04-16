@@ -95,8 +95,8 @@ pub async fn validate_chunk(
                     image_paths: vec![],
                 });
             }
-            // ディレクトリ全体
-            let images = directory::list_images_in_directory(Path::new(&dir1))?;
+            // ディレクトリ全体（サブフォルダを再帰的に走査）
+            let images = directory::list_images_recursively(Path::new(&dir1))?;
             let paths: Vec<String> = images.iter().map(|p| p.to_string_lossy().to_string()).collect();
             Ok(ChunkValidationResult {
                 is_valid: true,
@@ -307,7 +307,8 @@ pub async fn validate_chunk(
 fn resolve_from_start_only(start_path: &str) -> Result<Vec<String>, String> {
     match classify_path(start_path) {
         PathType::Directory(dir) => {
-            let images = directory::list_images_in_directory(Path::new(&dir))?;
+            // サブフォルダを再帰的に走査
+            let images = directory::list_images_recursively(Path::new(&dir))?;
             Ok(images.iter().map(|p| p.to_string_lossy().to_string()).collect())
         }
         PathType::ZipWhole(zip) => {

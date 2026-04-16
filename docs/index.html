@@ -54,7 +54,7 @@
     "@type": "Person",
     "name": "Yuta Tomida"
   },
-  "softwareVersion": "0.2.0",
+  "softwareVersion": "0.4.0",
   "license": "https://github.com/tmd-0x5a/linkori/blob/main/LICENSE"
 }
 </script>
@@ -340,7 +340,7 @@ a { text-decoration: none; }
     <span class="nav-brand">Linkori</span>
     <div class="nav-links">
       <a href="#features" data-en="Features" data-ja="機能">Features</a>
-      <a href="#whats-new" data-en="v0.3.0" data-ja="v0.3.0">v0.3.0</a>
+      <a href="#whats-new" data-en="v0.4.0" data-ja="v0.4.0">v0.4.0</a>
       <a href="#download" data-en="Download" data-ja="ダウンロード">Download</a>
       <a href="https://github.com/tmd-0x5a/linkori" target="_blank" rel="noopener">GitHub</a>
       <div class="lang-switch">
@@ -356,9 +356,9 @@ a { text-decoration: none; }
   <img src="https://raw.githubusercontent.com/tmd-0x5a/linkori/main/src-tauri/icons/icon.ico" alt="Linkori" class="hero-icon">
   <h1>Linkori</h1>
   <p class="subtitle" data-en="Local manga &amp; image viewer with playlist system." data-ja="プレイリストで複数フォルダ・ZIPを連続閲覧できる漫画ビューア。">Local manga &amp; image viewer with playlist system.</p>
-  <span class="version-badge">v0.3.0</span>
+  <span class="version-badge">v0.4.0</span>
   <div class="hero-ctas">
-    <a href="https://github.com/user-attachments/files/26654421/Linkori_0.3.0_x64-setup.zip" class="btn-primary">
+    <a href="https://github.com/tmd-0x5a/linkori/releases/tag/v0.4.0" class="btn-primary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span data-en="Download for Windows" data-ja="Windows 版をダウンロード">Download for Windows</span>
     </a>
@@ -438,28 +438,28 @@ a { text-decoration: none; }
 
 <!-- What's New -->
 <section class="whats-new" id="whats-new">
-  <h2 data-en="v0.3.0 Highlights." data-ja="v0.3.0 ハイライト。">v0.3.0 Highlights.</h2>
-  <p class="section-sub" data-en="Resume reading &amp; snappy seek." data-ja="続きから読める。サクサクシーク。">Resume reading &amp; snappy seek.</p>
+  <h2 data-en="v0.4.0 Highlights." data-ja="v0.4.0 ハイライト。">v0.4.0 Highlights.</h2>
+  <p class="section-sub" data-en="Group drag &amp; power selection." data-ja="グループドラッグ。賢い複数選択。">Group drag &amp; power selection.</p>
   <div class="new-grid">
     <div class="new-card">
       <span class="tag" data-en="New" data-ja="新機能">New</span>
-      <h3 data-en="Reading Position Memory" data-ja="閲覧位置の記憶">Reading Position Memory</h3>
-      <p data-en="Automatically saves and restores your last viewed page and display settings (single / spread) per playlist. Persists across app restarts." data-ja="プレイリストごとに最後に見たページと表示設定（1枚/見開き）を自動保存。アプリを閉じても次回起動時に復元。">Automatically saves and restores your last viewed page and display settings (single / spread) per playlist. Persists across app restarts.</p>
-    </div>
-    <div class="new-card">
-      <span class="tag" data-en="Improved" data-ja="改善">Improved</span>
-      <h3 data-en="Faster Seek-bar Thumbnails" data-ja="シークバーサムネイル高速化">Faster Seek-bar Thumbnails</h3>
-      <p data-en="Thumbnails now generate outward from the current page. Already-loaded images are resized instantly in the browser — no IPC overhead." data-ja="現在ページ付近から優先的にサムネイルを生成。読み込み済み画像はブラウザ側で即座にリサイズ。">Thumbnails now generate outward from the current page. Already-loaded images are resized instantly in the browser — no IPC overhead.</p>
-    </div>
-    <div class="new-card">
-      <span class="tag" data-en="Improved" data-ja="改善">Improved</span>
-      <h3 data-en="Lower Memory Usage" data-ja="メモリ使用量の削減">Lower Memory Usage</h3>
-      <p data-en="Reworked internal image delivery for significantly lower memory consumption, especially with large playlists and high-resolution images." data-ja="画像の内部配信方式を刷新し、大量の画像や高解像度画像を開いた際のメモリ消費を大幅に削減。">Reworked internal image delivery for significantly lower memory consumption, especially with large playlists and high-resolution images.</p>
+      <h3 data-en="Multi-Select &amp; Group Drag" data-ja="複数選択＆グループドラッグ">Multi-Select &amp; Group Drag</h3>
+      <p data-en="Ctrl+click, Shift+click, or drag to select multiple chunks. Drag the group — all selected chunks move simultaneously via DragOverlay with a stacked card and count badge." data-ja="Ctrl+クリック・Shift+クリック・ドラッグで複数チャンクを選択。ドラッグすると選択チャンクが DragOverlay として同時移動。件数バッジ付きのスタックカードで視覚的にわかりやすい。">Ctrl+click, Shift+click, or drag to select multiple chunks. Drag the group — all selected chunks move simultaneously via DragOverlay with a stacked card and count badge.</p>
     </div>
     <div class="new-card">
       <span class="tag" data-en="New" data-ja="新機能">New</span>
-      <h3 data-en="Chunk Preview" data-ja="チャンクプレビュー">Chunk Preview</h3>
-      <p data-en="Click the eye icon on a chunk card to browse its images as thumbnails before opening the viewer. Image count badges on every card." data-ja="チャンクカードの目のアイコンでサムネイル一覧を表示。各カードに画像枚数バッジも追加。">Click the eye icon on a chunk card to browse its images as thumbnails before opening the viewer. Image count badges on every card.</p>
+      <h3 data-en="Playlist Favorites &amp; Tags" data-ja="お気に入り＆タグ">Playlist Favorites &amp; Tags</h3>
+      <p data-en="Star any playlist as a favorite and filter to ★ only. Add custom text tags to playlists and click a tag in the filter bar to narrow the list instantly." data-ja="プレイリストをスターで登録してお気に入りのみ絞り込み。カスタムタグを付与してフィルタバーから即座に絞り込み。">Star any playlist as a favorite and filter to ★ only. Add custom text tags to playlists and click a tag in the filter bar to narrow the list instantly.</p>
+    </div>
+    <div class="new-card">
+      <span class="tag" data-en="New" data-ja="新機能">New</span>
+      <h3 data-en="Split Chunk by Subfolder" data-ja="サブフォルダで分割">Split Chunk by Subfolder</h3>
+      <p data-en="Split one chunk into multiple sub-chunks, one per subfolder — perfect for series organized by volume. Undo the split with a single click." data-ja="1チャンクをサブフォルダ単位の複数チャンクに分割。巻ごとにフォルダが分かれたシリーズに最適。ワンクリックでアンドゥも可能。">Split one chunk into multiple sub-chunks, one per subfolder — perfect for series organized by volume. Undo the split with a single click.</p>
+    </div>
+    <div class="new-card">
+      <span class="tag" data-en="Improved" data-ja="改善">Improved</span>
+      <h3 data-en="Playlist Drag Reorder" data-ja="プレイリスト並び替え改善">Playlist Drag Reorder</h3>
+      <p data-en="Drag anywhere on a playlist item to reorder — no dedicated handle required. Sort chunks by name, modified date, or created date from the sort menu." data-ja="プレイリストアイテムのどこでもドラッグして並び替え可能（専用ハンドル不要）。チャンクもソートメニューから名前・更新日・作成日で並び替えできるように。">Drag anywhere on a playlist item to reorder — no dedicated handle required. Sort chunks by name, modified date, or created date from the sort menu.</p>
     </div>
   </div>
 </section>
@@ -492,9 +492,9 @@ a { text-decoration: none; }
   <h2 data-en="Ready to read." data-ja="さあ、読もう。">Ready to read.</h2>
   <p class="section-sub" data-en="Free, open source, and runs entirely locally." data-ja="無料・オープンソース。すべてローカルで動作。">Free, open source, and runs entirely locally.</p>
   <div class="download-ctas">
-    <a href="https://github.com/user-attachments/files/26654421/Linkori_0.3.0_x64-setup.zip" class="btn-primary">
+    <a href="https://github.com/tmd-0x5a/linkori/releases/tag/v0.4.0" class="btn-primary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span data-en="Download v0.3.0" data-ja="v0.3.0 をダウンロード">Download v0.3.0</span>
+      <span data-en="Download v0.4.0" data-ja="v0.4.0 をダウンロード">Download v0.4.0</span>
     </a>
     <a href="https://github.com/tmd-0x5a/linkori" class="btn-outline" target="_blank" rel="noopener" data-en="Source Code" data-ja="ソースコード">Source Code</a>
   </div>

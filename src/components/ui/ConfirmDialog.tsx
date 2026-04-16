@@ -47,6 +47,14 @@ export function ConfirmDialog({
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
             "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
           )}
+          onKeyDown={(e) => {
+            // Enter または Delete キーで確認実行
+            if (e.key === "Enter" || e.key === "Delete") {
+              e.preventDefault();
+              onConfirm();
+              onOpenChange(false);
+            }
+          }}
         >
           <AlertDialogPrimitive.Title className="heading-clay text-xl text-black text-balance">
             {title}

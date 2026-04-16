@@ -26,17 +26,28 @@ async function getStore(): Promise<Store> {
  * tauri-plugin-store を使ってプレイリストとビューア設定を永続化するフック
  * - アプリ起動時にストアからロード（ハイドレーション）
  * - プレイリストの変更を自動的にストアへ保存
+ *
+ * isHydrated は Zustand ストアの _hydrated から取得し、レンダー時に ref へ同期する。
+ * これにより HMR でストアがリセットされると ref も false に戻り、ロード前の上書き保存を防ぐ。
+ * deps 配列のサイズは変わらないため "changed size between renders" エラーも発生しない。
  */
 export function usePersistence() {
   const playlists = usePlaylistStore((s) => s.playlists);
   const hydrate = usePlaylistStore((s) => s.hydrate);
+  const markHydrated = usePlaylistStore((s) => s.markHydrated);
   const settings = useViewerStore((s) => s.settings);
   const updateSettings = useViewerStore((s) => s.updateSettings);
   const progressMap = useViewerStore((s) => s.progressMap);
   const hydrateProgress = useViewerStore((s) => s.hydrateProgress);
   const lang = useSettingsStore((s) => s.lang);
   const setLang = useSettingsStore((s) => s.setLang);
-  const isHydrated = useRef(false);
+
+  // HMR でストアがリセットされると _hydrated も false に戻る。
+  // レンダー時に ref へ同期することで、エフェクト内では常に最新の値を参照できる。
+  const _hydrated = usePlaylistStore((s) => s._hydrated);
+  const isHydratedRef = useRef(false);
+  isHydratedRef.current = _hydrated;
+
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // --- 起動時のハイドレーション ---
@@ -47,10 +58,10 @@ export function usePersistence() {
       try {
         const store = await getStore();
 
-        // プレイリスト読み込み
+        // プレイリスト読み込み（_hydrated = true もここで設定される）
         const savedPlaylists = await store.get<Playlist[]>(PLAYLISTS_KEY);
-        if (savedPlaylists && mounted) {
-          hydrate(savedPlaylists);
+        if (mounted) {
+          hydrate(savedPlaylists ?? []);
         }
 
         // ビューア設定読み込み
@@ -71,14 +82,10 @@ export function usePersistence() {
         if (savedLang && mounted) {
           setLang(savedLang);
         }
-
-        if (mounted) {
-          isHydrated.current = true;
-        }
       } catch (error) {
         console.error("ストアからの読み込みに失敗:", error);
         if (mounted) {
-          isHydrated.current = true;
+          markHydrated();
         }
       }
     }
@@ -93,7 +100,7 @@ export function usePersistence() {
 
   // --- プレイリスト変更時の自動保存（デバウンス） ---
   useEffect(() => {
-    if (!isHydrated.current) return;
+    if (!isHydratedRef.current) return;
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -118,7 +125,7 @@ export function usePersistence() {
 
   // --- ビューア設定変更時の自動保存 ---
   useEffect(() => {
-    if (!isHydrated.current) return;
+    if (!isHydratedRef.current) return;
 
     async function saveSettings() {
       try {
@@ -136,7 +143,7 @@ export function usePersistence() {
   // --- 閲覧位置変更時の自動保存（デバウンス） ---
   const progressSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!isHydrated.current) return;
+    if (!isHydratedRef.current) return;
 
     if (progressSaveRef.current) {
       clearTimeout(progressSaveRef.current);
@@ -161,7 +168,7 @@ export function usePersistence() {
 
   // --- 言語設定変更時の自動保存 ---
   useEffect(() => {
-    if (!isHydrated.current) return;
+    if (!isHydratedRef.current) return;
 
     async function saveLang() {
       try {

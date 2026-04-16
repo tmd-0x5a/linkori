@@ -16,6 +16,8 @@ export interface ChunkBoundary {
 /** プレイリストごとの閲覧位置 */
 export interface PlaylistProgress {
   pageIndex: number;
+  /** 進捗パーセント計算用の総ページ数 */
+  totalPages: number;
   settings: ViewerSettings;
 }
 
@@ -152,10 +154,20 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
         : 0;
       const restoredSettings = saved ? saved.settings : get().settings;
 
+      const newTotal = allImagePaths.length;
+
+      // ロード時点の進捗を progressMap に記録（totalPages を含む）
+      const currentProgress = get().progressMap[playlistId];
+      const updatedProgress: PlaylistProgress = {
+        pageIndex: restoredPage,
+        totalPages: newTotal,
+        settings: restoredSettings,
+      };
+
       // パスリストをそのまま保存（遅延読み込みのため事前変換しない）
       set({
         flatImageList: allImagePaths,
-        totalPages: allImagePaths.length,
+        totalPages: newTotal,
         currentPageIndex: restoredPage,
         isLoading: false,
         loadError: null,
@@ -164,6 +176,10 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
           : null,
         chunkBoundaries: boundaries,
         settings: restoredSettings,
+        progressMap: {
+          ...get().progressMap,
+          [playlistId]: updatedProgress,
+        },
       });
     } catch (error) {
       set({
@@ -181,7 +197,7 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
     if (activePlaylistId) {
       updates.progressMap = {
         ...progressMap,
-        [activePlaylistId]: { pageIndex: clamped, settings },
+        [activePlaylistId]: { pageIndex: clamped, totalPages, settings },
       };
     }
     set(updates);
@@ -251,25 +267,25 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
   },
 
   updateSettings: (newSettings: Partial<ViewerSettings>) => {
-    const { activePlaylistId, currentPageIndex, progressMap } = get();
+    const { activePlaylistId, currentPageIndex, totalPages, progressMap } = get();
     const merged = { ...get().settings, ...newSettings };
     const updates: Partial<ViewerState> = { settings: merged };
     if (activePlaylistId) {
       updates.progressMap = {
         ...progressMap,
-        [activePlaylistId]: { pageIndex: currentPageIndex, settings: merged },
+        [activePlaylistId]: { pageIndex: currentPageIndex, totalPages, settings: merged },
       };
     }
     set(updates);
   },
 
   saveProgress: () => {
-    const { activePlaylistId, currentPageIndex, settings, progressMap } = get();
+    const { activePlaylistId, currentPageIndex, totalPages, settings, progressMap } = get();
     if (!activePlaylistId) return;
     set({
       progressMap: {
         ...progressMap,
-        [activePlaylistId]: { pageIndex: currentPageIndex, settings },
+        [activePlaylistId]: { pageIndex: currentPageIndex, totalPages, settings },
       },
     });
   },
@@ -282,9 +298,9 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
 
   reset: () => {
     // ホームに戻る前に現在の閲覧位置を保存
-    const { activePlaylistId, currentPageIndex, settings, progressMap } = get();
+    const { activePlaylistId, currentPageIndex, totalPages, settings, progressMap } = get();
     const newProgressMap = activePlaylistId
-      ? { ...progressMap, [activePlaylistId]: { pageIndex: currentPageIndex, settings } }
+      ? { ...progressMap, [activePlaylistId]: { pageIndex: currentPageIndex, totalPages, settings } }
       : progressMap;
     set({
       flatImageList: [],

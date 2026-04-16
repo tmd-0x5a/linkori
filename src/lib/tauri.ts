@@ -141,6 +141,22 @@ export async function readFileAsBase64(path: string): Promise<string> {
   return invoke<string>("read_file_as_base64", { path });
 }
 
+/**
+ * パスのファイルシステムメタデータ（更新日時・作成日時）を取得する。
+ * チャンクの日時ソートに使用する。
+ */
+export async function getPathMeta(path: string): Promise<{ modified_at: number | null; created_at: number | null }> {
+  return invoke<{ modified_at: number | null; created_at: number | null }>("get_path_meta", { path });
+}
+
+/**
+ * フォルダのチャンク分割候補を返す。
+ * 画像を直接含む最も深い子フォルダを再帰的に収集する。
+ */
+export async function listSplitCandidates(path: string): Promise<Array<{ name: string; path: string }>> {
+  return invoke<Array<{ name: string; path: string }>>("list_split_candidates", { path });
+}
+
 /** 画像パスをサムネイル用 manga URL に同期変換（IPC 不要） */
 export function imagePathToMangaThumbUrl(imagePath: string, maxSize: number): string {
   const fullUrl = imagePathToMangaUrl(imagePath);

@@ -10,9 +10,14 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ContextMenu } from "@/components/ui/ContextMenu";
 import { ImageFilePicker } from "@/components/ImageFilePicker";
 import { useT } from "@/hooks/useT";
-import { resolveChunkImages, readImageThumbnail, validateChunk as validateChunkTauri } from "@/lib/tauri";
+import { resolveChunkImages, readImageThumbnail, validateChunk as validateChunkTauri, listSplitCandidates } from "@/lib/tauri";
+import { getPdfPageCount, makePdfPagePath, isPdfPagePath, renderPdfThumbnail } from "@/lib/pdf";
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "tif"];
+
+function isPdfFile(path: string): boolean {
+  return path.trim().toLowerCase().endsWith(".pdf");
+}
 
 function getParentPath(path: string): string | undefined {
   if (!path.trim()) return undefined;
@@ -36,6 +41,8 @@ function getRestrictDir(startPath: string): string | undefined {
 
 function isDirectoryLike(path: string): boolean {
   if (!path.trim()) return false;
+  // PDF はページ数が可変なのでディレクトリ扱い（終了パス不要）
+  if (isPdfFile(path)) return true;
   const normalized = path.replace(/\\/g, "/").replace(/\/+$/, "");
   const lastSegment = normalized.split("/").pop() ?? "";
   const dotIdx = lastSegment.lastIndexOf(".");
@@ -52,9 +59,27 @@ interface ChunkCardProps {
     updates: Partial<Pick<Chunk, "name" | "startPath" | "endPath">>
   ) => void;
   onRemove: (chunkId: string) => void;
+  /** フォルダ型チャンクのサブフォルダ分割 */
+  onSplit?: (chunkId: string) => void;
+  /** このチャンクが分割操作で生成されたものなら呼び出せる */
+  onUndoSplit?: () => void;
+  /** 選択状態 */
+  selected?: boolean;
+  /** 選択中チャンク数（右クリックメニューの一括削除に使用） */
+  selectedCount?: number;
+  /** 選択中チャンクを一括削除するコールバック */
+  onBatchDeleteSelected?: () => void;
+  /** 複数選択ドラッグ中（自分は動いていないが選択グループの一員） */
+  isDraggingGroup?: boolean;
+  /** クリック選択（背景クリック） */
+  onCardClick?: (chunkId: string, index: number, e: React.MouseEvent) => void;
+  /** ドラッグ選択開始 */
+  onCardMouseDown?: (index: number, e: React.MouseEvent) => void;
+  /** ドラッグ選択中の通過 */
+  onCardMouseEnter?: (index: number) => void;
 }
 
-export function ChunkCard({ chunk, index, onUpdate, onRemove }: ChunkCardProps) {
+export function ChunkCard({ chunk, index, onUpdate, onRemove, onSplit, onUndoSplit, selected, selectedCount, onBatchDeleteSelected, isDraggingGroup, onCardClick, onCardMouseDown, onCardMouseEnter }: ChunkCardProps) {
   const t = useT();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(chunk.name ?? "");
@@ -62,6 +87,8 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove }: ChunkCardProps) 
   const [editEnd, setEditEnd] = useState(chunk.endPath);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  // 「サブフォルダで分割」の有効状態: idle=未確認, checking=確認中, ok=可能, none=不可
+  const [splitState, setSplitState] = useState<"idle" | "checking" | "ok" | "none">("idle");
 
   // 画像枚数バッジ（バックグラウンドで検証）
   const [imageCount, setImageCount] = useState<number | null>(null);
@@ -70,14 +97,21 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove }: ChunkCardProps) 
     if (!chunk.startPath) { setImageCount(null); setCountInvalid(false); return; }
     let cancelled = false;
     // 500ms デバウンス（編集中の高速変化を避ける）
-    const timer = setTimeout(() => {
-      validateChunkTauri(chunk.startPath, chunk.endPath)
-        .then(result => {
+    const timer = setTimeout(async () => {
+      try {
+        if (isPdfFile(chunk.startPath)) {
+          // PDF は pdf.js でページ数を取得
+          const count = await getPdfPageCount(chunk.startPath);
+          if (!cancelled) { setImageCount(count); setCountInvalid(false); }
+        } else {
+          const result = await validateChunkTauri(chunk.startPath, chunk.endPath);
           if (cancelled) return;
           if (result.is_valid) { setImageCount(result.image_count); setCountInvalid(false); }
           else { setImageCount(null); setCountInvalid(true); }
-        })
-        .catch(() => { if (!cancelled) { setImageCount(null); setCountInvalid(true); } });
+        }
+      } catch {
+        if (!cancelled) { setImageCount(null); setCountInvalid(true); }
+      }
     }, 500);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [chunk.startPath, chunk.endPath]);
@@ -94,7 +128,14 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove }: ChunkCardProps) 
     setPreviewError(null);
     setPreviewPaths([]);
     try {
-      const paths = await resolveChunkImages(chunk.startPath, chunk.endPath);
+      let paths: string[];
+      if (isPdfFile(chunk.startPath)) {
+        // PDF: pdf.js でページ数を取得して仮想パスに展開
+        const count = await getPdfPageCount(chunk.startPath);
+        paths = Array.from({ length: count }, (_, i) => makePdfPagePath(chunk.startPath, i + 1));
+      } else {
+        paths = await resolveChunkImages(chunk.startPath, chunk.endPath);
+      }
       setPreviewPaths(paths);
     } catch (e) {
       setPreviewError(String(e));
@@ -132,18 +173,58 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove }: ChunkCardProps) 
   }
 
   const displayName = chunk.name?.trim() || `#${index + 1}`;
+  const isDir = isDirectoryLike(chunk.startPath) && !isPdfFile(chunk.startPath);
+
+  /** コンテキストメニューを開き、フォルダなら分割可能か非同期チェック */
+  function handleContextMenu(e: React.MouseEvent) {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+    if (onSplit && isDir && splitState === "idle") {
+      setSplitState("checking");
+      listSplitCandidates(chunk.startPath)
+        .then((c) => setSplitState(c.length > 0 ? "ok" : "none"))
+        .catch(() => setSplitState("none"));
+    }
+  }
+
+  /** Delete キーでチャンク削除確認ダイアログを開く */
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (isEditing) return;
+    if (e.key === "Delete" || e.key === "Backspace") {
+      e.preventDefault();
+      setShowDeleteDialog(true);
+    }
+  }
 
   return (
     <>
       <div
         ref={setNodeRef}
         style={style}
+        tabIndex={0}
         className={cn(
-          "relative rounded-2xl border border-[#dad4c8] bg-white p-4",
+          "relative rounded-2xl border p-4 outline-none transition-colors",
           "shadow-[rgba(0,0,0,0.1)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset,rgba(0,0,0,0.05)_0px_-0.5px_1px]",
-          isDragging && "z-10 opacity-80 shadow-[rgb(0,0,0)_-4px_4px]"
+          "focus-visible:ring-2 focus-visible:ring-[#078a52]/50",
+          selected
+            ? "border-[#078a52] bg-[#e8faf1]"
+            : "border-[#dad4c8] bg-white",
+          // ドラッグ中は本体を非表示（DragOverlay が視覚を担う）
+          isDragging && "opacity-0",
+          // グループドラッグ中の選択済みチャンクも非表示
+          isDraggingGroup && "opacity-0"
         )}
-        onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY }); }}
+        onContextMenu={handleContextMenu}
+        onKeyDown={handleKeyDown}
+        onClick={(e) => {
+          if ((e.target as HTMLElement).closest("button, input, textarea")) return;
+          onCardClick?.(chunk.id, index, e);
+        }}
+        onMouseDown={(e) => {
+          if ((e.target as HTMLElement).closest("button, input, textarea")) return;
+          onCardMouseDown?.(index, e);
+        }}
+        onMouseEnter={() => onCardMouseEnter?.(index)}
       >
         {/* ヘッダー */}
         <div className="mb-3 flex items-center gap-3">
@@ -264,8 +345,37 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove }: ChunkCardProps) 
           onClose={() => setContextMenu(null)}
           items={[
             { label: t.edit, onClick: openEdit },
+            // アンドゥ（このチャンクが分割結果のとき）
+            ...(onUndoSplit
+              ? [{ separator: true as true }, { label: t.undoSplit, onClick: () => { onUndoSplit(); setContextMenu(null); } }]
+              : []
+            ),
+            // サブフォルダ分割（フォルダ型かつ未チェック/確認中/可能な場合）
+            ...(onSplit && isDir && splitState !== "none"
+              ? [
+                  { separator: true as true },
+                  {
+                    label: splitState === "checking" ? `${t.splitChunk}…` : t.splitChunk,
+                    disabled: splitState !== "ok",
+                    onClick: () => { onSplit(chunk.id); setContextMenu(null); },
+                  },
+                ]
+              : []
+            ),
             { separator: true },
-            { label: t.delete, danger: true, onClick: () => setShowDeleteDialog(true) },
+            // 複数選択中 → 一括削除のみ表示。単体選択/未選択 → 単体削除を表示
+            ...(selectedCount && selectedCount > 1
+              ? [
+                  {
+                    label: `選択中の ${selectedCount} 件を削除`,
+                    danger: true,
+                    onClick: () => { onBatchDeleteSelected?.(); setContextMenu(null); },
+                  },
+                ]
+              : [
+                  { label: t.delete, danger: true, onClick: () => setShowDeleteDialog(true) },
+                ]
+            ),
           ]}
         />
       )}
@@ -356,9 +466,19 @@ function ThumbItem({ path, index }: { path: string; index: number }) {
       (entries) => {
         if (entries[0].isIntersecting) {
           observer.disconnect();
-          readImageThumbnail(path, 200)
-            .then(setUrl)
-            .catch(() => setFailed(true));
+          if (isPdfPagePath(path)) {
+            // PDF ページは pdf.js でサムネイルを生成（パスをパースして pdfPath + pageNum に分解）
+            const hashIdx = path.lastIndexOf("#");
+            const pdfPath = path.slice("pdf:".length, hashIdx);
+            const pageNum = parseInt(path.slice(hashIdx + 1), 10) || 1;
+            renderPdfThumbnail(pdfPath, pageNum, 200)
+              .then(setUrl)
+              .catch(() => setFailed(true));
+          } else {
+            readImageThumbnail(path, 200)
+              .then(setUrl)
+              .catch(() => setFailed(true));
+          }
         }
       },
       { rootMargin: "120px" }
@@ -367,7 +487,10 @@ function ThumbItem({ path, index }: { path: string; index: number }) {
     return () => observer.disconnect();
   }, [path]);
 
-  const filename = path.replace(/\\/g, "/").split("/").pop() ?? "";
+  // PDF 仮想パス（pdf:D:/book.pdf#3）の場合はページ番号をファイル名として表示
+  const filename = isPdfPagePath(path)
+    ? `p.${path.split("#").pop()}`
+    : path.replace(/\\/g, "/").split("/").pop() ?? "";
 
   return (
     <div ref={ref} className="flex flex-col gap-1">

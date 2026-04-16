@@ -9,6 +9,8 @@ interface PlaylistState {
   // --- データ ---
   playlists: Playlist[];
   activePlaylistId: string | null;
+  /** ディスクからのロード完了フラグ（HMR でストアがリセットされると false に戻る） */
+  _hydrated: boolean;
 
   // --- 算出プロパティ ---
   activePlaylist: () => Playlist | undefined;
@@ -27,15 +29,27 @@ interface PlaylistState {
     updates: Partial<Pick<Chunk, "name" | "startPath" | "endPath">>
   ) => void;
   removeChunk: (playlistId: string, chunkId: string) => void;
+  removeChunks: (playlistId: string, chunkIds: string[]) => void;
   removeAllChunks: (playlistId: string) => void;
   reorderChunks: (
     playlistId: string,
     fromIndex: number,
     toIndex: number
   ) => void;
+  /** チャンクをIDの配列順に並び替える（ソート機能用） */
+  setChunksOrder: (playlistId: string, orderedIds: string[]) => void;
+  /** プレイリスト自体を並び替える */
+  reorderPlaylist: (fromIndex: number, toIndex: number) => void;
+  /** 指定インデックスに複数チャンクを挿入（分割・アンドゥ用） */
+  insertChunksAt: (playlistId: string, index: number, chunks: Chunk[]) => void;
+
+  // --- お気に入り / タグ ---
+  toggleFavorite: (id: string) => void;
+  setTags: (id: string, tags: string[]) => void;
 
   // --- 永続化 ---
   hydrate: (playlists: Playlist[]) => void;
+  markHydrated: () => void;
 }
 
 /**
@@ -59,6 +73,7 @@ function updatePlaylistChunks(
 export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   playlists: [],
   activePlaylistId: null,
+  _hydrated: false,
 
   activePlaylist: () => {
     const { playlists, activePlaylistId } = get();
@@ -138,6 +153,15 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     }));
   },
 
+  removeChunks: (playlistId: string, chunkIds: string[]) => {
+    const idSet = new Set(chunkIds);
+    set((state) => ({
+      playlists: updatePlaylistChunks(state.playlists, playlistId, (chunks) =>
+        chunks.filter((chunk) => !idSet.has(chunk.id))
+      ),
+    }));
+  },
+
   removeAllChunks: (playlistId: string) => {
     set((state) => ({
       playlists: updatePlaylistChunks(state.playlists, playlistId, () => []),
@@ -155,7 +179,55 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     }));
   },
 
+  reorderPlaylist: (fromIndex: number, toIndex: number) => {
+    set((state) => {
+      const newPlaylists = [...state.playlists];
+      const [moved] = newPlaylists.splice(fromIndex, 1);
+      newPlaylists.splice(toIndex, 0, moved);
+      return { playlists: newPlaylists };
+    });
+  },
+
+  setChunksOrder: (playlistId: string, orderedIds: string[]) => {
+    set((state) => ({
+      playlists: updatePlaylistChunks(state.playlists, playlistId, (chunks) => {
+        const map = new Map(chunks.map((c) => [c.id, c]));
+        return orderedIds.flatMap((id) => (map.has(id) ? [map.get(id)!] : []));
+      }),
+    }));
+  },
+
+  insertChunksAt: (playlistId: string, index: number, chunks: Chunk[]) => {
+    set((state) => ({
+      playlists: updatePlaylistChunks(state.playlists, playlistId, (existing) => {
+        const result = [...existing];
+        result.splice(index, 0, ...chunks);
+        return result;
+      }),
+    }));
+  },
+
+  toggleFavorite: (id: string) => {
+    set((state) => ({
+      playlists: state.playlists.map((pl) =>
+        pl.id === id ? { ...pl, isFavorite: !pl.isFavorite, updatedAt: Date.now() } : pl
+      ),
+    }));
+  },
+
+  setTags: (id: string, tags: string[]) => {
+    set((state) => ({
+      playlists: state.playlists.map((pl) =>
+        pl.id === id ? { ...pl, tags, updatedAt: Date.now() } : pl
+      ),
+    }));
+  },
+
   hydrate: (playlists: Playlist[]) => {
-    set({ playlists });
+    set({ playlists, _hydrated: true });
+  },
+
+  markHydrated: () => {
+    set({ _hydrated: true });
   },
 }));

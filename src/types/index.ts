@@ -14,6 +14,10 @@ export interface Playlist {
   chunks: Chunk[];
   createdAt: number;
   updatedAt: number;
+  /** お気に入り */
+  isFavorite?: boolean;
+  /** カスタムタグ */
+  tags?: string[];
 }
 
 /** ビューア設定 */
@@ -48,6 +52,8 @@ export interface FileEntry {
   is_dir: boolean;
   is_zip: boolean;
   is_image: boolean;
+  /** PDF ファイルかどうか */
+  is_pdf: boolean;
   thumbnail_url: string | null;
   is_hidden: boolean;
   /** ファイル更新日時（Unixタイムスタンプ秒）。取得不可の場合は null */

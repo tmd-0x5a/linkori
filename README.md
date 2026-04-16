@@ -38,12 +38,17 @@ Download the latest installer from the [**Releases**](https://github.com/tmd-0x5
 - Create, delete, and rename playlists
 - Playlists are saved locally and persist across restarts
 - Switch between multiple playlists
+- **Drag to reorder** (v0.4.0): drag anywhere on the playlist item to reorder (no separate drag handle required)
 - Right-click for rename / delete context menu
 - Double-click to rename in place
 - `F2` to rename the selected playlist; `Delete` to delete it
+- **Favorites**: star any playlist; filter the list to show only favorites (★ button)
+- **Custom tags**: add arbitrary text tags to each playlist; click a tag in the filter bar to narrow the list
+- **Reading progress bar**: each playlist item shows a progress bar indicating how far you've read
 
 ### Chunks (Reading Ranges)
 - Register a range from a start file to an end file as a "chunk"
+- **Multi-select & group drag** (v0.4.0): click to select, `Ctrl+click` to toggle, `Shift+click` to range-select, drag to select — drag selected chunks as a group; all move simultaneously with a DragOverlay showing a stacked card and count badge
 - Reorder chunks with drag and drop
 - Supports images in directories and inside ZIP archives
 - Chain multiple chunks into a single continuous playlist
@@ -53,6 +58,9 @@ Download the latest installer from the [**Releases**](https://github.com/tmd-0x5
 - **Reverse order**: if the end file comes before the start file numerically (e.g. `027.jpg` → `001.jpg`), images are served in reverse order
 - **Preview**: click the eye icon on a chunk card to browse its images as thumbnails before opening the viewer
 - **Image count badge**: each chunk card shows the number of images it contains
+- **Sort chunks**: sort all chunks in the active playlist by name, last-modified date, or created date (ascending / descending) via the sort menu
+- **Split by subfolder**: split a single chunk into multiple sub-chunks, one per subfolder — with undo support
+- **Batch delete**: select multiple chunks and delete them all at once; `Ctrl+Z` restores the last deleted batch
 
 ### File Browser (Built-in Explorer)
 - Custom in-app file browser — no OS native dialog

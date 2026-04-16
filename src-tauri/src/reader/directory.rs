@@ -26,6 +26,41 @@ pub fn list_images_in_directory(dir_path: &Path) -> Result<Vec<PathBuf>, String>
     Ok(images)
 }
 
+/// ディレクトリ内の画像ファイルを自然順ソートで再帰的に列挙する
+/// ファイルとサブディレクトリを混在させて自然順でソートし、
+/// サブディレクトリは深さ優先で展開する
+pub fn list_images_recursively(dir_path: &Path) -> Result<Vec<PathBuf>, String> {
+    if !dir_path.is_dir() {
+        return Err(format!("ディレクトリが存在しません: {}", dir_path.display()));
+    }
+
+    // ファイル・サブディレクトリをまとめて自然順ソート
+    let mut entries: Vec<PathBuf> = fs::read_dir(dir_path)
+        .map_err(|e| format!("ディレクトリの読み取りに失敗: {}", e))?
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
+        .collect();
+
+    entries.sort_by(|a, b| {
+        let a_name = a.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        let b_name = b.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        natural_compare(a_name, b_name)
+    });
+
+    let mut images = Vec::new();
+    for entry in entries {
+        if entry.is_dir() {
+            // サブディレクトリを再帰的に展開
+            let sub = list_images_recursively(&entry)?;
+            images.extend(sub);
+        } else if is_image_file(&entry) {
+            images.push(entry);
+        }
+    }
+
+    Ok(images)
+}
+
 /// ディレクトリ内で start_file から end_file の範囲の画像を返す
 /// start_file/end_file はファイル名（パスではない）
 /// start_file が None の場合は先頭から、end_file が None の場合は末尾まで

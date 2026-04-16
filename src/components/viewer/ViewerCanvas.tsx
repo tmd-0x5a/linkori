@@ -58,10 +58,18 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
         getCurrentWindow().setFullscreen(false).catch(() => {});
         isFullscreenRef.current = false;
       }
-      // PDF ドキュメントキャッシュをクリア
-      clearPdfCache();
+      // NOTE: clearPdfCache() はここでは呼ばない。
+      // React Strict Mode の二重マウント時にクリーンアップが走ると、
+      // 進行中の page.render() が破棄されて最初の数ページが失敗するため。
+      // キャッシュのクリアは handleBack() で行う。
     };
   }, []);
+
+  // ホームへ戻る（PDF キャッシュをここでクリアする）
+  const handleBack = useCallback(() => {
+    clearPdfCache();
+    onBack();
+  }, [onBack]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [direction, setDirection] = useState(0);
@@ -75,6 +83,8 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
   const imageCacheRef = useRef<Map<string, string>>(new Map());
   const failedPathsRef = useRef<Set<string>>(new Set());
   const loadingPathsRef = useRef<Set<string>>(new Set());
+  // PDF ページのリトライ回数（最大 3 回）
+  const pdfRetryCountRef = useRef<Map<string, number>>(new Map());
   const [, forceUpdate] = useState(0);
 
   // サムネイル専用キャッシュ（低品質・小サイズで高速）
@@ -94,6 +104,7 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
       imageCacheRef.current.clear();
       failedPathsRef.current.clear();
       loadingPathsRef.current.clear();
+      pdfRetryCountRef.current.clear();
       thumbCacheRef.current.clear();
       thumbLoadingRef.current.clear();
     }
@@ -122,6 +133,7 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
         .then((url) => {
           imageCacheRef.current.set(path, url);
           loadingPathsRef.current.delete(path);
+          pdfRetryCountRef.current.delete(path);
           // キャッシュウィンドウ外を削除
           const ci = useViewerStore.getState().currentPageIndex;
           for (const [p] of imageCacheRef.current) {
@@ -133,9 +145,22 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
           forceUpdate(n => n + 1);
         })
         .catch(() => {
-          failedPathsRef.current.add(path);
           loadingPathsRef.current.delete(path);
-          forceUpdate(n => n + 1);
+          // PDF ページは一時的な失敗（ワーカー未初期化など）が起こりうるためリトライする
+          if (isPdfPagePath(path)) {
+            const retries = pdfRetryCountRef.current.get(path) ?? 0;
+            if (retries < 3) {
+              pdfRetryCountRef.current.set(path, retries + 1);
+              // 指数バックオフ: 300ms, 600ms, 1200ms
+              setTimeout(() => forceUpdate(n => n + 1), 300 * Math.pow(2, retries));
+            } else {
+              failedPathsRef.current.add(path);
+              forceUpdate(n => n + 1);
+            }
+          } else {
+            failedPathsRef.current.add(path);
+            forceUpdate(n => n + 1);
+          }
         });
     }
   }
@@ -318,12 +343,12 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
           if (isFullscreenRef.current) {
             toggleFullscreen();
           } else {
-            onBack();
+            handleBack();
           }
           break;
       }
     },
-    [settings, nextSpread, prevSpread, goToFirst, goToLast, onBack, updateSettings, prevChunk, nextChunk, toggleFullscreen]
+    [settings, nextSpread, prevSpread, goToFirst, goToLast, handleBack, updateSettings, prevChunk, nextChunk, toggleFullscreen]
   );
 
   const lastWheelTime = useRef(0);
@@ -411,7 +436,7 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
           {loadError}
         </p>
         <button
-          onClick={onBack}
+          onClick={handleBack}
           className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700"
         >
           {t.back}
@@ -507,7 +532,7 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onBack();
+            handleBack();
           }}
           title={t.homeTitle}
           className="flex items-center gap-1.5 rounded-lg bg-black/40 px-3 py-1.5 text-xs text-zinc-400 opacity-0 backdrop-blur-sm transition-all duration-200 group-hover/top:opacity-100 hover:bg-black/70 hover:text-zinc-100"

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useId } from "react";
 import { readImageAsDataUrl } from "@/lib/tauri";
 import { FileBrowserDialog } from "@/components/playlist/FileBrowserDialog";
 import { useT } from "@/hooks/useT";
+import { initDragDropListener, registerDropZone, unregisterDropZone } from "@/lib/dragDrop";
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "tif"];
 
@@ -39,6 +40,33 @@ export function ImageFilePicker({ label, value, onChange, placeholder, disabled,
   const t = useT();
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [browserOpen, setBrowserOpen] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const onChangeRef = useRef(onChange);
+  const id = useId();
+
+  // onChange の最新参照を常に保持
+  useEffect(() => { onChangeRef.current = onChange; });
+
+  // Tauri ドラッグ&ドロップリスナーを初期化（アプリ全体で一度だけ）
+  useEffect(() => {
+    initDragDropListener();
+  }, []);
+
+  // ドロップゾーンの登録・解除
+  useEffect(() => {
+    if (disabled) return;
+    registerDropZone({
+      id,
+      getRect: () => containerRef.current?.getBoundingClientRect() ?? null,
+      onDrop: (paths) => {
+        setIsDragOver(false);
+        onChangeRef.current(paths[0]);
+      },
+      setActive: (active) => setIsDragOver(active),
+    });
+    return () => unregisterDropZone(id);
+  }, [id, disabled]);
 
   useEffect(() => {
     setThumbnailUrl(null);
@@ -57,9 +85,26 @@ export function ImageFilePicker({ label, value, onChange, placeholder, disabled,
     <div className="flex flex-col gap-1.5">
       <label className="label-clay text-[#55534e]">{label}</label>
 
-      <div className="flex gap-2">
+      {/* ドロップゾーン全体 */}
+      <div
+        ref={containerRef}
+        className={`relative flex gap-2 rounded-lg transition-all duration-150 ${
+          isDragOver
+            ? "outline outline-2 outline-[#078a52] bg-[#e8fdf2] shadow-[0_0_0_4px_rgba(7,138,82,0.15)]"
+            : ""
+        }`}
+      >
+        {/* ドラッグオーバー時のオーバーレイ */}
+        {isDragOver && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg">
+            <span className="rounded-full bg-[#078a52] px-3 py-1 text-xs font-semibold text-white shadow-md">
+              {t.dropHere}
+            </span>
+          </div>
+        )}
+
         {/* サムネイル */}
-        {thumbnailUrl && !disabled && (
+        {thumbnailUrl && !disabled && !isDragOver && (
           <div className="shrink-0 h-9 w-9 overflow-hidden rounded-lg border border-[#dad4c8] bg-[#faf9f7]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={thumbnailUrl} alt={filename ?? ""} className="h-full w-full object-contain" />

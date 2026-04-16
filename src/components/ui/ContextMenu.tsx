@@ -7,6 +7,7 @@ export interface ContextMenuItem {
   label: string;
   onClick: () => void;
   danger?: boolean;
+  disabled?: boolean;
   separator?: never;
 }
 
@@ -69,12 +70,17 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
         ) : (
           <button
             key={i}
+            disabled={(item as ContextMenuItem).disabled}
             onClick={() => {
+              if ((item as ContextMenuItem).disabled) return;
               (item as ContextMenuItem).onClick();
               onClose();
             }}
             className={cn(
-              "flex w-full items-center px-3 py-1.5 text-left text-sm transition-colors hover:bg-[#eee9df]",
+              "flex w-full items-center px-3 py-1.5 text-left text-sm transition-colors",
+              (item as ContextMenuItem).disabled
+                ? "cursor-not-allowed opacity-40"
+                : "hover:bg-[#eee9df]",
               (item as ContextMenuItem).danger
                 ? "text-[#e05560] font-medium"
                 : "text-black"

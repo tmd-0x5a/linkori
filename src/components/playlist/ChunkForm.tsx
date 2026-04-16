@@ -4,9 +4,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { ImageFilePicker } from "@/components/ImageFilePicker";
 import { useT } from "@/hooks/useT";
+import { listSplitCandidates } from "@/lib/tauri";
 
 interface ChunkFormProps {
   onAdd: (startPath: string, endPath: string, name?: string) => void;
+  /** サブフォルダ分割時に複数チャンクを一括追加 */
+  onAddMultiple?: (chunks: Array<{ startPath: string; endPath: string; name?: string }>) => void;
   /** 増加するたびにフォームを開く（カウンター方式） */
   addTrigger?: number;
   /** キャンセル時に親へ通知（省略可） */
@@ -52,12 +55,41 @@ function isDirectoryLike(path: string): boolean {
   return !IMAGE_EXTENSIONS.includes(ext);
 }
 
-export function ChunkForm({ onAdd, addTrigger, onCancel, initialBrowsePath }: ChunkFormProps) {
+export function ChunkForm({ onAdd, onAddMultiple, addTrigger, onCancel, initialBrowsePath }: ChunkFormProps) {
   const t = useT();
   const [name, setName] = useState("");
   const [startPath, setStartPath] = useState("");
   const [endPath, setEndPath] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [isSplitting, setIsSplitting] = useState(false);
+  const [splitError, setSplitError] = useState<string | null>(null);
+
+  async function handleSplitBySubfolders() {
+    if (!startPath.trim()) return;
+    setIsSplitting(true);
+    setSplitError(null);
+    try {
+      const candidates = await listSplitCandidates(startPath.trim());
+      if (candidates.length === 0) {
+        setSplitError(t.noSubfoldersFound);
+        return;
+      }
+      const chunks = candidates.map((c) => ({ startPath: c.path, endPath: "", name: c.name }));
+      if (onAddMultiple) {
+        onAddMultiple(chunks);
+      } else {
+        for (const c of chunks) onAdd(c.startPath, c.endPath, c.name);
+      }
+      setName("");
+      setStartPath("");
+      setEndPath("");
+      setIsOpen(false);
+    } catch (e) {
+      setSplitError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setIsSplitting(false);
+    }
+  }
 
   useEffect(() => {
     if (addTrigger && addTrigger > 0) {
@@ -137,7 +169,11 @@ export function ChunkForm({ onAdd, addTrigger, onCancel, initialBrowsePath }: Ch
         restrictToDir={startPath.trim() && !startIsDir ? getRestrictDir(startPath) : undefined}
       />
 
-      <div className="flex justify-end gap-2">
+      {splitError && (
+        <p className="text-xs text-red-500">{splitError}</p>
+      )}
+
+      <div className="flex justify-end gap-2 flex-wrap">
         <Button
           type="button"
           variant="ghost"
@@ -147,11 +183,25 @@ export function ChunkForm({ onAdd, addTrigger, onCancel, initialBrowsePath }: Ch
             setName("");
             setStartPath("");
             setEndPath("");
+            setSplitError(null);
             onCancel?.();
           }}
         >
           {t.cancel}
         </Button>
+        {/* フォルダ選択時のみ「サブフォルダで分割」を表示 */}
+        {startIsDir && !isPdfFile(startPath) && startPath.trim() && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            title={t.splitBySubfoldersTitle}
+            disabled={isSplitting}
+            onClick={handleSplitBySubfolders}
+          >
+            {isSplitting ? "..." : t.splitBySubfolders}
+          </Button>
+        )}
         <Button type="submit" variant="primary" size="sm" disabled={!startPath.trim()}>
           {t.add}
         </Button>

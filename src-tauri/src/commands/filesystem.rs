@@ -16,6 +16,8 @@ pub struct FileEntry {
     pub is_dir: bool,
     pub is_zip: bool,
     pub is_image: bool,
+    /// PDF ファイルかどうか
+    pub is_pdf: bool,
     /// manga:// URL (is_image = true のときのみ Some)
     pub thumbnail_url: Option<String>,
     /// Windows: FILE_ATTRIBUTE_HIDDEN, Unix: ドット始まり
@@ -82,8 +84,13 @@ pub async fn browse_directory(path: String) -> Result<Vec<FileEntry>, String> {
             let is_dir = detect_is_dir(&entry, &entry_path);
             let is_zip = !is_dir && is_zip_like(&entry_path);
             let is_image = !is_dir && !is_zip && is_image_file(&entry_path);
+            let is_pdf = !is_dir && !is_zip && !is_image && entry_path
+                .extension()
+                .and_then(|e| e.to_str())
+                .map(|e| e.to_lowercase() == "pdf")
+                .unwrap_or(false);
 
-            if !(is_dir || is_zip || is_image) {
+            if !(is_dir || is_zip || is_image || is_pdf) {
                 return None;
             }
 
@@ -102,6 +109,7 @@ pub async fn browse_directory(path: String) -> Result<Vec<FileEntry>, String> {
                 is_dir,
                 is_zip,
                 is_image,
+                is_pdf,
                 thumbnail_url: None, // TypeScript側で readImageAsDataUrl を使って遅延読み込み
                 is_hidden,
                 modified_at,
@@ -228,6 +236,7 @@ pub async fn browse_zip(zip_path: String) -> Result<Vec<FileEntry>, String> {
             is_dir: false,
             is_zip: true,
             is_image: false,
+            is_pdf: false,
             thumbnail_url: None,
             is_hidden: false,
             modified_at: None,
@@ -245,6 +254,7 @@ pub async fn browse_zip(zip_path: String) -> Result<Vec<FileEntry>, String> {
             is_dir: false,
             is_zip: false,
             is_image: true,
+            is_pdf: false,
             thumbnail_url: None,
             is_hidden: false,
             modified_at: None,
@@ -252,6 +262,69 @@ pub async fn browse_zip(zip_path: String) -> Result<Vec<FileEntry>, String> {
     }
 
     Ok(entries)
+}
+
+/// パスのファイルシステムメタデータ（更新日時・作成日時）を返す。
+/// チャンクの並び替えに使用する。ZIP内部パスや存在しないパスは None を返す。
+#[derive(Debug, Serialize)]
+pub struct PathMeta {
+    /// 更新日時（Unix タイムスタンプ秒）
+    pub modified_at: Option<u64>,
+    /// 作成日時（Unix タイムスタンプ秒）。Linux など未対応環境では None
+    pub created_at: Option<u64>,
+}
+
+#[tauri::command]
+pub async fn get_path_meta(path: String) -> Result<PathMeta, String> {
+    let p = Path::new(&path);
+    let meta = p.metadata().map_err(|e| format!("メタデータ取得失敗: {e}"))?;
+    let modified_at = meta.modified().ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_secs());
+    let created_at = meta.created().ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_secs());
+    Ok(PathMeta { modified_at, created_at })
+}
+
+/// チャンク分割候補（サブフォルダ）
+#[derive(Debug, Serialize)]
+pub struct SplitCandidate {
+    pub name: String,
+    pub path: String,
+}
+
+/// 指定フォルダの直下にある非隠しサブフォルダを自然順で返す。
+/// 再帰的な展開はせず、ユーザーが必要に応じて各チャンクを再分割する。
+#[tauri::command]
+pub async fn list_split_candidates(path: String) -> Result<Vec<SplitCandidate>, String> {
+    let normalized = path.replace('\\', "/");
+    let dir = std::path::Path::new(&normalized);
+    if !dir.is_dir() {
+        return Err(format!("ディレクトリが存在しません: {path}"));
+    }
+
+    let mut subdirs: Vec<std::path::PathBuf> = fs::read_dir(dir)
+        .map_err(|e| format!("読み取り失敗: {e}"))?
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
+        .filter(|p| {
+            if !p.is_dir() { return false; }
+            let name = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            !detect_is_hidden(p, name)
+        })
+        .collect();
+
+    subdirs.sort_by(|a, b| {
+        let a_name = a.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        let b_name = b.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        natural_compare(a_name, b_name)
+    });
+
+    Ok(subdirs.iter().map(|p| SplitCandidate {
+        name: p.file_name().and_then(|n| n.to_str()).unwrap_or("").to_string(),
+        path: p.to_string_lossy().replace('\\', "/"),
+    }).collect())
 }
 
 /// ファイルをバイト列として読み込み、Base64 文字列で返す。
