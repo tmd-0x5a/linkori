@@ -124,24 +124,28 @@ a{text-decoration:none}
 .cd h3{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;
   font-size:19px;font-weight:600;line-height:1.24;letter-spacing:-.374px;
   color:#f5f5f7;margin-bottom:8px}
-.cd p{font-size:14px;color:rgba(255,255,255,.5);letter-spacing:-.224px;line-height:1.43}
+.cd p{font-size:14px;color:rgba(255,255,255,.5);letter-spacing:-.224px;line-height:1.43;
+  word-break:keep-all;overflow-wrap:break-word}
 .cd ul{list-style:none;padding:0;margin-top:10px}
 .cd ul li{font-size:14px;color:rgba(255,255,255,.5);letter-spacing:-.224px;
-  line-height:1.43;padding:3px 0 3px 14px;position:relative}
+  line-height:1.43;padding:3px 0 3px 14px;position:relative;
+  word-break:keep-all;overflow-wrap:break-word}
 .cd ul li::before{content:"–";position:absolute;left:0;color:rgba(255,255,255,.2)}
-.cd ul li strong{color:rgba(255,255,255,.85);font-weight:600}
+.cd ul li strong{color:rgba(255,255,255,.85);font-weight:600;white-space:nowrap}
 
 /* ── Card: light ── */
 .cl{background:#fff;border-radius:12px;padding:28px 24px;text-align:left}
 .cl h3{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;
   font-size:19px;font-weight:600;line-height:1.24;letter-spacing:-.374px;
   color:#1d1d1f;margin-bottom:8px}
-.cl p{font-size:14px;color:rgba(0,0,0,.56);letter-spacing:-.224px;line-height:1.43}
+.cl p{font-size:14px;color:rgba(0,0,0,.56);letter-spacing:-.224px;line-height:1.43;
+  word-break:keep-all;overflow-wrap:break-word}
 .cl ul{list-style:none;padding:0;margin-top:10px}
 .cl ul li{font-size:14px;color:rgba(0,0,0,.56);letter-spacing:-.224px;
-  line-height:1.43;padding:3px 0 3px 14px;position:relative}
+  line-height:1.43;padding:3px 0 3px 14px;position:relative;
+  word-break:keep-all;overflow-wrap:break-word}
 .cl ul li::before{content:"–";position:absolute;left:0;color:rgba(0,0,0,.2)}
-.cl ul li strong{color:#1d1d1f;font-weight:600}
+.cl ul li strong{color:#1d1d1f;font-weight:600;white-space:nowrap}
 
 /* ── Grids ── */
 .g2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
@@ -162,17 +166,19 @@ a{text-decoration:none}
   font-size:40px;font-weight:600;line-height:1.10;color:#1d1d1f;margin-bottom:12px}
 .spotlight p{font-size:17px;color:rgba(0,0,0,.5);letter-spacing:-.374px;line-height:1.47}
 
-/* ── Keyboard table ── */
-.kbd-wrap{max-width:640px;margin:0 auto;text-align:left}
-.kbd-t{width:100%;border-collapse:collapse}
-.kbd-t th{font-size:12px;font-weight:600;color:rgba(0,0,0,.4);
-  letter-spacing:-.08px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.1)}
-.kbd-t td{font-size:14px;color:#1d1d1f;letter-spacing:-.224px;
-  padding:9px 0;border-bottom:1px solid rgba(0,0,0,.06);vertical-align:middle}
-.kbd-t td:first-child{color:rgba(0,0,0,.5);padding-right:24px;white-space:nowrap}
-kbd{display:inline-block;background:#e8e8e8;border-radius:4px;
-  padding:1px 6px;font-size:12px;font-family:inherit;font-weight:600;
-  border:1px solid rgba(0,0,0,.12);margin:1px}
+/* ── Keyboard shortcut cards ── */
+.kbd-list{margin-top:14px}
+.kbd-row{display:flex;align-items:flex-start;justify-content:space-between;
+  padding:9px 0;border-bottom:1px solid rgba(0,0,0,.06);gap:16px}
+.kbd-row:last-child{border-bottom:none;padding-bottom:0}
+.kbd-keys{display:flex;flex-wrap:wrap;gap:3px;flex-shrink:0}
+.kbd-act{font-size:13px;color:rgba(0,0,0,.56);letter-spacing:-.16px;
+  line-height:1.4;text-align:right;flex-shrink:0;padding-top:2px;white-space:nowrap}
+.kbd-mouse{font-size:11px;color:rgba(0,0,0,.4);letter-spacing:-.08px;
+  padding:2px 7px;background:#ebebeb;border-radius:5px;white-space:nowrap}
+kbd{display:inline-block;background:#ebebeb;border-radius:5px;
+  padding:2px 7px;font-size:11px;font-family:inherit;font-weight:600;
+  color:#1d1d1f;letter-spacing:-.08px;white-space:nowrap}
 
 /* ── Format badges ── */
 .fmt-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:36px}
@@ -550,37 +556,88 @@ kbd{display:inline-block;background:#e8e8e8;border-radius:4px;
 <section class="sl" id="keyboard">
   <h2 data-en="Keyboard shortcuts." data-ja="キーボードショートカット。">Keyboard shortcuts.</h2>
   <p class="sub" data-en="Navigate entirely without a mouse." data-ja="マウスなしで全操作。">Navigate entirely without a mouse.</p>
-  <div class="kbd-wrap">
-    <table class="kbd-t">
-      <thead><tr>
-        <th data-en="Key / Input" data-ja="キー / 入力">Key / Input</th>
-        <th data-en="Action" data-ja="動作">Action</th>
-      </tr></thead>
-      <tbody>
-        <tr><td><kbd>←</kbd><kbd>↑</kbd><kbd>Space</kbd><kbd>PageDown</kbd></td>
-            <td data-en="Next page" data-ja="次ページ">Next page</td></tr>
-        <tr><td><kbd>→</kbd><kbd>↓</kbd><kbd>Shift+Space</kbd><kbd>PageUp</kbd></td>
-            <td data-en="Previous page" data-ja="前ページ">Previous page</td></tr>
-        <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td>
-            <td data-en="First / last page" data-ja="最初 / 最後のページ">First / last page</td></tr>
-        <tr><td><kbd>S</kbd></td>
-            <td data-en="Toggle single / spread view" data-ja="1枚 / 見開き切替">Toggle single / spread view</td></tr>
-        <tr><td><kbd>[</kbd> / <kbd>]</kbd></td>
-            <td data-en="Next / previous chunk" data-ja="次 / 前チャンク">Next / previous chunk</td></tr>
-        <tr><td><kbd>F</kbd></td>
-            <td data-en="Toggle fullscreen" data-ja="フルスクリーン切替">Toggle fullscreen</td></tr>
-        <tr><td><kbd>Esc</kbd></td>
-            <td data-en="Exit fullscreen or return home" data-ja="フルスクリーン解除 / ホームへ">Exit fullscreen or return home</td></tr>
-        <tr><td><span data-en="Click right / left half" data-ja="右 / 左半分クリック">Click right / left half</span></td>
-            <td data-en="Previous / next page" data-ja="前 / 次ページ">Previous / next page</td></tr>
-        <tr><td><kbd>F2</kbd></td>
-            <td data-en="Rename selected playlist" data-ja="選択プレイリストをリネーム">Rename selected playlist</td></tr>
-        <tr><td><kbd>Delete</kbd></td>
-            <td data-en="Delete selected playlist" data-ja="選択プレイリストを削除">Delete selected playlist</td></tr>
-        <tr><td><kbd>Ctrl+Z</kbd></td>
-            <td data-en="Undo last chunk delete or split" data-ja="直前の削除・分割をアンドゥ">Undo last chunk delete or split</td></tr>
-      </tbody>
-    </table>
+  <div class="w g3">
+
+    <!-- Page Navigation -->
+    <div class="cl">
+      <div class="ico-l"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+      <h3 data-en="Page Navigation" data-ja="ページ操作">Page Navigation</h3>
+      <div class="kbd-list">
+        <div class="kbd-row">
+          <div class="kbd-keys"><kbd>←</kbd><kbd>↑</kbd><kbd>Space</kbd><kbd>PgDn</kbd></div>
+          <div class="kbd-act" data-en="Next page" data-ja="次ページ">Next page</div>
+        </div>
+        <div class="kbd-row">
+          <div class="kbd-keys"><kbd>→</kbd><kbd>↓</kbd><kbd>⇧Space</kbd><kbd>PgUp</kbd></div>
+          <div class="kbd-act" data-en="Previous page" data-ja="前ページ">Previous page</div>
+        </div>
+        <div class="kbd-row">
+          <div class="kbd-keys"><kbd>Home</kbd></div>
+          <div class="kbd-act" data-en="First page" data-ja="先頭ページ">First page</div>
+        </div>
+        <div class="kbd-row">
+          <div class="kbd-keys"><kbd>End</kbd></div>
+          <div class="kbd-act" data-en="Last page" data-ja="最終ページ">Last page</div>
+        </div>
+        <div class="kbd-row">
+          <div class="kbd-keys"><span class="kbd-mouse" data-en="Scroll ↓ / ↑" data-ja="スクロール ↓ / ↑">Scroll ↓ / ↑</span></div>
+          <div class="kbd-act" data-en="Next / prev page" data-ja="次 / 前ページ">Next / prev page</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View & Screen -->
+    <div class="cl">
+      <div class="ico-l"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg></div>
+      <h3 data-en="View &amp; Screen" data-ja="表示・画面">View &amp; Screen</h3>
+      <div class="kbd-list">
+        <div class="kbd-row">
+          <div class="kbd-keys"><kbd>S</kbd></div>
+          <div class="kbd-act" data-en="Single / spread" data-ja="1枚 / 見開き">Single / spread</div>
+        </div>
+        <div class="kbd-row">
+          <div class="kbd-keys"><kbd>F</kbd></div>
+          <div class="kbd-act" data-en="Fullscreen" data-ja="フルスクリーン">Fullscreen</div>
+        </div>
+        <div class="kbd-row">
+          <div class="kbd-keys"><kbd>Esc</kbd></div>
+          <div class="kbd-act" data-en="Exit / Home" data-ja="解除 / ホーム">Exit / Home</div>
+        </div>
+        <div class="kbd-row">
+          <div class="kbd-keys"><span class="kbd-mouse" data-en="Click left half" data-ja="左半分クリック">Click left</span></div>
+          <div class="kbd-act" data-en="Next page" data-ja="次ページ">Next page</div>
+        </div>
+        <div class="kbd-row">
+          <div class="kbd-keys"><span class="kbd-mouse" data-en="Click right half" data-ja="右半分クリック">Click right</span></div>
+          <div class="kbd-act" data-en="Previous page" data-ja="前ページ">Previous page</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Playlist & Chunks -->
+    <div class="cl">
+      <div class="ico-l"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+      <h3 data-en="Playlist &amp; Chunks" data-ja="プレイリスト・チャンク">Playlist &amp; Chunks</h3>
+      <div class="kbd-list">
+        <div class="kbd-row">
+          <div class="kbd-keys"><kbd>[</kbd><kbd>]</kbd></div>
+          <div class="kbd-act" data-en="Prev / next chunk" data-ja="前 / 次チャンク">Prev / next chunk</div>
+        </div>
+        <div class="kbd-row">
+          <div class="kbd-keys"><kbd>F2</kbd></div>
+          <div class="kbd-act" data-en="Rename playlist" data-ja="プレイリストをリネーム">Rename playlist</div>
+        </div>
+        <div class="kbd-row">
+          <div class="kbd-keys"><kbd>Delete</kbd></div>
+          <div class="kbd-act" data-en="Delete playlist" data-ja="プレイリストを削除">Delete playlist</div>
+        </div>
+        <div class="kbd-row">
+          <div class="kbd-keys"><kbd>Ctrl+Z</kbd></div>
+          <div class="kbd-act" data-en="Undo delete / split" data-ja="削除・分割をアンドゥ">Undo delete / split</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
