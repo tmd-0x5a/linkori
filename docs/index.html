@@ -12,39 +12,25 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://tmd-0x5a.github.io/linkori/">
 <meta property="og:title" content="Linkori — Local Manga & Image Viewer">
-<meta property="og:description" content="Linkori is a free, open-source local manga and image viewer for Windows. Read multiple folders and ZIP archives in sequence using a playlist system.">
+<meta property="og:description" content="Free open-source local manga and image viewer for Windows with playlist, ZIP, and PDF support.">
 <meta property="og:image" content="https://tmd-0x5a.github.io/linkori/ogp.png">
 <meta property="og:locale" content="en_US">
 <meta property="og:locale:alternate" content="ja_JP">
 <meta property="og:site_name" content="Linkori">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Linkori — Local Manga & Image Viewer">
-<meta name="twitter:description" content="Free Windows app for reading manga and images. Playlist system, ZIP support, fast lazy loading.">
+<meta name="twitter:description" content="Free Windows app for reading manga and images. Playlist, ZIP, PDF support.">
 <meta name="twitter:image" content="https://tmd-0x5a.github.io/linkori/ogp.png">
 <link rel="alternate" hreflang="en" href="https://tmd-0x5a.github.io/linkori/">
 <link rel="alternate" hreflang="ja" href="https://tmd-0x5a.github.io/linkori/">
 <link rel="alternate" hreflang="x-default" href="https://tmd-0x5a.github.io/linkori/">
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Linkori",
-  "alternateName": "Linkori — Local Manga & Image Viewer",
-  "operatingSystem": "Windows 10, Windows 11",
-  "applicationCategory": "MultimediaApplication",
-  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-  "url": "https://tmd-0x5a.github.io/linkori/",
-  "downloadUrl": "https://github.com/tmd-0x5a/linkori/releases",
-  "description": "Free, open-source local manga and image viewer for Windows. Supports playlists, ZIP archives, PDF, and fast lazy loading.",
-  "author": { "@type": "Person", "name": "Yuta Tomida" },
-  "softwareVersion": "0.4.0",
-  "license": "https://github.com/tmd-0x5a/linkori/blob/main/LICENSE"
-}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Linkori","operatingSystem":"Windows 10, Windows 11","applicationCategory":"MultimediaApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://tmd-0x5a.github.io/linkori/","downloadUrl":"https://github.com/tmd-0x5a/linkori/releases","description":"Free open-source local manga and image viewer for Windows.","author":{"@type":"Person","name":"Yuta Tomida"},"softwareVersion":"0.4.0","license":"https://github.com/tmd-0x5a/linkori/blob/main/LICENSE"}
 </script>
 <style>
-/* ===== Reset & Base ===== */
+/* ===== Reset ===== */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 body{font-family:'SF Pro Text','SF Pro Icons','Helvetica Neue',Helvetica,Arial,'Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,sans-serif;color:#1d1d1f;background:#000}
 img{max-width:100%;height:auto;display:block}
 a{text-decoration:none}
@@ -60,115 +46,122 @@ a{text-decoration:none}
 .lang-switch button{padding:3px 8px;font-size:11px;font-weight:500;color:rgba(255,255,255,.5);background:transparent;border:none;cursor:pointer;transition:all .2s;font-family:inherit}
 .lang-switch button.active{color:#fff;background:rgba(255,255,255,.15)}
 
+/* ===== CTAs ===== */
+.btn-primary{display:inline-flex;align-items:center;gap:6px;background:#0071e3;color:#fff;font-size:17px;font-weight:400;letter-spacing:-.374px;padding:12px 24px;border-radius:980px;border:none;cursor:pointer;transition:background .2s}
+.btn-primary:hover{background:#0077ed}
+.btn-primary svg{width:16px;height:16px}
+.btn-outline-dark{display:inline-flex;align-items:center;color:#2997ff;font-size:17px;font-weight:400;letter-spacing:-.374px;padding:12px 24px;border-radius:980px;border:1px solid rgba(255,255,255,.25);transition:border-color .2s;cursor:pointer;background:transparent}
+.btn-outline-dark:hover{border-color:#2997ff}
+.btn-outline-light{display:inline-flex;align-items:center;color:#0066cc;font-size:17px;font-weight:400;letter-spacing:-.374px;padding:12px 24px;border-radius:980px;border:1px solid rgba(0,0,0,.2);transition:border-color .2s;cursor:pointer;background:transparent}
+.btn-outline-light:hover{border-color:#0066cc}
+
+/* ===== Section base ===== */
+.s-dark{background:#000;color:#fff;padding:100px 22px;text-align:center}
+.s-light{background:#f5f5f7;color:#1d1d1f;padding:100px 22px;text-align:center}
+.s-dark h2{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:40px;font-weight:600;line-height:1.10;letter-spacing:normal;margin-bottom:12px}
+.s-light h2{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:40px;font-weight:600;line-height:1.10;color:#1d1d1f;margin-bottom:12px}
+.s-dark .sub{font-size:17px;color:rgba(255,255,255,.56);letter-spacing:-.374px;line-height:1.47;margin-bottom:56px}
+.s-light .sub{font-size:17px;color:rgba(0,0,0,.56);letter-spacing:-.374px;line-height:1.47;margin-bottom:56px}
+.wrap{max-width:980px;margin:0 auto}
+
 /* ===== Hero ===== */
 .hero{min-height:100vh;background:#000;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 22px 80px}
 .hero-icon{width:80px;height:80px;border-radius:18px;margin-bottom:24px;box-shadow:rgba(0,0,0,.22) 3px 5px 30px}
 .hero h1{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:56px;font-weight:600;line-height:1.07;letter-spacing:-.28px;margin-bottom:12px}
 .hero .subtitle{font-size:21px;font-weight:400;line-height:1.19;letter-spacing:.231px;color:rgba(255,255,255,.7);margin-bottom:8px}
-.hero .version-badge{display:inline-block;font-size:12px;font-weight:600;letter-spacing:-.08px;color:#2997ff;background:rgba(41,151,255,.12);padding:4px 12px;border-radius:980px;margin-bottom:32px}
+.hero .badge{display:inline-block;font-size:12px;font-weight:600;color:#2997ff;background:rgba(41,151,255,.12);padding:4px 12px;border-radius:980px;margin-bottom:32px}
 .hero-ctas{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
-.btn-primary{display:inline-flex;align-items:center;gap:6px;background:#0071e3;color:#fff;font-size:17px;font-weight:400;letter-spacing:-.374px;padding:12px 24px;border-radius:980px;border:none;cursor:pointer;transition:background .2s}
-.btn-primary:hover{background:#0077ed}
-.btn-primary svg{width:16px;height:16px}
-.btn-outline{display:inline-flex;align-items:center;color:#2997ff;font-size:17px;font-weight:400;padding:12px 24px;border-radius:980px;border:1px solid rgba(255,255,255,.25);transition:border-color .2s,color .2s;cursor:pointer;background:transparent}
-.btn-outline:hover{border-color:#2997ff}
 .hero-note{margin-top:16px;font-size:12px;color:rgba(255,255,255,.36);letter-spacing:-.08px}
 
 /* ===== Screenshots ===== */
 .screenshots{background:#000;padding:80px 22px 100px;text-align:center}
 .screenshots h2{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:40px;font-weight:600;line-height:1.10;color:#f5f5f7;margin-bottom:48px}
-.screenshot-grid{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:32px}
-.screenshot-card{background:#1d1d1f;border-radius:12px;overflow:hidden;box-shadow:rgba(0,0,0,.22) 3px 5px 30px}
-.screenshot-card img{width:100%;display:block}
-.screenshot-card .caption{padding:16px 20px;font-size:14px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:-.224px}
+.ss-grid{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:32px}
+.ss-card{background:#1d1d1f;border-radius:12px;overflow:hidden;box-shadow:rgba(0,0,0,.22) 3px 5px 30px}
+.ss-card img{width:100%;display:block}
+.ss-card .cap{padding:16px 20px;font-size:14px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:-.224px}
 
-/* ===== Section headers ===== */
-.section-dark{background:#000;color:#fff;padding:100px 22px;text-align:center}
-.section-light{background:#f5f5f7;padding:100px 22px;text-align:center}
-.section-dark h2,.section-light h2{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:40px;font-weight:600;line-height:1.10;margin-bottom:12px}
-.section-light h2{color:#1d1d1f}
-.section-dark .section-sub{font-size:17px;color:rgba(255,255,255,.56);letter-spacing:-.374px;margin-bottom:56px}
-.section-light .section-sub{font-size:17px;color:rgba(0,0,0,.56);letter-spacing:-.374px;margin-bottom:56px}
+/* ===== 2-col grid ===== */
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;text-align:left}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;text-align:left}
+.grid6{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;text-align:left}
 
-/* ===== Feature grid (3-col) ===== */
-.feature-grid{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;text-align:left}
-.feature-card{background:#fff;border-radius:12px;padding:28px 24px}
-.feature-card .icon{width:40px;height:40px;border-radius:10px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:18px}
-.feature-card h3{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;font-weight:600;line-height:1.24;letter-spacing:-.374px;color:#1d1d1f;margin-bottom:8px}
-.feature-card p{font-size:14px;color:rgba(0,0,0,.56);letter-spacing:-.224px;line-height:1.43}
+/* ===== Cards dark ===== */
+.card-d{background:#1d1d1f;border-radius:12px;padding:32px 28px}
+.card-d .tag{display:inline-block;font-size:12px;font-weight:600;color:#2997ff;background:rgba(41,151,255,.12);padding:3px 10px;border-radius:980px;margin-bottom:12px;letter-spacing:-.08px}
+.card-d h3{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:21px;font-weight:600;line-height:1.19;letter-spacing:.231px;color:#f5f5f7;margin-bottom:10px}
+.card-d p{font-size:14px;color:rgba(255,255,255,.56);letter-spacing:-.224px;line-height:1.43}
+.card-d ul{list-style:none;padding:0;margin-top:12px}
+.card-d ul li{font-size:14px;color:rgba(255,255,255,.56);letter-spacing:-.224px;line-height:1.43;padding:3px 0 3px 14px;position:relative}
+.card-d ul li::before{content:"–";position:absolute;left:0;color:rgba(255,255,255,.25)}
+.card-d ul li strong{color:rgba(255,255,255,.85)}
 
-/* ===== Feature list cards (dark) ===== */
-.detail-grid{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr);gap:24px;text-align:left}
-.detail-card{background:#1d1d1f;border-radius:12px;padding:28px 24px}
-.detail-card h3{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:19px;font-weight:600;line-height:1.19;letter-spacing:.231px;color:#f5f5f7;margin-bottom:16px}
-.detail-card ul{list-style:none;padding:0}
-.detail-card ul li{font-size:14px;color:rgba(255,255,255,.56);letter-spacing:-.224px;line-height:1.43;padding:4px 0 4px 16px;position:relative}
-.detail-card ul li::before{content:"–";position:absolute;left:0;color:rgba(255,255,255,.3)}
-.detail-card ul li strong{color:rgba(255,255,255,.85);font-weight:600}
+/* ===== Cards light ===== */
+.card-l{background:#fff;border-radius:12px;padding:32px 28px}
+.card-l .icon{width:40px;height:40px;border-radius:10px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.card-l h3{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;font-weight:600;line-height:1.24;letter-spacing:-.374px;color:#1d1d1f;margin-bottom:8px}
+.card-l p{font-size:14px;color:rgba(0,0,0,.56);letter-spacing:-.224px;line-height:1.43}
+.card-l ul{list-style:none;padding:0;margin-top:10px}
+.card-l ul li{font-size:14px;color:rgba(0,0,0,.56);letter-spacing:-.224px;line-height:1.43;padding:3px 0 3px 14px;position:relative}
+.card-l ul li::before{content:"–";position:absolute;left:0;color:rgba(0,0,0,.2)}
+.card-l ul li strong{color:#1d1d1f}
 
-/* ===== What's New cards ===== */
-.new-grid{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr);gap:24px;text-align:left}
-.new-card{background:#1d1d1f;border-radius:12px;padding:28px 24px}
-.new-card .tag{display:inline-block;font-size:12px;font-weight:600;color:#2997ff;background:rgba(41,151,255,.12);padding:3px 10px;border-radius:980px;margin-bottom:12px;letter-spacing:-.08px}
-.new-card h3{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:21px;font-weight:600;line-height:1.19;letter-spacing:.231px;margin-bottom:8px}
-.new-card p{font-size:14px;color:rgba(255,255,255,.56);letter-spacing:-.224px;line-height:1.43}
+/* ===== Spotlight (1 feature, centered) ===== */
+.spotlight{max-width:640px;margin:0 auto;text-align:center}
+.spotlight h2{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:40px;font-weight:600;line-height:1.10;margin-bottom:12px}
+.spotlight p{font-size:17px;line-height:1.47;letter-spacing:-.374px}
+.spotlight-points{max-width:640px;margin:40px auto 0;display:grid;grid-template-columns:repeat(2,1fr);gap:16px;text-align:left}
+.sp-item{background:#1d1d1f;border-radius:12px;padding:20px 22px}
+.sp-item h4{font-family:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:1.24;letter-spacing:-.16px;color:#f5f5f7;margin-bottom:6px}
+.sp-item p{font-size:13px;color:rgba(255,255,255,.5);letter-spacing:-.12px;line-height:1.43}
 
-/* ===== Keyboard table ===== */
-.kbd-table-wrap{max-width:640px;margin:0 auto;text-align:left}
-.kbd-table{width:100%;border-collapse:collapse}
-.kbd-table th{font-size:12px;font-weight:600;color:rgba(0,0,0,.48);letter-spacing:-.08px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.1)}
-.kbd-table td{font-size:14px;color:#1d1d1f;letter-spacing:-.224px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06)}
-.kbd-table td:first-child{color:rgba(0,0,0,.56)}
+/* ===== Kbd table ===== */
+.kbd-wrap{max-width:640px;margin:0 auto;text-align:left}
+.kbd-tbl{width:100%;border-collapse:collapse}
+.kbd-tbl th{font-size:12px;font-weight:600;color:rgba(0,0,0,.48);letter-spacing:-.08px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.1)}
+.kbd-tbl td{font-size:14px;color:#1d1d1f;letter-spacing:-.224px;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.06);vertical-align:top}
+.kbd-tbl td:first-child{color:rgba(0,0,0,.56);padding-right:20px;white-space:nowrap}
 kbd{display:inline-block;background:#e8e8e8;border-radius:4px;padding:1px 6px;font-size:12px;font-family:inherit;font-weight:600;border:1px solid rgba(0,0,0,.12)}
 
-/* ===== Formats ===== */
-.format-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:24px}
-.format-badge{display:inline-block;font-size:13px;font-weight:600;letter-spacing:-.08px;color:#1d1d1f;background:#fff;padding:6px 16px;border-radius:980px;border:1px solid rgba(0,0,0,.1)}
+/* ===== Format badges ===== */
+.fmt-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:32px}
+.fmt{display:inline-block;font-size:13px;font-weight:600;color:#1d1d1f;background:#fff;padding:6px 18px;border-radius:980px;border:1px solid rgba(0,0,0,.1)}
 
-/* ===== Requirements ===== */
-.req-grid{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr);gap:20px;text-align:left}
-.req-item h4{font-size:14px;font-weight:600;color:#1d1d1f;letter-spacing:-.224px;margin-bottom:4px}
-.req-item p{font-size:14px;color:rgba(0,0,0,.56);letter-spacing:-.224px;line-height:1.43}
-
-/* ===== Download ===== */
-.download-ctas{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:24px}
-.download .note{font-size:12px;color:rgba(255,255,255,.36);letter-spacing:-.08px;max-width:480px;margin:0 auto;line-height:1.5}
+/* ===== Download ctas ===== */
+.dl-ctas{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:20px}
+.dl-note{font-size:12px;color:rgba(255,255,255,.36);letter-spacing:-.08px;max-width:400px;margin:0 auto;line-height:1.5}
 
 /* ===== Footer ===== */
 .footer{background:#f5f5f7;padding:32px 22px;text-align:center;border-top:1px solid rgba(0,0,0,.06)}
-.footer-inner{max-width:980px;margin:0 auto}
 .footer p{font-size:12px;color:rgba(0,0,0,.48);letter-spacing:-.08px;line-height:1.6}
-.footer a{color:#0066cc;transition:color .2s}
+.footer a{color:#0066cc}
 .footer a:hover{text-decoration:underline}
 
 /* ===== Responsive ===== */
 @media(max-width:834px){
   .hero h1{font-size:40px}
   .hero .subtitle{font-size:17px}
-  .feature-grid{grid-template-columns:repeat(2,1fr)}
-  .new-grid,.detail-grid{grid-template-columns:1fr}
-  .section-dark h2,.section-light h2,.screenshots h2{font-size:32px}
+  .grid2,.grid3,.grid6,.spotlight-points{grid-template-columns:1fr}
+  .s-dark h2,.s-light h2,.screenshots h2,.spotlight h2{font-size:32px}
 }
 @media(max-width:480px){
   .hero h1{font-size:28px}
   .hero .subtitle{font-size:14px}
-  .feature-grid{grid-template-columns:1fr}
-  .req-grid{grid-template-columns:1fr}
-  .nav-links a[href]{display:none}
+  .nav-links a[href]:not([target]){display:none}
   .hero-ctas{flex-direction:column;align-items:center}
-  .btn-primary,.btn-outline{width:100%;max-width:280px;justify-content:center}
+  .btn-primary,.btn-outline-dark{width:100%;max-width:280px;justify-content:center}
 }
 </style>
 </head>
 <body>
 
-<!-- Navigation -->
+<!-- Nav -->
 <nav class="nav">
   <div class="nav-inner">
     <span class="nav-brand">Linkori</span>
     <div class="nav-links">
-      <a href="#features" data-en="Features" data-ja="機能">Features</a>
-      <a href="#detail" data-en="Details" data-ja="詳細">Details</a>
+      <a href="#playlist" data-en="Playlist" data-ja="プレイリスト">Playlist</a>
+      <a href="#viewer" data-en="Viewer" data-ja="ビューア">Viewer</a>
       <a href="#whats-new" data-en="v0.4.0" data-ja="v0.4.0">v0.4.0</a>
       <a href="#download" data-en="Download" data-ja="ダウンロード">Download</a>
       <a href="https://github.com/tmd-0x5a/linkori" target="_blank" rel="noopener">GitHub</a>
@@ -181,294 +174,399 @@ kbd{display:inline-block;background:#e8e8e8;border-radius:4px;padding:1px 6px;fo
 </nav>
 
 <!-- Hero -->
-<section class="hero" id="top">
+<section class="hero">
   <img src="https://raw.githubusercontent.com/tmd-0x5a/linkori/main/src-tauri/icons/icon.ico" alt="Linkori" class="hero-icon">
   <h1>Linkori</h1>
   <p class="subtitle" data-en="Local manga &amp; image viewer with playlist system." data-ja="プレイリストで複数フォルダ・ZIPを連続閲覧できる漫画ビューア。">Local manga &amp; image viewer with playlist system.</p>
-  <span class="version-badge">v0.4.0</span>
+  <span class="badge">v0.4.0</span>
   <div class="hero-ctas">
     <a href="https://github.com/user-attachments/files/26791099/Linkori_0.4.0_x64-setup.zip" class="btn-primary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span data-en="Download for Windows" data-ja="Windows 版をダウンロード">Download for Windows</span>
     </a>
-    <a href="https://github.com/tmd-0x5a/linkori" class="btn-outline" target="_blank" rel="noopener" data-en="View on GitHub" data-ja="GitHub で見る">View on GitHub</a>
+    <a href="https://github.com/tmd-0x5a/linkori" class="btn-outline-dark" target="_blank" rel="noopener" data-en="View on GitHub" data-ja="GitHub で見る">View on GitHub</a>
   </div>
   <p class="hero-note" data-en="Windows 10 / 11 (x64) — Free &amp; Open Source (MIT)" data-ja="Windows 10 / 11 (x64) — 無料・オープンソース (MIT)">Windows 10 / 11 (x64) — Free &amp; Open Source (MIT)</p>
 </section>
 
 <!-- Screenshots -->
-<section class="screenshots" id="screenshots">
+<section class="screenshots">
   <h2 data-en="See it in action." data-ja="こんな感じで使えます。">See it in action.</h2>
-  <div class="screenshot-grid">
-    <div class="screenshot-card">
+  <div class="ss-grid">
+    <div class="ss-card">
       <img src="ビューア画面.png" alt="Viewer" loading="lazy">
-      <p class="caption" data-en="Viewer — Spread mode with right-to-left reading" data-ja="ビューア — 見開き表示・右から左読み">Viewer — Spread mode with right-to-left reading</p>
+      <p class="cap" data-en="Viewer — Spread mode, right-to-left" data-ja="ビューア — 見開き表示・右から左読み">Viewer — Spread mode, right-to-left</p>
     </div>
-    <div class="screenshot-card">
+    <div class="ss-card">
       <img src="プレイリスト画面.png" alt="Playlist" loading="lazy">
-      <p class="caption" data-en="Playlist — Organize your reading with chunks, tags, and favorites" data-ja="プレイリスト — チャンク・タグ・お気に入りで管理">Playlist — Organize your reading with chunks, tags, and favorites</p>
+      <p class="cap" data-en="Playlist — Tags, favorites, and progress" data-ja="プレイリスト — タグ・お気に入り・進捗">Playlist — Tags, favorites, and progress</p>
     </div>
-    <div class="screenshot-card">
+    <div class="ss-card">
       <img src="ファイルブラウザ.png" alt="File Browser" loading="lazy">
-      <p class="caption" data-en="File Browser — Navigate folders and ZIPs with search &amp; thumbnails" data-ja="ファイルブラウザ — 検索・サムネイル付きでフォルダ・ZIPを探索">File Browser — Navigate folders and ZIPs with search &amp; thumbnails</p>
+      <p class="cap" data-en="File Browser — Search, thumbnails, ZIP navigation" data-ja="ファイルブラウザ — 検索・サムネイル・ZIP ナビ">File Browser — Search, thumbnails, ZIP navigation</p>
     </div>
   </div>
 </section>
 
-<!-- Features Overview -->
-<section class="section-light" id="features">
-  <h2 data-en="Everything you need to read." data-ja="読むために必要な、すべて。">Everything you need to read.</h2>
-  <p class="section-sub" data-en="Folders, ZIPs, PDFs, and playlists — all in one app." data-ja="フォルダ、ZIP、PDF、プレイリスト — ひとつのアプリで。">Folders, ZIPs, PDFs, and playlists — all in one app.</p>
-  <div class="feature-grid">
-    <div class="feature-card">
-      <div class="icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-      </div>
-      <h3 data-en="Spread &amp; Single View" data-ja="見開き・1枚表示">Spread &amp; Single View</h3>
-      <p data-en="Toggle between two-page spread and single-page mode. Right-to-left reading for manga." data-ja="2枚見開きと1枚表示をワンタッチで切替。漫画に最適な右から左読み。">Toggle between two-page spread and single-page mode. Right-to-left reading for manga.</p>
+<!-- ── Playlist ──────────────────────────────────────────────── -->
+
+<!-- Playlist: overview -->
+<section class="s-dark" id="playlist">
+  <h2 data-en="Organize everything." data-ja="すべてを整理する。">Organize everything.</h2>
+  <p class="sub" data-en="Playlists, favorites, tags, and reading status — all in one sidebar." data-ja="プレイリスト・お気に入り・タグ・既読管理、すべてサイドバーひとつで。">Playlists, favorites, tags, and reading status — all in one sidebar.</p>
+  <div class="wrap grid2">
+    <div class="card-d">
+      <h3 data-en="Favorites &amp; Tags" data-ja="お気に入り＆タグ">Favorites &amp; Tags</h3>
+      <ul>
+        <li data-en="Star any playlist to mark as favorite" data-ja="スターでお気に入り登録">Star any playlist to mark as favorite</li>
+        <li data-en="Filter the sidebar to ★ only with one click" data-ja="★ ボタンでお気に入りだけに絞り込み">Filter the sidebar to ★ only with one click</li>
+        <li data-en="Add custom text tags to each playlist" data-ja="プレイリストにカスタムテキストタグを付与">Add custom text tags to each playlist</li>
+        <li data-en="Click any #tag in the filter bar to narrow the list instantly" data-ja="フィルタバーの #tag クリックで即座に絞り込み">Click any #tag in the filter bar to narrow the list instantly</li>
+      </ul>
     </div>
-    <div class="feature-card">
-      <div class="icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-      </div>
-      <h3 data-en="Playlist System" data-ja="プレイリスト">Playlist System</h3>
-      <p data-en="Chain multiple folders and ZIPs into a single continuous reading session with chunks. Add tags, favorites, and reading status." data-ja="複数のフォルダ・ZIPをチャンクで連結し、1つの連続した読書セッションに。タグ・お気に入り・既読管理も。">Chain multiple folders and ZIPs into a single continuous reading session with chunks. Add tags, favorites, and reading status.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-      </div>
-      <h3 data-en="Built-in File Browser" data-ja="内蔵ファイルブラウザ">Built-in File Browser</h3>
-      <p data-en="Navigate drives, folders, and ZIP archives with search, sorting, thumbnails, and grid view." data-ja="ドライブ・フォルダ・ZIPを検索・ソート・サムネイル付きで探索。グリッド表示にも対応。">Navigate drives, folders, and ZIP archives with search, sorting, thumbnails, and grid view.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </div>
-      <h3 data-en="Instant Open" data-ja="即座に開く">Instant Open</h3>
-      <p data-en="Viewer opens immediately. Images load on demand as you read — no waiting, even for large ZIPs." data-ja="ビューアは一瞬で起動。画像は読み進めながら必要な分だけ読み込む遅延方式。大型ZIPでも待ち時間なし。">Viewer opens immediately. Images load on demand as you read — no waiting, even for large ZIPs.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      </div>
-      <h3 data-en="ZIP, CBZ &amp; PDF" data-ja="ZIP・CBZ・PDF 対応">ZIP, CBZ &amp; PDF</h3>
-      <p data-en="Read directly from ZIP archives (including subdirectories), CBZ files, and PDF documents. Shift-JIS filenames supported." data-ja="ZIPアーカイブ（サブディレクトリ含む）・CBZ・PDFを直接読み込み。Shift-JIS ファイル名にも対応。">Read directly from ZIP archives (including subdirectories), CBZ files, and PDF documents. Shift-JIS filenames supported.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-      </div>
-      <h3 data-en="EN / JA Language" data-ja="日本語 / English">EN / JA Language</h3>
-      <p data-en="Switch UI language between English and Japanese. Preference is saved across sessions." data-ja="UIの言語を日本語・英語に切り替え可能。設定は次回起動時にも引き継ぎ。">Switch UI language between English and Japanese. Preference is saved across sessions.</p>
+    <div class="card-d">
+      <h3 data-en="Reading Status &amp; Progress" data-ja="既読ステータス＆進捗">Reading Status &amp; Progress</h3>
+      <ul>
+        <li data-en="Mark playlists as Unread / Read from the right-click menu" data-ja="右クリックメニューから未読 / 既読を設定">Mark playlists as Unread / Read from the right-click menu</li>
+        <li data-en="Progress bar on each playlist shows how far you've read" data-ja="各プレイリストに閲覧進捗バーを表示">Progress bar on each playlist shows how far you've read</li>
+        <li data-en="Position is saved per playlist — resumes exactly where you left off" data-ja="プレイリストごとに位置を保存、次回は続きから">Position is saved per playlist — resumes exactly where you left off</li>
+      </ul>
     </div>
   </div>
 </section>
 
-<!-- Detail sections -->
-<section class="section-dark" id="detail">
-  <h2 data-en="Feature deep dive." data-ja="機能詳細。">Feature deep dive.</h2>
-  <p class="section-sub" data-en="Every feature, documented." data-ja="すべての機能を網羅。">Every feature, documented.</p>
-  <div class="detail-grid">
+<!-- Playlist: reorder & rename -->
+<section class="s-light">
+  <h2 data-en="Always in the right order." data-ja="いつでも正しい順番に。">Always in the right order.</h2>
+  <p class="sub" data-en="Drag, rename, or delete — right where you are." data-ja="ドラッグ、リネーム、削除 — その場で。">Drag, rename, or delete — right where you are.</p>
+  <div class="wrap grid3">
+    <div class="card-l">
+      <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
+      <h3 data-en="Drag Anywhere to Reorder" data-ja="どこでもドラッグして並び替え">Drag Anywhere to Reorder</h3>
+      <p data-en="No handle required. Grab any part of a playlist item and drag it to its new position." data-ja="専用ハンドル不要。アイテムのどこでも掴んで新しい位置にドロップ。">No handle required. Grab any part of a playlist item and drag it to its new position.</p>
+    </div>
+    <div class="card-l">
+      <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+      <h3 data-en="Inline Rename" data-ja="その場でリネーム">Inline Rename</h3>
+      <p data-en="Double-click or press F2 to rename in place. No dialogs, no interruptions." data-ja="ダブルクリックまたは F2 キーでその場でリネーム。ダイアログなし。">Double-click or press F2 to rename in place. No dialogs, no interruptions.</p>
+    </div>
+    <div class="card-l">
+      <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></div>
+      <h3 data-en="Right-Click Menu" data-ja="右クリックメニュー">Right-Click Menu</h3>
+      <p data-en="Rename, delete, toggle favorite, edit tags, or change reading status — all from the context menu." data-ja="リネーム・削除・お気に入り・タグ編集・既読設定をコンテキストメニューから。">Rename, delete, toggle favorite, edit tags, or change reading status — all from the context menu.</p>
+    </div>
+  </div>
+</section>
 
-    <div class="detail-card">
-      <h3 data-en="Playlist Management" data-ja="プレイリスト管理">Playlist Management</h3>
+<!-- ── Chunks ─────────────────────────────────────────────────── -->
+
+<!-- Chunks: overview -->
+<section class="s-dark" id="chunks">
+  <h2 data-en="Chunks. Reading ranges, defined." data-ja="チャンク。読書範囲を、定義する。">Chunks. Reading ranges, defined.</h2>
+  <p class="sub" data-en="Link a start file to an end file. Chain chunks into a seamless reading session." data-ja="開始ファイルと終了ファイルを結ぶ。チャンクを連結して、途切れない読書を。">Link a start file to an end file. Chain chunks into a seamless reading session.</p>
+  <div class="wrap grid2">
+    <div class="card-d">
+      <h3 data-en="Flexible Range Definition" data-ja="柔軟な範囲指定">Flexible Range Definition</h3>
       <ul>
-        <li data-en="Create, rename, and delete playlists" data-ja="作成・リネーム・削除">Create, rename, and delete playlists</li>
-        <li data-en="Drag anywhere on an item to reorder (no handle needed)" data-ja="アイテムのどこでもドラッグして並び替え（ハンドル不要）">Drag anywhere on an item to reorder (no handle needed)</li>
-        <li data-en="Double-click or F2 to rename in place" data-ja="ダブルクリックまたは F2 でその場でリネーム">Double-click or F2 to rename in place</li>
-        <li data-en="Right-click context menu: rename, delete, favorite, tags, status" data-ja="右クリックメニュー: リネーム・削除・お気に入り・タグ・ステータス">Right-click context menu: rename, delete, favorite, tags, status</li>
-        <li><strong data-en="Favorites" data-ja="お気に入り">Favorites</strong> <span data-en="— star playlists; filter bar shows ★ only" data-ja="— スターで登録、★フィルタで絞り込み">— star playlists; filter bar shows ★ only</span></li>
-        <li><strong data-en="Custom tags" data-ja="カスタムタグ">Custom tags</strong> <span data-en="— add text tags; click #tag in filter bar to narrow the list" data-ja="— テキストタグを付与、フィルタバーの #tag クリックで絞り込み">— add text tags; click #tag in filter bar to narrow the list</span></li>
-        <li><strong data-en="Reading status" data-ja="既読/未読ステータス">Reading status</strong> <span data-en="— mark as Unread / Read from context menu" data-ja="— 右クリックから未読/既読を設定">— mark as Unread / Read from context menu</span></li>
-        <li data-en="Reading progress bar on each playlist item" data-ja="各アイテムに閲覧進捗バーを表示">Reading progress bar on each playlist item</li>
+        <li data-en="Point to a start image and an end image — everything in between is included" data-ja="開始画像と終了画像を指定 — その間がすべて対象">Point to a start image and an end image — everything in between is included</li>
+        <li data-en="Set a folder or ZIP as start path to include the entire contents" data-ja="フォルダ/ZIP を開始パスに指定してフォルダ全体を対象に">Set a folder or ZIP as start path to include the entire contents</li>
+        <li data-en="Reverse order: end before start → images delivered in reverse" data-ja="逆順: 終了が開始より前 → 画像を逆順で提供">Reverse order: end before start → images delivered in reverse</li>
+        <li data-en="Optional name label for each chunk" data-ja="チャンクごとに任意の名前ラベルを設定">Optional name label for each chunk</li>
       </ul>
     </div>
-
-    <div class="detail-card">
-      <h3 data-en="Chunk Management" data-ja="チャンク管理">Chunk Management</h3>
+    <div class="card-d">
+      <h3 data-en="Image Count &amp; Preview" data-ja="枚数バッジ＆プレビュー">Image Count &amp; Preview</h3>
       <ul>
-        <li data-en="Register start→end file range as a chunk (optional name)" data-ja="開始〜終了ファイル範囲をチャンクとして登録（名前は省略可）">Register start→end file range as a chunk (optional name)</li>
-        <li data-en="Set a folder/ZIP as start path to include entire contents" data-ja="開始パスにフォルダ/ZIPを指定してフォルダ全体を対象に">Set a folder/ZIP as start path to include entire contents</li>
-        <li data-en="Reverse order: end before start → images served in reverse" data-ja="逆順表示: 終了が開始より前 → 画像を逆順で配信">Reverse order: end before start → images served in reverse</li>
-        <li><strong data-en="Multi-select" data-ja="複数選択">Multi-select</strong> <span data-en="— click, Ctrl+click, Shift+click, or drag to select" data-ja="— クリック・Ctrl+クリック・Shift+クリック・ドラッグで選択">— click, Ctrl+click, Shift+click, or drag to select</span></li>
-        <li><strong data-en="Group drag" data-ja="グループドラッグ">Group drag</strong> <span data-en="— all selected chunks move simultaneously via DragOverlay" data-ja="— 選択チャンクが DragOverlay として同時移動">— all selected chunks move simultaneously via DragOverlay</span></li>
-        <li><strong data-en="Batch delete" data-ja="一括削除">Batch delete</strong> <span data-en="— delete selected; Ctrl+Z to undo" data-ja="— 選択を一括削除、Ctrl+Z で復元">— delete selected; Ctrl+Z to undo</span></li>
-        <li><strong data-en="Sort" data-ja="ソート">Sort</strong> <span data-en="— by name / modified date / created date (asc/desc)" data-ja="— 名前・更新日時・作成日時（昇順/降順）">— by name / modified date / created date (asc/desc)</span></li>
-        <li><strong data-en="Split by subfolder" data-ja="サブフォルダで分割">Split by subfolder</strong> <span data-en="— expand one chunk into per-subfolder sub-chunks; undoable" data-ja="— 1チャンクをサブフォルダ単位に分割、アンドゥ可">— expand one chunk into per-subfolder sub-chunks; undoable</span></li>
-        <li data-en="Preview: eye icon → thumbnail gallery before opening viewer" data-ja="プレビュー: 目のアイコンでビューアを開く前にサムネイル確認">Preview: eye icon → thumbnail gallery before opening viewer</li>
-        <li data-en="Image count badge on every card" data-ja="各カードに画像枚数バッジを表示">Image count badge on every card</li>
+        <li data-en="Image count badge on every chunk card" data-ja="各チャンクカードに画像枚数バッジを表示">Image count badge on every chunk card</li>
+        <li data-en="Click the eye icon to open a thumbnail gallery before launching the viewer" data-ja="目のアイコンでビューアを開く前にサムネイル確認">Click the eye icon to open a thumbnail gallery before launching the viewer</li>
+        <li data-en="Right-click for edit and delete" data-ja="右クリックで編集・削除">Right-click for edit and delete</li>
       </ul>
     </div>
+  </div>
+</section>
 
-    <div class="detail-card">
-      <h3 data-en="File Browser" data-ja="ファイルブラウザ">File Browser</h3>
+<!-- Chunks: group drag spotlight -->
+<section class="s-light" id="group-drag">
+  <div class="spotlight">
+    <h2 data-en="Move them all at once." data-ja="まとめて、動かす。">Move them all at once.</h2>
+    <p style="font-size:17px;color:rgba(0,0,0,.56);letter-spacing:-.374px;line-height:1.47" data-en="Select multiple chunks, then drag. All of them move simultaneously — exactly where you want them." data-ja="複数のチャンクを選択してドラッグ。すべてが同時に、思い通りの位置へ移動する。">Select multiple chunks, then drag. All of them move simultaneously — exactly where you want them.</p>
+  </div>
+  <div class="spotlight-points" style="max-width:640px;margin:40px auto 0;display:grid;grid-template-columns:repeat(2,1fr);gap:16px;text-align:left">
+    <div class="card-l" style="background:#f5f5f7;border:1px solid rgba(0,0,0,.08)">
+      <h3 data-en="Click to select" data-ja="クリックで選択">Click to select</h3>
+      <p data-en="Single click selects one chunk." data-ja="クリックで1件選択。">Single click selects one chunk.</p>
+    </div>
+    <div class="card-l" style="background:#f5f5f7;border:1px solid rgba(0,0,0,.08)">
+      <h3 data-en="Ctrl+click to add" data-ja="Ctrl+クリックで追加">Ctrl+click to add</h3>
+      <p data-en="Toggle individual chunks in or out of the selection." data-ja="チャンクを選択に追加/除外。">Toggle individual chunks in or out of the selection.</p>
+    </div>
+    <div class="card-l" style="background:#f5f5f7;border:1px solid rgba(0,0,0,.08)">
+      <h3 data-en="Shift+click for range" data-ja="Shift+クリックで範囲">Shift+click for range</h3>
+      <p data-en="Select a continuous range from the last selection to here." data-ja="直前の選択からここまでを範囲選択。">Select a continuous range from the last selection to here.</p>
+    </div>
+    <div class="card-l" style="background:#f5f5f7;border:1px solid rgba(0,0,0,.08)">
+      <h3 data-en="Drag to select" data-ja="ドラッグで選択">Drag to select</h3>
+      <p data-en="Drag across the list to sweep-select multiple chunks." data-ja="リスト上をドラッグして複数チャンクをまとめて選択。">Drag across the list to sweep-select multiple chunks.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Chunks: sort & split -->
+<section class="s-dark">
+  <h2 data-en="Sort. Split. Undo." data-ja="ソート。分割。アンドゥ。">Sort. Split. Undo.</h2>
+  <p class="sub" data-en="Power tools for large playlists." data-ja="大規模プレイリスト向けの高機能ツール。">Power tools for large playlists.</p>
+  <div class="wrap grid3">
+    <div class="card-d">
+      <h3 data-en="Sort Chunks" data-ja="チャンクをソート">Sort Chunks</h3>
       <ul>
-        <li data-en="Built-in explorer — no OS native dialog" data-ja="アプリ内蔵エクスプローラー（OSダイアログ不使用）">Built-in explorer — no OS native dialog</li>
-        <li data-en="Sidebar: all available drives detected automatically" data-ja="サイドバー: 存在するドライブを自動検出して表示">Sidebar: all available drives detected automatically</li>
+        <li data-en="Name A→Z or Z→A" data-ja="名前の A→Z または Z→A">Name A→Z or Z→A</li>
+        <li data-en="Modified date — newest or oldest first" data-ja="更新日時 — 新しい順・古い順">Modified date — newest or oldest first</li>
+        <li data-en="Created date — newest or oldest first" data-ja="作成日時 — 新しい順・古い順">Created date — newest or oldest first</li>
+      </ul>
+    </div>
+    <div class="card-d">
+      <h3 data-en="Split by Subfolder" data-ja="サブフォルダで分割">Split by Subfolder</h3>
+      <ul>
+        <li data-en="One chunk → one sub-chunk per subfolder" data-ja="1チャンク → サブフォルダ単位の複数チャンクに">One chunk → one sub-chunk per subfolder</li>
+        <li data-en="Nested subfolder support" data-ja="ネストしたサブフォルダにも対応">Nested subfolder support</li>
+        <li data-en="Undo the split with a single click" data-ja="ワンクリックで分割を元に戻す">Undo the split with a single click</li>
+      </ul>
+    </div>
+    <div class="card-d">
+      <h3 data-en="Batch Delete &amp; Undo" data-ja="一括削除＆アンドゥ">Batch Delete &amp; Undo</h3>
+      <ul>
+        <li data-en="Select multiple chunks and delete them all at once" data-ja="複数チャンクを選択してまとめて削除">Select multiple chunks and delete them all at once</li>
+        <li data-en="Ctrl+Z to instantly restore the last deleted batch" data-ja="Ctrl+Z で最後の削除を即座に復元">Ctrl+Z to instantly restore the last deleted batch</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── File Browser ───────────────────────────────────────────── -->
+
+<section class="s-light" id="browser">
+  <h2 data-en="Browse without leaving the app." data-ja="アプリを出ずに、ブラウズする。">Browse without leaving the app.</h2>
+  <p class="sub" data-en="A full file explorer — built in." data-ja="フルスペックのファイルエクスプローラーを内蔵。">A full file explorer — built in.</p>
+  <div class="wrap grid2">
+    <div class="card-l">
+      <h3 data-en="Navigation" data-ja="ナビゲーション">Navigation</h3>
+      <ul>
+        <li><strong data-en="Drive sidebar" data-ja="ドライブサイドバー">Drive sidebar</strong> <span data-en="— all available drives listed automatically" data-ja="— 利用可能なドライブを自動表示">— all available drives listed automatically</span></li>
         <li><strong data-en="Quick access" data-ja="クイックアクセス">Quick access</strong> <span data-en="— Desktop, Downloads, Documents, Pictures, Videos, Music" data-ja="— デスクトップ・ダウンロード・ドキュメント・ピクチャ・ビデオ・ミュージック">— Desktop, Downloads, Documents, Pictures, Videos, Music</span></li>
-        <li data-en="Address bar: breadcrumb navigation or type path directly" data-ja="アドレスバー: パンくずナビまたは直接パス入力">Address bar: breadcrumb navigation or type path directly</li>
-        <li><strong data-en="Search" data-ja="検索">Search</strong> <span data-en="— filter visible files by name" data-ja="— ファイル名で絞り込み">— filter visible files by name</span></li>
-        <li data-en="List view / Grid view (large thumbnails) toggle" data-ja="リスト表示 / グリッド表示（サムネイル大）切替">List view / Grid view (large thumbnails) toggle</li>
-        <li data-en="Sort: name or date, asc/desc — remembered across navigations" data-ja="ソート: 名前・日付、昇順/降順 — パス移動後も記憶">Sort: name or date, asc/desc — remembered across navigations</li>
-        <li data-en="Hidden files toggle" data-ja="隠しファイル表示切替">Hidden files toggle</li>
-        <li data-en="Navigate into folders and ZIP / CBZ archives" data-ja="フォルダおよびZIP / CBZアーカイブ内を自由に移動">Navigate into folders and ZIP / CBZ archives</li>
+        <li><strong data-en="Address bar" data-ja="アドレスバー">Address bar</strong> <span data-en="— breadcrumb navigation or type a path directly" data-ja="— パンくずナビまたは直接パス入力">— breadcrumb navigation or type a path directly</span></li>
+        <li data-en="Navigate into directories and ZIP / CBZ archives" data-ja="フォルダおよびZIP / CBZアーカイブ内を自由に移動">Navigate into directories and ZIP / CBZ archives</li>
         <li data-en="Shift-JIS (CP932) filenames displayed correctly" data-ja="Shift-JIS (CP932) のファイル名を正しく表示">Shift-JIS (CP932) filenames displayed correctly</li>
-        <li data-en="Lazy thumbnail loading" data-ja="サムネイル遅延読み込み">Lazy thumbnail loading</li>
-        <li data-en='"Select this folder" / "Select this ZIP" for whole-folder selection' data-ja='「このフォルダを選択」「このZIPを選択」でフォルダ丸ごと選択'>"Select this folder" / "Select this ZIP" for whole-folder selection</li>
-        <li data-en="End-path picker locked to same folder/ZIP as start path" data-ja="終了パス選択は開始パスと同じフォルダ/ZIP内のみ">End-path picker locked to same folder/ZIP as start path</li>
       </ul>
     </div>
-
-    <div class="detail-card">
-      <h3 data-en="Viewer" data-ja="ビューア">Viewer</h3>
+    <div class="card-l">
+      <h3 data-en="Display &amp; Selection" data-ja="表示＆選択">Display &amp; Selection</h3>
       <ul>
-        <li data-en="Single page / two-page spread toggle (S key)" data-ja="1枚表示 / 2枚見開き切替（Sキー）">Single page / two-page spread toggle (S key)</li>
-        <li data-en="Right-to-left reading direction (RTL, Japanese manga)" data-ja="右から左読み（RTL、日本漫画向け）">Right-to-left reading direction (RTL, Japanese manga)</li>
-        <li data-en="Page transition animation" data-ja="ページ遷移アニメーション">Page transition animation</li>
-        <li data-en="Fullscreen (F key or button)" data-ja="フルスクリーン（Fキーまたはボタン）">Fullscreen (F key or button)</li>
-        <li><strong data-en="Instant open" data-ja="高速起動">Instant open</strong> <span data-en="— lazy loading, no startup delay" data-ja="— 遅延読み込みで起動待ち時間ゼロ">— lazy loading, no startup delay</span></li>
-        <li><strong data-en="Reading position memory" data-ja="閲覧位置の記憶">Reading position memory</strong> <span data-en="— saves page &amp; display mode per playlist across restarts" data-ja="— プレイリストごとにページと表示設定を自動保存、再起動後も復元">— saves page &amp; display mode per playlist across restarts</span></li>
-        <li><strong data-en="Seek-bar thumbnails" data-ja="シークバーサムネイル">Seek-bar thumbnails</strong> <span data-en="— priority loading from current page; instant resize for cached images" data-ja="— 現在ページ付近から優先生成、読み込み済み画像は即時リサイズ">— priority loading from current page; instant resize for cached images</span></li>
-        <li><strong data-en="Partial failure warning" data-ja="部分失敗時の警告">Partial failure warning</strong> <span data-en="— banner lists failed chunks; rest of playlist still viewable" data-ja="— 失敗したチャンクをバナーで通知、他のチャンクはそのまま閲覧可">— banner lists failed chunks; rest of playlist still viewable</span></li>
-        <li data-en="Chunk tick marks on progress bar — click to jump to chunk" data-ja="プログレスバーにチャンク境界マーク — クリックでジャンプ">Chunk tick marks on progress bar — click to jump to chunk</li>
-        <li data-en="Prev/next chunk buttons flank the progress bar" data-ja="プログレスバーの両端に前/次チャンクボタン">Prev/next chunk buttons flank the progress bar</li>
-        <li data-en="Current chunk name displayed when playlist has multiple chunks" data-ja="複数チャンク時は現在チャンク名を中央に表示">Current chunk name displayed when playlist has multiple chunks</li>
-        <li data-en="PDF rendering via pdf.js (page-by-page, no extraction needed)" data-ja="pdf.js による PDF レンダリング（ページ単位、展開不要）">PDF rendering via pdf.js (page-by-page, no extraction needed)</li>
+        <li><strong data-en="Search" data-ja="検索">Search</strong> <span data-en="— filter visible files by filename" data-ja="— ファイル名で絞り込み">— filter visible files by filename</span></li>
+        <li><strong data-en="List / Grid view" data-ja="リスト / グリッド表示">List / Grid view</strong> <span data-en="— toggle between list and large thumbnail grid" data-ja="— リスト表示と大サムネイルグリッドを切替">— toggle between list and large thumbnail grid</span></li>
+        <li><strong data-en="Sort" data-ja="ソート">Sort</strong> <span data-en="— by name or date, asc/desc; remembered across navigations" data-ja="— 名前・日付、昇順/降順、パス移動後も記憶">— by name or date, asc/desc; remembered across navigations</span></li>
+        <li><strong data-en="Hidden files toggle" data-ja="隠しファイル切替">Hidden files toggle</strong> <span data-en="— show or hide system/hidden files" data-ja="— 隠しファイルの表示/非表示">— show or hide system/hidden files</span></li>
+        <li data-en="Lazy thumbnail loading for fast browsing" data-ja="サムネイル遅延読み込みで快適ブラウズ">Lazy thumbnail loading for fast browsing</li>
+        <li data-en='"Select this folder" / "Select this ZIP" for whole-folder selection' data-ja='「このフォルダを選択」「このZIPを選択」でフォルダ丸ごと選択'>"Select this folder" / "Select this ZIP" buttons</li>
+        <li data-en="End-path picker locked to same folder/ZIP as start path" data-ja="終了パス選択は開始パスと同じフォルダ/ZIP内のみ">End-path locked to same folder/ZIP as start</li>
       </ul>
     </div>
   </div>
 </section>
 
-<!-- Keyboard shortcuts -->
-<section class="section-light" id="keyboard">
+<!-- ── Viewer ─────────────────────────────────────────────────── -->
+
+<section class="s-dark" id="viewer">
+  <h2 data-en="A viewer built for manga." data-ja="漫画のために作られたビューア。">A viewer built for manga.</h2>
+  <p class="sub" data-en="Spread mode. RTL. Instant open. Zero waiting." data-ja="見開き。右→左。即起動。ゼロ待ち。">Spread mode. RTL. Instant open. Zero waiting.</p>
+  <div class="wrap grid2">
+    <div class="card-d">
+      <h3 data-en="Display Modes" data-ja="表示モード">Display Modes</h3>
+      <ul>
+        <li data-en="Single page or two-page spread — toggle with S key" data-ja="1枚表示 / 2枚見開き — S キーで切替">Single page or two-page spread — toggle with S key</li>
+        <li data-en="Right-to-left reading direction (RTL) for Japanese manga" data-ja="右から左読み（RTL）— 日本漫画向け">Right-to-left reading direction (RTL) for Japanese manga</li>
+        <li data-en="Page transition animation" data-ja="ページ遷移アニメーション">Page transition animation</li>
+        <li data-en="Fullscreen (F key)" data-ja="フルスクリーン（F キー）">Fullscreen (F key)</li>
+      </ul>
+    </div>
+    <div class="card-d">
+      <h3 data-en="Performance" data-ja="パフォーマンス">Performance</h3>
+      <ul>
+        <li><strong data-en="Instant open" data-ja="即起動">Instant open</strong> <span data-en="— viewer starts immediately; images load on demand as you read" data-ja="— ビューアは即座に起動、画像は読み進めながら遅延読み込み">— viewer starts immediately; images load on demand as you read</span></li>
+        <li><strong data-en="Reading position memory" data-ja="閲覧位置の記憶">Reading position memory</strong> <span data-en="— page and display mode saved per playlist across restarts" data-ja="— プレイリストごとにページと表示設定を保存、再起動後も復元">— page and display mode saved per playlist across restarts</span></li>
+        <li><strong data-en="Smart seek-bar thumbnails" data-ja="スマートシークバーサムネイル">Smart seek-bar thumbnails</strong> <span data-en="— priority loading from current page; cached images resize instantly" data-ja="— 現在ページ付近から優先生成、読み込み済みは即時リサイズ">— priority loading from current page; cached images resize instantly</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Viewer: page bar -->
+<section class="s-light">
+  <h2 data-en="Navigate with precision." data-ja="精確に、ナビゲートする。">Navigate with precision.</h2>
+  <p class="sub" data-en="The page bar tells you exactly where you are." data-ja="ページバーが今いる場所を正確に示す。">The page bar tells you exactly where you are.</p>
+  <div class="wrap grid3">
+    <div class="card-l">
+      <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <h3 data-en="Progress Bar" data-ja="プログレスバー">Progress Bar</h3>
+      <p data-en="Drag or click the RTL progress bar to jump anywhere in the playlist instantly." data-ja="右→左方向のプログレスバーをドラッグ/クリックしてどこへでも即ジャンプ。">Drag or click the RTL progress bar to jump anywhere in the playlist instantly.</p>
+    </div>
+    <div class="card-l">
+      <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+      <h3 data-en="Chunk Tick Marks" data-ja="チャンク境界マーク">Chunk Tick Marks</h3>
+      <p data-en="Chunk boundaries appear as tick marks on the progress bar. Click any tick to jump directly to that chunk's first page." data-ja="プログレスバーにチャンク境界のティックマークを表示。クリックでそのチャンクの先頭へ即ジャンプ。">Chunk boundaries appear as tick marks on the progress bar. Click any tick to jump directly to that chunk's first page.</p>
+    </div>
+    <div class="card-l">
+      <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></div>
+      <h3 data-en="Chunk Navigation" data-ja="チャンクナビゲーション">Chunk Navigation</h3>
+      <p data-en="Prev/next chunk buttons flank the bar. Current chunk name shown when the playlist has multiple chunks." data-ja="バーの両端に前/次チャンクボタン。複数チャンク時は現在チャンク名を中央に表示。">Prev/next chunk buttons flank the bar. Current chunk name shown for multi-chunk playlists.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Viewer: partial failure + PDF -->
+<section class="s-dark">
+  <h2 data-en="Resilient. Reliable." data-ja="強靭。信頼できる。">Resilient. Reliable.</h2>
+  <p class="sub" data-en="Keep reading even when something goes wrong." data-ja="何か問題があっても、読み続けられる。">Keep reading even when something goes wrong.</p>
+  <div class="wrap grid2">
+    <div class="card-d">
+      <h3 data-en="Partial Failure Warning" data-ja="部分失敗時の警告">Partial Failure Warning</h3>
+      <p data-en="If some chunks fail to load but others succeed, a dismissible banner at the top of the viewer lists the failed chunks. The rest of the playlist remains fully viewable." data-ja="一部のチャンクが読み込めなくても、他のチャンクは閲覧可能。ビューア上部に閉じられる警告バナーで失敗したチャンクを通知。">If some chunks fail to load but others succeed, a dismissible banner at the top of the viewer lists the failed chunks. The rest of the playlist remains fully viewable.</p>
+    </div>
+    <div class="card-d">
+      <h3 data-en="PDF Support" data-ja="PDF 対応">PDF Support</h3>
+      <p data-en="Add PDF files as chunks. Pages are rendered on demand via pdf.js — no extraction, no conversion needed. Integrated seamlessly alongside images and ZIPs." data-ja="PDF ファイルをチャンクとして追加可能。pdf.js によりページを必要に応じてレンダリング。展開・変換不要。画像や ZIP とシームレスに混在。">Add PDF files as chunks. Pages are rendered on demand via pdf.js — no extraction, no conversion needed.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Keyboard shortcuts ─────────────────────────────────────── -->
+
+<section class="s-light" id="keyboard">
   <h2 data-en="Keyboard shortcuts." data-ja="キーボードショートカット。">Keyboard shortcuts.</h2>
-  <p class="section-sub" data-en="Navigate without lifting a hand from the keyboard." data-ja="キーボードだけで全操作。">Navigate without lifting a hand from the keyboard.</p>
-  <div class="kbd-table-wrap">
-    <table class="kbd-table">
-      <thead>
-        <tr>
-          <th data-en="Key / Action" data-ja="キー / 操作">Key / Action</th>
-          <th data-en="Function" data-ja="機能">Function</th>
-        </tr>
-      </thead>
+  <p class="sub" data-en="Navigate entirely without a mouse." data-ja="マウスなしで全操作。">Navigate entirely without a mouse.</p>
+  <div class="kbd-wrap">
+    <table class="kbd-tbl">
+      <thead><tr>
+        <th data-en="Key / Input" data-ja="キー / 入力">Key / Input</th>
+        <th data-en="Action" data-ja="動作">Action</th>
+      </tr></thead>
       <tbody>
-        <tr><td><kbd>←</kbd> <kbd>↑</kbd> <kbd>Space</kbd> <kbd>PageDown</kbd> <span data-en="/ Scroll ↓" data-ja="/ ホイール↓">/ Scroll ↓</span></td><td data-en="Next page" data-ja="次ページ">Next page</td></tr>
-        <tr><td><kbd>→</kbd> <kbd>↓</kbd> <kbd>Shift+Space</kbd> <kbd>PageUp</kbd> <span data-en="/ Scroll ↑" data-ja="/ ホイール↑">/ Scroll ↑</span></td><td data-en="Previous page" data-ja="前ページ">Previous page</td></tr>
-        <tr><td><kbd>Home</kbd></td><td data-en="First page" data-ja="最初のページ">First page</td></tr>
-        <tr><td><kbd>End</kbd></td><td data-en="Last page" data-ja="最後のページ">Last page</td></tr>
+        <tr><td><kbd>←</kbd> <kbd>↑</kbd> <kbd>Space</kbd> <kbd>PageDown</kbd></td><td data-en="Next page" data-ja="次ページ">Next page</td></tr>
+        <tr><td><kbd>→</kbd> <kbd>↓</kbd> <kbd>Shift+Space</kbd> <kbd>PageUp</kbd></td><td data-en="Previous page" data-ja="前ページ">Previous page</td></tr>
+        <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td data-en="First / last page" data-ja="最初 / 最後のページ">First / last page</td></tr>
         <tr><td><kbd>S</kbd></td><td data-en="Toggle single / spread view" data-ja="1枚 / 見開き切替">Toggle single / spread view</td></tr>
-        <tr><td><kbd>[</kbd></td><td data-en="Next chunk" data-ja="次チャンクへ">Next chunk</td></tr>
-        <tr><td><kbd>]</kbd></td><td data-en="Previous chunk" data-ja="前チャンクへ">Previous chunk</td></tr>
+        <tr><td><kbd>[</kbd> / <kbd>]</kbd></td><td data-en="Next / previous chunk" data-ja="次 / 前チャンク">Next / previous chunk</td></tr>
         <tr><td><kbd>F</kbd></td><td data-en="Toggle fullscreen" data-ja="フルスクリーン切替">Toggle fullscreen</td></tr>
-        <tr><td><kbd>Esc</kbd></td><td data-en="Exit fullscreen / return home" data-ja="フルスクリーン解除 / ホームに戻る">Exit fullscreen / return home</td></tr>
-        <tr><td><span data-en="Click right half" data-ja="画面右半分クリック">Click right half</span></td><td data-en="Previous page" data-ja="前ページ">Previous page</td></tr>
-        <tr><td><span data-en="Click left half" data-ja="画面左半分クリック">Click left half</span></td><td data-en="Next page" data-ja="次ページ">Next page</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td data-en="Exit fullscreen or return home" data-ja="フルスクリーン解除 / ホームへ">Exit fullscreen or return home</td></tr>
+        <tr><td><span data-en="Click right half" data-ja="右半分クリック">Click right half</span></td><td data-en="Previous page" data-ja="前ページ">Previous page</td></tr>
+        <tr><td><span data-en="Click left half" data-ja="左半分クリック">Click left half</span></td><td data-en="Next page" data-ja="次ページ">Next page</td></tr>
         <tr><td><kbd>F2</kbd></td><td data-en="Rename selected playlist" data-ja="選択プレイリストをリネーム">Rename selected playlist</td></tr>
-        <tr><td><kbd>Delete</kbd></td><td data-en="Delete selected playlist (with confirmation)" data-ja="選択プレイリストを削除（確認あり）">Delete selected playlist (with confirmation)</td></tr>
+        <tr><td><kbd>Delete</kbd></td><td data-en="Delete selected playlist (with confirmation)" data-ja="選択プレイリストを削除（確認あり）">Delete selected playlist</td></tr>
         <tr><td><kbd>Ctrl+Z</kbd></td><td data-en="Undo last chunk delete or split" data-ja="直前のチャンク削除・分割をアンドゥ">Undo last chunk delete or split</td></tr>
       </tbody>
     </table>
   </div>
 </section>
 
-<!-- What's New -->
-<section class="section-dark" id="whats-new">
-  <h2 data-en="v0.4.0 Highlights." data-ja="v0.4.0 ハイライト。">v0.4.0 Highlights.</h2>
-  <p class="section-sub" data-en="Group drag &amp; power selection." data-ja="グループドラッグ。賢い複数選択。">Group drag &amp; power selection.</p>
-  <div class="new-grid">
-    <div class="new-card">
+<!-- ── What's New ─────────────────────────────────────────────── -->
+
+<section class="s-dark" id="whats-new">
+  <h2 data-en="New in v0.4.0." data-ja="v0.4.0 の新機能。">New in v0.4.0.</h2>
+  <p class="sub" data-en="Group drag, favorites, tags, and split." data-ja="グループドラッグ、お気に入り、タグ、分割。">Group drag, favorites, tags, and split.</p>
+  <div class="wrap grid2">
+    <div class="card-d">
       <span class="tag" data-en="New" data-ja="新機能">New</span>
       <h3 data-en="Multi-Select &amp; Group Drag" data-ja="複数選択＆グループドラッグ">Multi-Select &amp; Group Drag</h3>
-      <p data-en="Ctrl+click, Shift+click, or drag to select multiple chunks. Drag the group — all selected chunks move simultaneously via DragOverlay with a stacked card and count badge." data-ja="Ctrl+クリック・Shift+クリック・ドラッグで複数チャンクを選択。ドラッグすると選択チャンクが DragOverlay として同時移動。件数バッジ付きのスタックカードで視覚的にわかりやすい。">Ctrl+click, Shift+click, or drag to select multiple chunks. Drag the group — all selected chunks move simultaneously via DragOverlay with a stacked card and count badge.</p>
+      <p data-en="Select multiple chunks with Ctrl+click, Shift+click, or drag. Drag the group — all selected chunks move simultaneously via DragOverlay with a stacked card and count badge." data-ja="Ctrl+クリック・Shift+クリック・ドラッグで複数チャンクを選択。ドラッグすると DragOverlay として同時移動。件数バッジ付きのスタックカードで視覚的に確認。">Select multiple chunks with Ctrl+click, Shift+click, or drag. Drag the group — all selected chunks move simultaneously via DragOverlay with a stacked card and count badge.</p>
     </div>
-    <div class="new-card">
+    <div class="card-d">
       <span class="tag" data-en="New" data-ja="新機能">New</span>
-      <h3 data-en="Playlist Favorites &amp; Tags" data-ja="お気に入り＆タグ">Playlist Favorites &amp; Tags</h3>
-      <p data-en="Star any playlist as a favorite and filter to ★ only. Add custom text tags to playlists and click a tag in the filter bar to narrow the list instantly." data-ja="プレイリストをスターで登録してお気に入りのみ絞り込み。カスタムタグを付与してフィルタバーから即座に絞り込み。">Star any playlist as a favorite and filter to ★ only. Add custom text tags to playlists and click a tag in the filter bar to narrow the list instantly.</p>
+      <h3 data-en="Favorites &amp; Custom Tags" data-ja="お気に入り＆カスタムタグ">Favorites &amp; Custom Tags</h3>
+      <p data-en="Star playlists as favorites and filter to ★ only. Add custom text tags and click a tag in the filter bar to narrow the list instantly." data-ja="プレイリストをスターでお気に入りに登録、★ フィルタで絞り込み。カスタムタグを付与してフィルタバーから即座に絞り込み。">Star playlists as favorites and filter to ★ only. Add custom text tags and click a tag in the filter bar to narrow the list instantly.</p>
     </div>
-    <div class="new-card">
+    <div class="card-d">
       <span class="tag" data-en="New" data-ja="新機能">New</span>
-      <h3 data-en="Split Chunk by Subfolder" data-ja="サブフォルダで分割">Split Chunk by Subfolder</h3>
-      <p data-en="Split one chunk into multiple sub-chunks, one per subfolder — perfect for series organized by volume. Undo the split with a single click." data-ja="1チャンクをサブフォルダ単位の複数チャンクに分割。巻ごとにフォルダが分かれたシリーズに最適。ワンクリックでアンドゥも可能。">Split one chunk into multiple sub-chunks, one per subfolder — perfect for series organized by volume. Undo the split with a single click.</p>
+      <h3 data-en="Split by Subfolder" data-ja="サブフォルダで分割">Split by Subfolder</h3>
+      <p data-en="Expand one chunk into multiple sub-chunks — one per subfolder. Perfect for series organized by volume. Undo the split with a single click." data-ja="1チャンクをサブフォルダ単位の複数チャンクに展開。巻ごとにフォルダが分かれたシリーズに最適。ワンクリックでアンドゥ。">Expand one chunk into multiple sub-chunks — one per subfolder. Perfect for series organized by volume. Undo the split with a single click.</p>
     </div>
-    <div class="new-card">
+    <div class="card-d">
       <span class="tag" data-en="Improved" data-ja="改善">Improved</span>
-      <h3 data-en="Playlist Drag Reorder" data-ja="プレイリスト並び替え改善">Playlist Drag Reorder</h3>
-      <p data-en="Drag anywhere on a playlist item to reorder — no dedicated handle required. Sort chunks by name, modified date, or created date from the sort menu." data-ja="プレイリストアイテムのどこでもドラッグして並び替え可能（専用ハンドル不要）。チャンクもソートメニューから名前・更新日・作成日で並び替えできるように。">Drag anywhere on a playlist item to reorder — no dedicated handle required. Sort chunks by name, modified date, or created date from the sort menu.</p>
+      <h3 data-en="Playlist &amp; Chunk Reorder" data-ja="プレイリスト＆チャンク並び替え改善">Playlist &amp; Chunk Reorder</h3>
+      <p data-en="Drag anywhere on a playlist item to reorder — no handle required. Sort chunks from the sort menu by name, modified date, or created date." data-ja="プレイリストアイテムのどこでもドラッグして並び替え（ハンドル不要）。チャンクもソートメニューから名前・更新日・作成日で並び替え。">Drag anywhere on a playlist item to reorder — no handle required. Sort chunks from the sort menu by name, modified date, or created date.</p>
     </div>
   </div>
 </section>
 
-<!-- Supported Formats -->
-<section class="section-light" id="formats">
-  <h2 data-en="Supported Formats." data-ja="対応フォーマット。">Supported Formats.</h2>
-  <p class="section-sub" data-en="Images, archives, and documents." data-ja="画像・アーカイブ・ドキュメント。">Images, archives, and documents.</p>
-  <div class="format-badges">
-    <span class="format-badge">JPEG</span>
-    <span class="format-badge">PNG</span>
-    <span class="format-badge">GIF</span>
-    <span class="format-badge">WebP</span>
-    <span class="format-badge">BMP</span>
-    <span class="format-badge">TIFF</span>
-    <span class="format-badge">PDF</span>
-    <span class="format-badge">.zip</span>
-    <span class="format-badge">.cbz</span>
+<!-- ── Formats ────────────────────────────────────────────────── -->
+
+<section class="s-light" id="formats">
+  <h2 data-en="Every format you need." data-ja="必要なすべてのフォーマット。">Every format you need.</h2>
+  <p class="sub" data-en="Images, archives, and documents." data-ja="画像・アーカイブ・ドキュメント。">Images, archives, and documents.</p>
+  <div class="fmt-row">
+    <span class="fmt">JPEG</span>
+    <span class="fmt">PNG</span>
+    <span class="fmt">GIF</span>
+    <span class="fmt">WebP</span>
+    <span class="fmt">BMP</span>
+    <span class="fmt">TIFF</span>
+    <span class="fmt">PDF</span>
+    <span class="fmt">.zip</span>
+    <span class="fmt">.cbz</span>
   </div>
 </section>
 
-<!-- System Requirements -->
-<section class="section-dark" id="requirements">
-  <h2 data-en="System Requirements." data-ja="動作環境。">System Requirements.</h2>
-  <p class="section-sub" data-en="Lightweight. Runs entirely locally." data-ja="軽量。すべてローカルで動作。">Lightweight. Runs entirely locally.</p>
-  <div class="req-grid" style="max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr);gap:20px;text-align:left">
-    <div>
-      <h4 style="font-size:14px;font-weight:600;color:#f5f5f7;letter-spacing:-.224px;margin-bottom:4px">OS</h4>
-      <p style="font-size:14px;color:rgba(255,255,255,.56);letter-spacing:-.224px;line-height:1.43">Windows 10 / 11 (x64)</p>
+<!-- ── Requirements ───────────────────────────────────────────── -->
+
+<section class="s-dark" id="requirements">
+  <h2 data-en="System requirements." data-ja="動作環境。">System requirements.</h2>
+  <p class="sub" data-en="Lightweight. 100% local." data-ja="軽量。完全ローカル。">Lightweight. 100% local.</p>
+  <div class="wrap" style="display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:640px;text-align:left">
+    <div class="card-d">
+      <h3>OS</h3>
+      <p>Windows 10 / 11 (x64)</p>
     </div>
-    <div>
-      <h4 style="font-size:14px;font-weight:600;color:#f5f5f7;letter-spacing:-.224px;margin-bottom:4px" data-en="Runtime" data-ja="ランタイム">Runtime</h4>
-      <p style="font-size:14px;color:rgba(255,255,255,.56);letter-spacing:-.224px;line-height:1.43" data-en="WebView2 (built into Win 11, auto-installed on Win 10)" data-ja="WebView2（Win 11 標準搭載、Win 10 は自動インストール）">WebView2 (built into Win 11, auto-installed on Win 10)</p>
+    <div class="card-d">
+      <h3 data-en="Runtime" data-ja="ランタイム">Runtime</h3>
+      <p data-en="WebView2 — built into Windows 11; auto-installed on Windows 10." data-ja="WebView2 — Windows 11 標準搭載、Windows 10 は自動インストール。">WebView2 — built into Windows 11; auto-installed on Windows 10.</p>
     </div>
-    <div>
-      <h4 style="font-size:14px;font-weight:600;color:#f5f5f7;letter-spacing:-.224px;margin-bottom:4px" data-en="Storage" data-ja="保存場所">Storage</h4>
-      <p style="font-size:14px;color:rgba(255,255,255,.56);letter-spacing:-.224px;line-height:1.43" data-en="AppData\Roaming\com.linkori.app\" data-ja="AppData\Roaming\com.linkori.app\">AppData\Roaming\com.linkori.app\</p>
+    <div class="card-d">
+      <h3 data-en="Storage" data-ja="保存場所">Storage</h3>
+      <p style="font-size:12px;word-break:break-all">AppData\Roaming\com.linkori.app\</p>
     </div>
-    <div>
-      <h4 style="font-size:14px;font-weight:600;color:#f5f5f7;letter-spacing:-.224px;margin-bottom:4px" data-en="Privacy" data-ja="プライバシー">Privacy</h4>
-      <p style="font-size:14px;color:rgba(255,255,255,.56);letter-spacing:-.224px;line-height:1.43" data-en="100% local — no network requests ever" data-ja="完全ローカル動作 — 外部通信一切なし">100% local — no network requests ever</p>
+    <div class="card-d">
+      <h3 data-en="Privacy" data-ja="プライバシー">Privacy</h3>
+      <p data-en="No network requests. Ever." data-ja="外部通信は一切なし。">No network requests. Ever.</p>
     </div>
   </div>
 </section>
 
-<!-- Download -->
-<section class="section-dark" id="download">
+<!-- ── Download ───────────────────────────────────────────────── -->
+
+<section class="s-dark" id="download">
   <h2 data-en="Ready to read." data-ja="さあ、読もう。">Ready to read.</h2>
-  <p class="section-sub" data-en="Free, open source, and runs entirely locally." data-ja="無料・オープンソース。すべてローカルで動作。">Free, open source, and runs entirely locally.</p>
-  <div class="download-ctas">
+  <p class="sub" data-en="Free, open source, runs entirely locally." data-ja="無料・オープンソース。すべてローカルで動作。">Free, open source, runs entirely locally.</p>
+  <div class="dl-ctas">
     <a href="https://github.com/user-attachments/files/26791099/Linkori_0.4.0_x64-setup.zip" class="btn-primary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span data-en="Download v0.4.0 (Setup)" data-ja="v0.4.0 をダウンロード（インストーラー）">Download v0.4.0 (Setup)</span>
+      <span data-en="Download v0.4.0" data-ja="v0.4.0 をダウンロード">Download v0.4.0</span>
     </a>
-    <a href="https://github.com/tmd-0x5a/linkori/releases" class="btn-outline" target="_blank" rel="noopener" data-en="All releases" data-ja="全リリース">All releases</a>
-    <a href="https://github.com/tmd-0x5a/linkori" class="btn-outline" target="_blank" rel="noopener" data-en="Source Code" data-ja="ソースコード">Source Code</a>
+    <a href="https://github.com/tmd-0x5a/linkori/releases" class="btn-outline-dark" target="_blank" rel="noopener" data-en="All releases" data-ja="全リリース">All releases</a>
+    <a href="https://github.com/tmd-0x5a/linkori" class="btn-outline-dark" target="_blank" rel="noopener" data-en="Source Code" data-ja="ソースコード">Source Code</a>
   </div>
-  <p class="download note" style="font-size:12px;color:rgba(255,255,255,.36);letter-spacing:-.08px;max-width:480px;margin:0 auto;line-height:1.5" data-en="No data is ever sent to external servers. Everything runs locally on your machine." data-ja="外部サーバーへのデータ送信は一切ありません。すべてお使いのPC内で完結します。">No data is ever sent to external servers. Everything runs locally on your machine.</p>
+  <p class="dl-note" data-en="No data is ever sent to external servers. Everything runs locally on your machine." data-ja="外部サーバーへのデータ送信は一切ありません。すべてお使いのPC内で完結します。">No data is ever sent to external servers. Everything runs locally on your machine.</p>
 </section>
 
-<!-- Disclaimer -->
-<section class="section-light">
+<!-- ── Disclaimer ─────────────────────────────────────────────── -->
+
+<section class="s-light">
   <h2 data-en="Disclaimer" data-ja="免責事項">Disclaimer</h2>
-  <div style="max-width:640px;margin:0 auto;text-align:left;padding-top:32px">
-    <p style="font-size:13px;color:rgba(0,0,0,.56);letter-spacing:-.16px;line-height:1.6">
-      <span data-en='This software is provided "as is" without warranty of any kind, express or implied. The author shall not be liable for any damages arising from the use of this software. You are solely responsible for ensuring that your use of any content complies with applicable copyright laws. This application runs entirely locally and never transmits data to external servers.' data-ja="本ソフトウェアは現状有姿（AS IS）で提供され、明示・暗示を問わずいかなる保証もありません。本ソフトウェアの使用によって生じたいかなる損害についても、作者は一切の責任を負いません。著作権で保護されたコンテンツの取り扱いは、ユーザー自身の責任において適法に行ってください。本アプリケーションはローカル環境のみで動作し、外部サーバーへのデータ送信は一切行いません。">This software is provided "as is" without warranty of any kind, express or implied. The author shall not be liable for any damages arising from the use of this software. You are solely responsible for ensuring that your use of any content complies with applicable copyright laws. This application runs entirely locally and never transmits data to external servers.</span>
-    </p>
+  <div style="max-width:640px;margin:32px auto 0;text-align:left">
+    <p style="font-size:13px;color:rgba(0,0,0,.56);letter-spacing:-.16px;line-height:1.6" data-en='This software is provided "as is" without warranty of any kind. The author is not liable for any damages arising from its use. You are solely responsible for ensuring that your use of any content complies with applicable copyright laws. This application runs entirely locally and never transmits data to external servers.' data-ja="本ソフトウェアは現状有姿（AS IS）で提供され、いかなる保証もありません。使用によって生じた損害について作者は責任を負いません。コンテンツの取り扱いはユーザー自身の責任で適法に行ってください。本アプリはローカル環境のみで動作し、外部サーバーへのデータ送信は一切行いません。">This software is provided "as is" without warranty of any kind. The author is not liable for any damages arising from its use. You are solely responsible for ensuring that your use of any content complies with applicable copyright laws. This application runs entirely locally and never transmits data to external servers.</p>
   </div>
 </section>
 
 <!-- Footer -->
 <footer class="footer">
-  <div class="footer-inner">
+  <div style="max-width:980px;margin:0 auto">
     <p>
       <span data-en="Linkori is open source under the" data-ja="Linkori は">Linkori is open source under the</span>
       <a href="https://github.com/tmd-0x5a/linkori/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a><span data-en="." data-ja=" のオープンソースです。">.</span><br>
@@ -479,23 +577,22 @@ kbd{display:inline-block;background:#e8e8e8;border-radius:4px;padding:1px 6px;fo
 </footer>
 
 <script>
-function setLang(lang) {
-  document.documentElement.lang = lang;
-  document.querySelectorAll('[data-en][data-ja]').forEach(el => {
-    const text = el.getAttribute('data-' + lang);
-    if (text !== null) el.innerHTML = text;
+function setLang(lang){
+  document.documentElement.lang=lang;
+  document.querySelectorAll('[data-en][data-ja]').forEach(el=>{
+    const t=el.getAttribute('data-'+lang);
+    if(t!==null) el.innerHTML=t;
   });
-  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
-  document.getElementById('btn-ja').classList.toggle('active', lang === 'ja');
-  try { localStorage.setItem('linkori-lang', lang); } catch {}
+  document.getElementById('btn-en').classList.toggle('active',lang==='en');
+  document.getElementById('btn-ja').classList.toggle('active',lang==='ja');
+  try{localStorage.setItem('linkori-lang',lang);}catch(e){}
 }
-(function() {
-  var saved = null;
-  try { saved = localStorage.getItem('linkori-lang'); } catch {}
-  if (saved === 'ja' || saved === 'en') { setLang(saved); }
-  else if (navigator.language && navigator.language.startsWith('ja')) { setLang('ja'); }
+(function(){
+  var s=null;
+  try{s=localStorage.getItem('linkori-lang');}catch(e){}
+  if(s==='ja'||s==='en'){setLang(s);}
+  else if(navigator.language&&navigator.language.startsWith('ja')){setLang('ja');}
 })();
 </script>
-
 </body>
 </html>
