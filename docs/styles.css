@@ -465,24 +465,24 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
 .mock > .mock-plist,
 .mock > .mock-viewer,
 .mock > .mock-browser{ flex:1; min-height:0 }
-/* macOS風タイトルバー（実OSライクなトラフィックライト） */
+/* Windows 11 風タイトルバー（タイトル左 / ウィンドウ制御右） */
 .mock .chrome, .frame .chrome{
-  height:28px; background: linear-gradient(180deg, #e9ecef 0%, #d8dde3 100%);
-  display:flex; align-items:center; gap:8px; padding:0 12px;
-  border-bottom:1px solid rgba(0,0,0,.12);
+  height:30px; background: #f3f3f3;
+  display:flex; align-items:center; padding:0 0 0 12px;
+  border-bottom:1px solid #e5e5e5;
   flex-shrink:0;
 }
-.mock .chrome .tl, .frame .chrome .tl{
-  width:12px; height:12px; border-radius:50%;
-  box-shadow: inset 0 0 0 .5px rgba(0,0,0,.18);
-}
-.mock .chrome .tl:nth-of-type(1), .frame .chrome .tl:nth-of-type(1){ background:#ff5f57 }
-.mock .chrome .tl:nth-of-type(2), .frame .chrome .tl:nth-of-type(2){ background:#febc2e }
-.mock .chrome .tl:nth-of-type(3), .frame .chrome .tl:nth-of-type(3){ background:#28c840 }
 .mock .chrome .ti, .frame .chrome .ti{
-  flex:1; text-align:center; font-family:var(--sans); font-size:11px;
-  color:#4a5160; letter-spacing:.02em; font-weight:500;
+  flex:1; font-family:var(--sans); font-size:12px;
+  color:#1f1f1f; letter-spacing:0; font-weight:400;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
+.mock .chrome .wc, .frame .chrome .wc{
+  width:44px; height:30px; display:inline-flex; align-items:center; justify-content:center;
+  color:#1f1f1f;
+}
+.mock .chrome .wc svg, .frame .chrome .wc svg{ width:10px; height:10px; }
+.mock .chrome .wc.close, .frame .chrome .wc.close{ color:#1f1f1f; }
 
 /* ─── Playlist mock — Linkori アプリ準拠 ─── */
 .mock-plist{
@@ -653,15 +653,31 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
   background:#05060a; position:relative; overflow:hidden;
 }
 .mock-viewer .top{
-  position:absolute; top:0; left:0; right:0; z-index:3;
-  display:flex; align-items:center; gap:6px; padding:10px 14px;
+  position:absolute; top:12px; left:14px; z-index:3;
+  display:flex; align-items:center; gap:6px;
 }
-.mock-viewer .top .spacer{ flex:1 }
-.mock-viewer .top .homebtn{
-  padding:5px; border-radius:6px;
-  background: rgba(255,255,255,.06); color:rgba(255,255,255,.75);
-  display:inline-flex; align-items:center; justify-content:center;
+.mock-viewer .top .topbtn{
+  height:26px; padding:0 9px; border-radius:7px;
+  background: rgba(0,0,0,.4); color:rgba(255,255,255,.72);
+  display:inline-flex; align-items:center; gap:5px;
+  font-family:var(--sans); font-size:10px; font-weight:500;
   backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.mock-viewer .top .topbtn.icon{ padding:0 7px; }
+.mock-viewer .top .seg{
+  display:flex; overflow:hidden; border-radius:7px;
+  border:1px solid rgba(255,255,255,.1);
+  background: rgba(0,0,0,.4); backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.mock-viewer .top .seg > span{
+  padding:0 9px; height:26px; display:inline-flex; align-items:center;
+  font-family:var(--sans); font-size:10px; color: rgba(255,255,255,.45);
+}
+.mock-viewer .top .seg > span + span{ border-left:1px solid rgba(255,255,255,.1); }
+.mock-viewer .top .seg > span.on{
+  background: rgba(37,99,235,.60); color:#bfdbfe;
 }
 .mock-viewer .pages{
   flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:24px;
@@ -982,6 +998,106 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
   display:flex; justify-content:center; align-items:center; gap:6px;
   padding:10px; border:1px dashed #cfd9e4; border-radius:10px;
   color:#7e8a99; font-family:var(--sans); font-size:10px; font-weight:500;
+}
+
+/* ─── チャンク複数選択モック（v0.4 group-drag） ─── */
+.mock-chunksel{
+  position:relative; aspect-ratio: 4/5; max-width:340px; width:100%;
+  border-radius:14px; border:1px solid var(--border-2);
+  background:#f4f7fb; padding:14px 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.45);
+  display:flex; flex-direction:column; gap:8px;
+  overflow:hidden;
+}
+.mock-chunksel .cs-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 4px 2px 10px; border-bottom:1px solid #cfd9e4;
+  margin-bottom:4px;
+}
+.mock-chunksel .cs-head .ti{
+  font-family: "Noto Serif JP", "YuMincho", serif;
+  color:#0a1628; font-size:14px; font-weight:700; letter-spacing:-.01em;
+}
+.mock-chunksel .cs-head .mt{
+  color:#7e8a99; font-size:9px; font-family:var(--mono);
+  text-transform:uppercase; letter-spacing:.1em;
+}
+.mock-chunksel .cs-row{
+  display:grid; grid-template-columns: 14px 1fr auto; gap:10px; align-items:center;
+  padding:9px 11px; border-radius:10px;
+  background:#fff; border:1px solid #cfd9e4;
+  box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+.mock-chunksel .cs-row.selected{
+  border-color:#2f8fd1; background: rgba(47,143,209,.25);
+}
+.mock-chunksel .cs-row .ssgrip{
+  display:grid; grid-template-columns: 3px 3px; gap:2px; color:#b8c2cf;
+}
+.mock-chunksel .cs-row .ssgrip i{ width:3px; height:3px; background:currentColor; border-radius:50%; display:block; }
+.mock-chunksel .cs-row .nm{
+  color:#0a1628; font-size:11px; font-weight:600;
+  font-family: "Noto Serif JP", "YuMincho", serif; letter-spacing:-.01em;
+}
+.mock-chunksel .cs-row .mt{
+  color:#7e8a99; font-size:9px; font-family:var(--mono); margin-top:2px;
+}
+.mock-chunksel .cs-row .ssbadge{
+  background:#9fd8e8; color:#0f1d4a;
+  padding:2px 7px; border-radius:999px;
+  font-family:var(--mono); font-size:8px; font-weight:700;
+}
+/* 選択時アクションバー（上部フロート） */
+.mock-chunksel .cs-actionbar{
+  position:absolute; top:64px; left:50%; transform:translateX(-50%);
+  display:inline-flex; align-items:center; gap:8px;
+  padding:6px 10px; border-radius:999px;
+  background: rgba(15, 29, 74, 0.95); color:#fff;
+  font-family:var(--sans); font-size:10px; font-weight:600;
+  box-shadow: 0 8px 22px rgba(0,0,0,.45);
+  z-index:3;
+}
+.mock-chunksel .cs-actionbar .cnt{
+  background:#2f8fd1; padding:2px 7px; border-radius:999px;
+  font-family:var(--mono); font-size:9px; font-weight:700;
+}
+.mock-chunksel .cs-actionbar .act{
+  color:rgba(255,255,255,.8); padding:2px 4px;
+  display:inline-flex; align-items:center; gap:3px;
+}
+.mock-chunksel .cs-actionbar .act + .act{ border-left:1px solid rgba(255,255,255,.18); padding-left:8px; margin-left:2px; }
+/* ドラッグオーバーレイ（積み重ねカード + バッジ） */
+.mock-chunksel .cs-overlay{
+  position:absolute; right:24px; bottom:52px;
+  width:180px; z-index:4;
+  pointer-events:none;
+  transform: rotate(-3deg);
+  filter: drop-shadow(0 14px 20px rgba(0,0,0,.35));
+}
+.mock-chunksel .cs-overlay .card{
+  position:absolute; inset:0;
+  background:#fff; border:1px solid #2f8fd1;
+  border-radius:10px; padding:10px 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.15);
+}
+.mock-chunksel .cs-overlay .card:nth-of-type(1){ transform: translate(-6px, -6px) rotate(-4deg); opacity:.55 }
+.mock-chunksel .cs-overlay .card:nth-of-type(2){ transform: translate(-3px, -3px) rotate(-2deg); opacity:.78 }
+.mock-chunksel .cs-overlay .card:nth-of-type(3){ transform: none; opacity:1; position:relative; }
+.mock-chunksel .cs-overlay .card .nm{
+  color:#0a1628; font-size:11px; font-weight:700;
+  font-family: "Noto Serif JP", "YuMincho", serif;
+}
+.mock-chunksel .cs-overlay .card .mt{
+  color:#7e8a99; font-size:9px; font-family:var(--mono); margin-top:3px;
+}
+.mock-chunksel .cs-overlay .cs-count{
+  position:absolute; top:-10px; right:-10px;
+  width:26px; height:26px; border-radius:50%;
+  background:#2f8fd1; color:#fff;
+  display:grid; place-items:center;
+  font-family:var(--mono); font-size:11px; font-weight:800;
+  box-shadow: 0 4px 10px rgba(47,143,209,.6);
+  border:2px solid #fff;
 }
 
 /* ─── Keyboard shortcuts table ─── */

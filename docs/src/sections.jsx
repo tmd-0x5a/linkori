@@ -91,7 +91,7 @@ function PlaylistSec(){
             </ul>
           </div>
           <div className="mock reveal" style={{'--d':'100ms'}} data-par="0.4">
-            <div className="chrome"><i className="tl"/><i className="tl"/><i className="tl"/><span className="ti">linkori — playlist</span></div>
+            <WinChrome title="Linkori"/>
             <PlaylistMock/>
           </div>
         </div>
@@ -138,10 +138,13 @@ function ChunksSec(){
           </div>
         </div>
 
-        <div className="reveal" style={{ display: 'flex', justifyContent: 'center', margin: '40px 0' }}>
-          <div className="feature-copy" style={{ maxWidth: 800 }}>
+        <div className="feature-row reveal" style={{ margin: '40px 0', alignItems:'center' }}>
+          <div style={{ display:'flex', justifyContent:'center' }} data-par="0.3">
+            <ChunkSelectMock/>
+          </div>
+          <div className="feature-copy">
             <h3 style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{lang==='ja'?'柔軟な範囲指定。':'Flexible range.'}</h3>
-            <p style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{lang==='ja'?'1画像から1フォルダまで、どこでも始点・終点に指定できる。':'Start anywhere, end anywhere — single image to a full folder.'}</p>
+            <p style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{lang==='ja'?'1画像から1フォルダまで、どこでも始点・終点に指定できる。複数選択でまとめて移動・削除も。':'Start anywhere, end anywhere — single image to a full folder. Multi-select to move or delete in bulk.'}</p>
             <ul>{c.bullets.map((b,i)=> <li key={i} style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{mapLang(b,lang)}</li>)}</ul>
           </div>
         </div>
@@ -201,7 +204,7 @@ function BrowserSec(){
         </div>
         <div className="feature-row">
           <div className="mock reveal" data-par="0.4">
-            <div className="chrome"><i className="tl"/><i className="tl"/><i className="tl"/><span className="ti">linkori — file browser</span></div>
+            <WinChrome title="Linkori — File Browser"/>
             <BrowserMock/>
           </div>
           <div className="feature-copy reveal" style={{'--d':'100ms'}}>
@@ -443,6 +446,11 @@ function PlaylistMock(){
           <span className="brand">Linkori</span>
           <span className="spacer"/>
           <span className="icobtn">JA</span>
+          <span className="icobtn" title="テーマ切替">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </span>
           <span className="icobtn"><Ico name="plus" size={11}/></span>
         </div>
         <div className="filter">
@@ -514,12 +522,12 @@ function PlaylistMock(){
 function ViewerMock({showSidebar=true}){
   return (
     <div className="mock-viewer">
-      {/* 上部ホームボタン（実アプリの Home アイコン） */}
+      {/* 左上ホバー UI（実アプリ: ホーム / フルスクリーン / チャンク編集 / 見開き切替） */}
       <div className="top">
-        <span className="homebtn"><Ico name="arrow" size={11}/></span>
-        <span className="spacer"/>
-        <span className="homebtn"><Ico name="edit" size={11}/></span>
-        <span className="homebtn"><Ico name="expand" size={11}/></span>
+        <span className="topbtn"><Ico name="arrow" size={10}/>ホーム</span>
+        <span className="topbtn icon"><Ico name="expand" size={11}/></span>
+        <span className="topbtn icon"><Ico name="list" size={11}/></span>
+        <span className="seg"><span>1P</span><span className="on">2P</span></span>
       </div>
       <div className="pages">
         {/* 右→左読み: 先に R（次ページ）、続いて L */}
@@ -651,6 +659,52 @@ function BrowserMock(){
   );
 }
 
+// チャンク複数選択モック（v0.4 group-drag 機能のプレビュー）
+function ChunkSelectMock(){
+  const rows = [
+    {n:'序章 — 旅立ち',   mt:'JPG · 42枚',    cnt:'42'},
+    {n:'第一巻 — 出会い', mt:'Folder · 86枚', cnt:'86', sel:true},
+    {n:'第二巻 — 修練',   mt:'ZIP · 120枚',   cnt:'120', sel:true},
+    {n:'第三巻 — 決戦',   mt:'PDF · 64枚',    cnt:'64', sel:true},
+    {n:'外伝 — 追憶',     mt:'Folder · 28枚', cnt:'28'},
+  ];
+  return (
+    <div className="mock-chunksel">
+      <div className="cs-head">
+        <span className="ti">VAGABOND</span>
+        <span className="mt">5 CHUNKS</span>
+      </div>
+      {/* 選択時の浮遊アクションバー */}
+      <div className="cs-actionbar">
+        <span className="cnt">3</span>
+        <span className="act"><Ico name="check" size={9}/>選択中</span>
+        <span className="act"><Ico name="move" size={9}/>まとめて移動</span>
+        <span className="act"><Ico name="trash" size={9}/>削除</span>
+      </div>
+      {rows.map((r,i)=>(
+        <div key={i} className={'cs-row '+(r.sel?'selected':'')}>
+          <div className="ssgrip"><i/><i/><i/><i/><i/><i/></div>
+          <div>
+            <div className="nm">{r.n}</div>
+            <div className="mt">{r.mt}</div>
+          </div>
+          <span className="ssbadge">{r.cnt}</span>
+        </div>
+      ))}
+      {/* ドラッグオーバーレイ（選択カード積み重ね + カウントバッジ） */}
+      <div className="cs-overlay">
+        <div className="card"/>
+        <div className="card"/>
+        <div className="card">
+          <div className="nm">第一巻 — 出会い</div>
+          <div className="mt">Folder · 86枚</div>
+        </div>
+        <span className="cs-count">3</span>
+      </div>
+    </div>
+  );
+}
+
 // ビューア機能詳細モック（ViewerSec 用、全機能を見せる）
 function ViewerShowcaseMock(){
   return (
@@ -658,11 +712,8 @@ function ViewerShowcaseMock(){
       {/* 見開き + チャンク編集サイドバー */}
       <ViewerMock showSidebar={true}/>
       {/* 機能ラベル */}
-      <div className="vlabel l-top"   style={{top:'8%',   left:0}}>
-        <span className="dot"/><span>ホームへ戻る</span>
-      </div>
-      <div className="vlabel l-top2"  style={{top:'8%',   right:0}}>
-        <span>チャンク編集 · フルスクリーン</span><span className="dot"/>
+      <div className="vlabel l-top"   style={{top:'6%',   left:0}}>
+        <span className="dot"/><span>ホーム · フルスクリーン · チャンク編集 · 見開き切替</span>
       </div>
       <div className="vlabel l-right" style={{top:'38%',  right:0}}>
         <span>チャンク追加 · 並び替え · 削除</span><span className="dot"/>
@@ -677,14 +728,28 @@ function ViewerShowcaseMock(){
   );
 }
 
-// full-cell mocks（プレビュー用: Mac風クローム付き）
+// Windows 11 風クローム（タイトル左 / 制御右）
+function WinChrome({title}){
+  return (
+    <div className="chrome">
+      <span className="ti">{title}</span>
+      <span className="wc" aria-hidden>
+        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1"><line x1="2" y1="5" x2="8" y2="5"/></svg>
+      </span>
+      <span className="wc" aria-hidden>
+        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1"><rect x="2" y="2" width="6" height="6"/></svg>
+      </span>
+      <span className="wc close" aria-hidden>
+        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg>
+      </span>
+    </div>
+  );
+}
+// full-cell mocks（プレビュー用: Windows風クローム付き）
 function WithChrome({title, children}){
   return (
     <div style={{height:'100%', display:'flex', flexDirection:'column'}}>
-      <div className="chrome">
-        <i className="tl"/><i className="tl"/><i className="tl"/>
-        <span className="ti">{title}</span>
-      </div>
+      <WinChrome title={title}/>
       <div style={{flex:1, minHeight:0, overflow:'hidden'}}>{children}</div>
     </div>
   );
