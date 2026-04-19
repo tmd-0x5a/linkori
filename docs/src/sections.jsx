@@ -51,16 +51,16 @@ function Screens(){
         </div>
         <div className="ss">
           <div className="cell reveal" data-par="0.3">
-            <PlaylistMockFull/>
+            <div className="frame"><PlaylistMockFull/></div>
             <div className="cap"><b>{lang==='ja'?'プレイリスト':'Playlist'}</b><span>{lang==='ja'?'タグ色・お気に入り':'Tag colors · favorites'}</span></div>
           </div>
           <div className="cell reveal" style={{'--d':'120ms'}} data-par="0.5">
-            <ViewerMockFull/>
+            <div className="frame"><ViewerMockFull/></div>
             <div className="cap"><b>{lang==='ja'?'ビューア':'Viewer'}</b><span>{lang==='ja'?'見開き・RTL・編集':'Spread · RTL · edit'}</span></div>
           </div>
           <div className="cell reveal" style={{'--d':'240ms'}} data-par="0.3">
-            <BrowserMockFull/>
-            <div className="cap"><b>{lang==='ja'?'ファイルブラウザ':'File Browser'}</b><span>{lang==='ja'?'検索・サムネイル':'Search · thumbnails'}</span></div>
+            <div className="frame"><BrowserMockFull/></div>
+            <div className="cap"><b>{lang==='ja'?'ファイルブラウザ':'File Browser'}</b><span>{lang==='ja'?'検索・リスト表示':'Search · list view'}</span></div>
           </div>
         </div>
       </div>
@@ -480,22 +480,31 @@ function PlaylistMock(){
         </div>
         <div className="chunks">
           {[
-            {n:'Vol.01 — prologue', c:'42 pages',  type:'ZIP'},
-            {n:'Vol.01 — arc A',    c:'86 pages',  type:'Folder', sel:true},
-            {n:'Vol.02 — arc B',    c:'120 pages', type:'PDF'},
-            {n:'Vol.03 — finale',   c:'64 pages',  type:'CBZ'},
+            {n:'序章 — 旅立ち',     start:'D:/manga/vol_01/001.jpg', end:'042.jpg', cnt:42,  type:'JPG'},
+            {n:'第一巻 — 出会い',   start:'D:/manga/vol_01_raw',     end:'',        cnt:86,  type:'Folder', sel:true},
+            {n:'第二巻 — 修練',     start:'D:/manga/vol_02.zip',     end:'',        cnt:120, type:'ZIP'},
+            {n:'第三巻 — 決戦',     start:'D:/manga/vol_03.pdf',     end:'',        cnt:64,  type:'PDF'},
           ].map((ch,i)=>(
             <div key={i} className={'chunk '+(ch.sel?'selected':'')}>
-              <div className="thumb"/>
+              <div className="grip"><i/><i/><i/><i/><i/><i/></div>
               <div className="body">
                 <div className="name">{ch.n}</div>
-                <div className="count">{ch.type} · {ch.c}</div>
+                <div className="pathline">
+                  <span className="lbl">START:</span>
+                  <span className="pth">{ch.start}</span>
+                </div>
+                {ch.end && (
+                  <div className="pathline">
+                    <span className="lbl">END:</span>
+                    <span className="pth">{ch.end}</span>
+                  </div>
+                )}
+                <span className="count-badge">{ch.cnt}枚</span>
               </div>
-              <span className="badge">{String(i+1).padStart(2,'0')}</span>
-              <Ico name="dots" size={13}/>
+              <span className="eyebtn"><Ico name="eye" size={12}/></span>
             </div>
           ))}
-          <div className="addchunk"><Ico name="plus" size={11}/>Add chunk</div>
+          <div className="addchunk"><Ico name="plus" size={11}/>チャンクを追加</div>
         </div>
       </div>
     </div>
@@ -528,40 +537,51 @@ function ViewerMock({showSidebar=true}){
         {showSidebar && (
           <div className="side-sheet">
             <div className="ss-head">
-              <span>CHUNKS · 4</span>
-              <Ico name="x" size={11}/>
-            </div>
-            {[
-              {n:'Vol.01 — prologue', type:'ZIP · 42p'},
-              {n:'Vol.01 — arc A',    type:'Folder · 86p', sel:true},
-              {n:'Vol.02 — arc B',    type:'PDF · 120p'},
-              {n:'Vol.03 — finale',   type:'CBZ · 64p'},
-            ].map((c,i)=>(
-              <div key={i} className={'ss-row '+(c.sel?'selected':'')}>
-                <span className="idx">{String(i+1).padStart(2,'0')}</span>
-                <div>
-                  <div className="nm">{c.n}</div>
-                  <div className="mt">{c.type}</div>
-                </div>
+              <div>
+                <div className="ss-title">VAGABOND</div>
+                <div className="ss-sub">4 チャンク</div>
               </div>
-            ))}
-            <div className="ss-add"><Ico name="plus" size={11}/><span>ADD CHUNK</span></div>
+              <span className="closebtn"><Ico name="x" size={13}/></span>
+            </div>
+            <div className="ss-body">
+              {[
+                {n:'序章 — 旅立ち',   type:'JPG · 42枚',    cnt:'42'},
+                {n:'第一巻 — 出会い', type:'Folder · 86枚', cnt:'86', sel:true},
+                {n:'第二巻 — 修練',   type:'ZIP · 120枚',   cnt:'120'},
+                {n:'第三巻 — 決戦',   type:'PDF · 64枚',    cnt:'64'},
+              ].map((c,i)=>(
+                <div key={i} className={'ss-row '+(c.sel?'selected':'')}>
+                  <div className="ssgrip"><i/><i/><i/><i/><i/><i/></div>
+                  <div>
+                    <div className="nm">{c.n}</div>
+                    <div className="mt">{c.type}</div>
+                  </div>
+                  <span className="ssbadge">{c.cnt}</span>
+                </div>
+              ))}
+              <div className="ss-add"><Ico name="plus" size={12}/><span>チャンクを追加</span></div>
+            </div>
           </div>
         )}
       </div>
-      {/* ページバー */}
+      {/* ページバー（実アプリ: 2段構成） */}
       <div className="bar">
-        <span className="navbtn"><Ico name="caret" size={10}/></span>
-        <span className="chunkname">Vol.01 — arc A</span>
-        <div className="progress">
-          <span className="tick" style={{right:'20%'}}/>
-          <span className="tick" style={{right:'50%'}}/>
-          <span className="tick" style={{right:'80%'}}/>
-          <i/>
-          <span className="handle"/>
+        <div className="bar-top">
+          <span className="remaining">残り 44 ページ</span>
+          <span className="chunkname">第一巻 — 出会い</span>
+          <span className="pgnum"><b>42</b> / 86</span>
         </div>
-        <span className="pgnum">42 / 86</span>
-        <span className="navbtn"><Ico name="caret" size={10} style={{transform:'rotate(180deg)'}}/></span>
+        <div className="bar-bot">
+          <span className="navbtn"><Ico name="caret" size={12} style={{transform:'rotate(90deg)'}}/></span>
+          <div className="progress">
+            <span className="tick" style={{right:'20%'}}/>
+            <span className="tick" style={{right:'50%'}}/>
+            <span className="tick" style={{right:'80%'}}/>
+            <i/>
+            <span className="handle"/>
+          </div>
+          <span className="navbtn"><Ico name="caret" size={12} style={{transform:'rotate(-90deg)'}}/></span>
+        </div>
       </div>
     </div>
   );
@@ -581,46 +601,48 @@ function BrowserMock(){
   ];
   return (
     <div className="mock-browser">
-      {/* 左: ドライブ & クイックアクセス */}
+      {/* 左: クイックアクセス + ドライブ（アプリ準拠のナビーサイドバー） */}
       <div className="drives">
-        <div className="h">Drives</div>
-        <div className="d active"><Ico name="folder" size={11}/>C:</div>
-        <div className="d"><Ico name="folder" size={11}/>D:</div>
         <div className="h">Quick</div>
-        <div className="d"><Ico name="folder" size={11}/>Desktop</div>
-        <div className="d"><Ico name="folder" size={11}/>Downloads</div>
-        <div className="d"><Ico name="folder" size={11}/>Documents</div>
-        <div className="d"><Ico name="folder" size={11}/>Pictures</div>
+        <div className="d"><Ico name="folder" size={11}/>デスクトップ</div>
+        <div className="d"><Ico name="folder" size={11}/>ダウンロード</div>
+        <div className="d"><Ico name="folder" size={11}/>ドキュメント</div>
+        <div className="d"><Ico name="folder" size={11}/>ピクチャ</div>
+        <div className="divider"/>
+        <div className="h">Drives</div>
+        <div className="d active"><Ico name="archive" size={11}/>C:</div>
+        <div className="d"><Ico name="archive" size={11}/>D:</div>
       </div>
-      {/* 右: メイン */}
+      {/* 右: メイン（ライトテーマ） */}
       <div className="main">
         <div className="crumbs">
-          <Ico name="arrow" size={10}/>
-          <span>C:</span><span className="sep">/</span>
-          <span>Users</span><span className="sep">/</span>
-          <span>manga</span><span className="sep">/</span>
-          <span className="active">vol_01</span>
-          <span className="spacer"/>
-          <span className="search"><Ico name="search" size={10}/>search</span>
+          <span className="back"><Ico name="arrow" size={12}/></span>
+          <div className="addr">
+            <span className="seg">C:</span><span className="sep">&gt;</span>
+            <span className="seg">Users</span><span className="sep">&gt;</span>
+            <span className="seg">manga</span><span className="sep">&gt;</span>
+            <span className="seg active">vol_01</span>
+          </div>
+          <span className="search"><Ico name="search" size={11}/>検索…</span>
           <span className="vmode">
-            <span className="on"><Ico name="list" size={10}/></span>
-            <span><Ico name="expand" size={10}/></span>
+            <span className="on"><Ico name="list" size={11}/></span>
+            <span><Ico name="expand" size={11}/></span>
           </span>
         </div>
         <div className="cols">
-          <span>Name ▾</span><span>Type</span><span>Modified</span>
+          <span>名前 ▾</span><span>種類</span><span>更新日時</span>
         </div>
         <div className="files">
           {rows.map((r,i)=>(
             <div key={i} className={'f '+(r.sel?'sel':'')}>
-              <span className="n"><Ico name={r.t==='Folder'?'folder':(r.t==='PDF'?'file':'archive')} size={11}/>{r.n}</span>
+              <span className="n"><Ico name={r.t==='Folder'?'folder':(r.t==='PDF'?'file':'archive')} size={13}/>{r.n}</span>
               <span className="t">{r.t}</span>
               <span className="d">{r.d}</span>
             </div>
           ))}
         </div>
         <div className="footer">
-          <span className="pill">Select this ZIP</span>
+          <span className="pill">この ZIP を選択</span>
           <span className="spacer"/>
           <span className="muted">9 items</span>
         </div>
@@ -655,10 +677,21 @@ function ViewerShowcaseMock(){
   );
 }
 
-// full-cell mocks (screenshot section)
-function PlaylistMockFull(){ return <div style={{height:'100%'}}><PlaylistMock/></div>;}
-function ViewerMockFull(){   return <div style={{height:'100%'}}><ViewerMock/></div>;}
-function BrowserMockFull(){  return <div style={{height:'100%'}}><BrowserMock/></div>;}
+// full-cell mocks（プレビュー用: Mac風クローム付き）
+function WithChrome({title, children}){
+  return (
+    <div style={{height:'100%', display:'flex', flexDirection:'column'}}>
+      <div className="chrome">
+        <i className="tl"/><i className="tl"/><i className="tl"/>
+        <span className="ti">{title}</span>
+      </div>
+      <div style={{flex:1, minHeight:0, overflow:'hidden'}}>{children}</div>
+    </div>
+  );
+}
+function PlaylistMockFull(){ return <WithChrome title="Linkori"><PlaylistMock/></WithChrome>; }
+function ViewerMockFull(){   return <WithChrome title="Linkori — Viewer"><ViewerMock showSidebar={false}/></WithChrome>; }
+function BrowserMockFull(){  return <WithChrome title="Linkori — File Browser"><BrowserMock/></WithChrome>; }
 
 window.Overview = Overview;
 window.Screens = Screens;

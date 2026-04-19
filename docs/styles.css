@@ -456,23 +456,38 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
 }
 
 .mock{
-  position:relative; aspect-ratio: 4/3; border-radius:18px; overflow:hidden;
-  background:var(--bg-3); border:1px solid var(--border);
-  box-shadow: 0 40px 80px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.04);
+  position:relative; aspect-ratio: 4/3; border-radius:10px; overflow:hidden;
+  background:#f4f7fb; border:1px solid rgba(0,0,0,.15);
+  box-shadow: 0 40px 80px -30px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.04) inset;
+  display:flex; flex-direction:column;
 }
-.mock .chrome{
-  height:28px; background: linear-gradient(180deg, #141820, #0f1217);
-  display:flex; align-items:center; gap:6px; padding:0 12px; border-bottom:1px solid var(--border);
+.mock > .chrome{ flex-shrink:0 }
+.mock > .mock-plist,
+.mock > .mock-viewer,
+.mock > .mock-browser{ flex:1; min-height:0 }
+/* macOS風タイトルバー（実OSライクなトラフィックライト） */
+.mock .chrome, .frame .chrome{
+  height:28px; background: linear-gradient(180deg, #e9ecef 0%, #d8dde3 100%);
+  display:flex; align-items:center; gap:8px; padding:0 12px;
+  border-bottom:1px solid rgba(0,0,0,.12);
+  flex-shrink:0;
 }
-.mock .chrome .tl{width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.14)}
-.mock .chrome .ti{
-  flex:1; text-align:center; font-family:var(--mono); font-size:10px; color:var(--fg-mute); letter-spacing:.08em;
+.mock .chrome .tl, .frame .chrome .tl{
+  width:12px; height:12px; border-radius:50%;
+  box-shadow: inset 0 0 0 .5px rgba(0,0,0,.18);
+}
+.mock .chrome .tl:nth-of-type(1), .frame .chrome .tl:nth-of-type(1){ background:#ff5f57 }
+.mock .chrome .tl:nth-of-type(2), .frame .chrome .tl:nth-of-type(2){ background:#febc2e }
+.mock .chrome .tl:nth-of-type(3), .frame .chrome .tl:nth-of-type(3){ background:#28c840 }
+.mock .chrome .ti, .frame .chrome .ti{
+  flex:1; text-align:center; font-family:var(--sans); font-size:11px;
+  color:#4a5160; letter-spacing:.02em; font-weight:500;
 }
 
 /* ─── Playlist mock — Linkori アプリ準拠 ─── */
 .mock-plist{
-  display:grid; grid-template-columns: 220px 1fr; height:calc(100% - 28px);
-  font-family: var(--sans);
+  display:grid; grid-template-columns: 220px 1fr; height:100%;
+  font-family: var(--sans); overflow:hidden;
 }
 /* サイドバー: ネイビー #0f1d4a */
 .mock-plist .side{
@@ -536,73 +551,106 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
 .mock-plist .side .plrow.active .pbar{ background: rgba(255,255,255,.25)}
 .mock-plist .side .plrow.active .pbar i{ background:#fff}
 
-/* メインパネル */
+/* メインパネル（アプリ実UIのライトテーマ: cream #f4f7fb） */
 .mock-plist .main{
   padding:0; display:flex; flex-direction:column; overflow:hidden;
-  background: var(--panel);
+  background: #f4f7fb;
 }
 .mock-plist .main .head{
   display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
-  padding:14px 18px; border-bottom:1px solid var(--border);
+  padding:14px 18px; border-bottom:1px solid #cfd9e4; background:#ffffff;
 }
+/* 明朝体タイトル（実アプリは font-mincho text-3xl） */
 .mock-plist .main .title{
-  font-family:var(--display); font-weight:700; font-size:16px; color:var(--fg);
-  letter-spacing:-.02em; margin-bottom:5px;
+  font-family: "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif;
+  font-weight:700; font-size:18px; color:#0a1628;
+  letter-spacing:-.02em; margin-bottom:5px; line-height:1.1;
 }
 .mock-plist .main .meta{
   display:flex; align-items:center; gap:5px; flex-wrap:wrap;
 }
 .mock-plist .main .tagpill{
-  padding:2px 7px; border-radius:4px; font-size:9px; font-weight:600;
+  padding:2px 7px; border-radius:999px; font-size:9px; font-weight:600;
   font-family:var(--sans);
 }
 .mock-plist .main .metatxt{
-  font-family:var(--mono); font-size:9px; color:var(--fg-mute);
+  font-family:var(--mono); font-size:9px; color:#7e8a99;
+  text-transform:uppercase; letter-spacing:.1em;
 }
 .mock-plist .main .actions{
   display:flex; gap:4px; align-items:center;
 }
 .mock-plist .main .iconbtn{
-  padding:5px; border:1px solid var(--border); border-radius:6px;
-  background: var(--bg-3); color:var(--fg-dim);
-  display:inline-flex; align-items:center; justify-content:center;
+  padding:5px 7px; border:1px solid #cfd9e4; border-radius:6px;
+  background: #ffffff; color:#7e8a99;
+  display:inline-flex; align-items:center; justify-content:center; gap:4px;
+  font-size:9px; font-family:var(--sans); font-weight:500;
 }
 .mock-plist .main .cta{
   display:inline-flex; align-items:center; gap:4px;
-  background:#2f8fd1; color:#fff; padding:5px 10px; border-radius:6px;
+  background:#2f8fd1; color:#fff; padding:5px 10px; border-radius:8px;
   font-size:10px; font-weight:600; font-family:var(--sans);
+  box-shadow: 0 2px 6px rgba(47,143,209,.3);
 }
 .mock-plist .main .chunks{
   padding:10px 14px; display:flex; flex-direction:column; gap:6px;
   overflow:hidden;
 }
+/* チャンクカード（アプリ準拠: rounded-2xl, white bg, drag-handle + name + eye + path + badge） */
 .mock-plist .chunk{
-  display:grid; grid-template-columns: 36px 1fr auto auto; gap:10px; align-items:center;
-  padding:7px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-3);
+  display:grid; grid-template-columns: 20px 1fr auto; gap:8px; align-items:center;
+  padding:10px 12px; border-radius:12px;
+  border:1px solid #cfd9e4; background:#ffffff;
+  box-shadow: 0 1px 1px rgba(0,0,0,.04);
 }
 .mock-plist .chunk.selected{
-  border-color:#2f8fd1; background: rgba(47,143,209,.15);
+  border-color:#2f8fd1; background: rgba(47,143,209,.12);
 }
-.mock-plist .chunk .thumb{
-  width:36px; height:24px; border-radius:3px;
-  background: linear-gradient(135deg,#2a2f3a,#0a0c10);
+/* 6点ドラッグハンドル（アプリの drag handle を再現） */
+.mock-plist .chunk .grip{
+  display:grid; grid-template-columns: 3px 3px; gap:2px;
+  color:#b8c2cf;
 }
-.mock-plist .chunk .name{ color:var(--fg); font-size:11px; font-weight:500; font-family:var(--sans); }
-.mock-plist .chunk .count{ color:var(--fg-mute); font-size:9px; font-family:var(--mono); margin-top:2px}
-.mock-plist .chunk .badge{
-  font-family:var(--mono); font-size:8px; font-weight:700;
-  color:var(--fg-mute); padding:2px 5px; border:1px solid var(--border-2); border-radius:4px;
+.mock-plist .chunk .grip i{ width:3px; height:3px; background:currentColor; border-radius:50% }
+.mock-plist .chunk .body{ display:flex; flex-direction:column; gap:3px; min-width:0 }
+.mock-plist .chunk .name{
+  color:#0a1628; font-size:12px; font-weight:600;
+  font-family: "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif;
+  letter-spacing:-.01em;
 }
+.mock-plist .chunk .pathline{
+  display:flex; align-items:center; gap:4px; font-size:9px;
+}
+.mock-plist .chunk .pathline .lbl{
+  color:#7e8a99; font-family:var(--mono); font-weight:600;
+  letter-spacing:.05em; flex:0 0 auto;
+}
+.mock-plist .chunk .pathline .pth{
+  color:#0a1628; font-family:var(--mono); opacity:.8;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.mock-plist .chunk .count-badge{
+  display:inline-flex; align-items:center; margin-top:4px;
+  background:#9fd8e8; color:#0f1d4a;
+  padding:2px 7px; border-radius:999px;
+  font-family:var(--mono); font-size:9px; font-weight:700;
+}
+.mock-plist .chunk .eyebtn{
+  color:#7e8a99; padding:4px; border-radius:6px;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.mock-plist .chunk.selected .eyebtn{ color:#2f8fd1 }
 .mock-plist .addchunk{
   display:flex; align-items:center; justify-content:center; gap:5px;
-  padding:8px; border:1px dashed var(--border-2); border-radius:8px;
-  color:var(--fg-mute); font-size:10px; font-family:var(--mono);
+  padding:10px; border:1px dashed #cfd9e4; border-radius:12px;
+  color:#7e8a99; font-size:10px; font-family:var(--sans); font-weight:500;
+  background:transparent;
 }
 
 /* ─── Viewer mock — Linkori アプリ準拠 ─── */
 .mock-viewer{
-  height:calc(100% - 28px); display:flex; flex-direction:column;
-  background:#05060a; position:relative;
+  height:100%; display:flex; flex-direction:column;
+  background:#05060a; position:relative; overflow:hidden;
 }
 .mock-viewer .top{
   position:absolute; top:0; left:0; right:0; z-index:3;
@@ -639,40 +687,62 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
   position:absolute; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
   border-radius:1px;
 }
-/* 下部ページバー（hover 表示を常時表示状態で模擬） */
+/* 下部ページバー（実アプリ準拠の2段構成） */
 .mock-viewer .bar{
-  height:44px; border-top:1px solid rgba(255,255,255,.06);
-  background: rgba(8,10,16,.96); backdrop-filter: blur(8px);
-  display:flex; align-items:center; gap:10px; padding:0 14px;
-  font-family:var(--mono); font-size:10px; color:rgba(159,216,232,.7);
+  background: rgba(0,0,0,.88); backdrop-filter: blur(8px);
+  display:flex; flex-direction:column; gap:6px; padding:10px 18px;
+  font-family:var(--mono); font-size:10px;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+.mock-viewer .bar .bar-top{
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:10px;
+}
+.mock-viewer .bar .bar-top .remaining{ color:#a1a1aa; font-family:var(--mono) }
+.mock-viewer .bar .chunkname{
+  color:#a1a1aa; font-family:var(--sans); font-size:10px;
+  max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.mock-viewer .bar .pgnum{
+  color:#e4e4e7; font-family:var(--mono); font-weight:500;
+}
+.mock-viewer .bar .pgnum b{ color:#fafafa; font-weight:600 }
+.mock-viewer .bar .bar-bot{
+  display:flex; align-items:center; gap:10px;
 }
 .mock-viewer .bar .navbtn{
-  padding:4px; border-radius:4px; color:rgba(159,216,232,.8);
+  padding:2px; color:#71717a;
   display:inline-flex; align-items:center; justify-content:center;
 }
-.mock-viewer .bar .chunkname{
-  color:#fff; font-family:var(--sans); font-size:10px; font-weight:500;
-}
-.mock-viewer .bar .pgnum{ color:#fff; font-weight:600; }
 .mock-viewer .progress{
-  flex:1; height:4px; background: rgba(255,255,255,.08); border-radius:4px; position:relative;
+  flex:1; height:12px; position:relative;
+  display:flex; align-items:center;
+}
+.mock-viewer .progress::before{
+  content:""; position:absolute; inset: 50% 0 auto; height:6px;
+  transform: translateY(-50%);
+  background: rgba(113,113,122,.6); border-radius:999px;
 }
 .mock-viewer .progress i{
-  position:absolute; right:0; width:50%; height:100%; background:#2f8fd1; border-radius:4px;
+  position:absolute; right:0; top:50%; transform:translateY(-50%);
+  width:50%; height:6px; background:rgba(59,130,246,.7); border-radius:999px;
 }
 .mock-viewer .progress .tick{
-  position:absolute; top:-3px; width:1px; height:10px; background:rgba(255,255,255,.4);
+  position:absolute; top:50%; width:2px; height:12px;
+  background:rgba(255,255,255,.4); transform: translate(50%, -50%);
+  border-radius:999px;
 }
 .mock-viewer .progress .handle{
-  position:absolute; right:calc(50% - 5px); top:-3px;
-  width:10px; height:10px; border-radius:50%; background:#fff;
-  box-shadow: 0 0 0 3px rgba(47,143,209,.4);
+  position:absolute; right:calc(50% - 6px); top:50%;
+  width:12px; height:12px; border-radius:50%; background:#fff;
+  transform: translateY(-50%);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.4);
 }
 
-/* ─── Browser mock — Linkori アプリ準拠（リスト表示） ─── */
+/* ─── Browser mock — Linkori アプリ準拠（ライトテーマ・リスト表示） ─── */
 .mock-browser{
-  display:grid; grid-template-columns: 140px 1fr; height:calc(100% - 28px);
-  font-family:var(--sans);
+  display:grid; grid-template-columns: 140px 1fr; height:100%;
+  font-family:var(--sans); background:#f4f7fb; overflow:hidden;
 }
 .mock-browser .drives{
   background:#0f1d4a; border-right:1px solid rgba(47,143,209,.4);
@@ -689,62 +759,86 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
 .mock-browser .drives .d.active{
   background:#2f8fd1; color:#fff;
 }
+.mock-browser .drives .divider{
+  height:1px; background:#1a2e6b; margin:4px 8px;
+}
 .mock-browser .main{
-  display:flex; flex-direction:column; overflow:hidden; background:var(--panel);
+  display:flex; flex-direction:column; overflow:hidden; background:#f4f7fb;
 }
+/* ツールバー（cream bg + back + breadcrumb + search） */
 .mock-browser .crumbs{
-  display:flex; align-items:center; gap:4px;
-  padding:8px 12px; border-bottom:1px solid var(--border);
-  font-family:var(--mono); font-size:10px; color:var(--fg-dim);
+  display:flex; align-items:center; gap:6px;
+  padding:8px 10px; border-bottom:1px solid #cfd9e4;
+  font-family:var(--sans); font-size:11px; color:#0a1628;
+  background:#ffffff;
 }
-.mock-browser .crumbs .sep{ color:var(--fg-mute) }
-.mock-browser .crumbs .active{ color:var(--fg); font-weight:600 }
-.mock-browser .crumbs .spacer{ flex:1 }
+.mock-browser .crumbs .back{
+  padding:4px; border-radius:4px; color:#7e8a99;
+  display:inline-flex; align-items:center;
+}
+.mock-browser .crumbs .addr{
+  flex:1; display:flex; align-items:center; gap:4px;
+  padding:4px 8px; border:1px solid #cfd9e4; border-radius:4px;
+  background:#ffffff; min-width:0; overflow:hidden;
+}
+.mock-browser .crumbs .addr .sep{ color:#cfd9e4; margin:0 1px }
+.mock-browser .crumbs .addr .seg{ color:#7e8a99 }
+.mock-browser .crumbs .addr .seg.active{ color:#0a1628; font-weight:600 }
 .mock-browser .crumbs .search{
   display:inline-flex; align-items:center; gap:4px;
-  padding:3px 8px; border:1px solid var(--border); border-radius:6px;
-  font-size:9px; color:var(--fg-mute);
+  padding:4px 8px; border:1px solid #cfd9e4; border-radius:4px;
+  font-size:10px; color:#7e8a99; background:#ffffff;
 }
 .mock-browser .crumbs .vmode{
-  display:inline-flex; border:1px solid var(--border); border-radius:6px; overflow:hidden;
+  display:inline-flex; border:1px solid #cfd9e4; border-radius:4px; overflow:hidden;
+  background:#ffffff;
 }
 .mock-browser .crumbs .vmode span{
-  padding:4px 6px; color:var(--fg-mute);
+  padding:4px 6px; color:#7e8a99;
 }
 .mock-browser .crumbs .vmode .on{ background:#2f8fd1; color:#fff }
+/* カラムヘッダ */
 .mock-browser .cols{
   display:grid; grid-template-columns: 1fr 80px 100px; gap:10px;
-  padding:6px 14px; border-bottom:1px solid var(--border);
-  font-family:var(--mono); font-size:9px; color:var(--fg-mute);
-  letter-spacing:.1em; text-transform:uppercase;
+  padding:8px 14px; border-bottom:1px solid #cfd9e4;
+  font-family:var(--mono); font-size:9px; color:#7e8a99;
+  letter-spacing:.1em; text-transform:uppercase; background:#ffffff;
 }
+/* ファイル行（リストビュー） */
 .mock-browser .files{
   flex:1; overflow:hidden; display:flex; flex-direction:column;
+  background:#ffffff;
 }
 .mock-browser .f{
   display:grid; grid-template-columns: 1fr 80px 100px; gap:10px; align-items:center;
-  padding:5px 14px; font-size:10px; color:var(--fg-dim);
-  border-bottom:1px solid rgba(255,255,255,.02);
+  padding:6px 14px; font-size:11px; color:#0a1628;
+  border-bottom:1px solid #f0f2f6;
+  font-family:var(--sans);
 }
-.mock-browser .f.sel{ background: rgba(47,143,209,.18); color:var(--fg) }
+.mock-browser .f.sel{ background:#e6f4fd; color:#2f8fd1 }
 .mock-browser .f .n{
-  display:inline-flex; align-items:center; gap:6px;
+  display:inline-flex; align-items:center; gap:7px;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  font-weight:500;
 }
-.mock-browser .f .t{ font-family:var(--mono); font-size:9px; color:var(--fg-mute) }
-.mock-browser .f .d{ font-family:var(--mono); font-size:9px; color:var(--fg-mute) }
+.mock-browser .f.sel .n{ color:#2f8fd1 }
+.mock-browser .f .n svg{ color:#7e8a99 }
+.mock-browser .f.sel .n svg{ color:#2f8fd1 }
+.mock-browser .f .t{ font-family:var(--mono); font-size:9px; color:#7e8a99 }
+.mock-browser .f .d{ font-family:var(--mono); font-size:9px; color:#7e8a99 }
 .mock-browser .footer{
   display:flex; align-items:center; gap:8px;
-  padding:8px 12px; border-top:1px solid var(--border);
-  background: var(--bg-3);
+  padding:8px 12px; border-top:1px solid #cfd9e4;
+  background:#ffffff;
 }
 .mock-browser .footer .pill{
-  background:#2f8fd1; color:#fff; padding:4px 10px; border-radius:6px;
+  background:#2f8fd1; color:#fff; padding:5px 12px; border-radius:8px;
   font-size:10px; font-weight:600;
+  box-shadow: 0 2px 6px rgba(47,143,209,.3);
 }
 .mock-browser .footer .spacer{ flex:1 }
 .mock-browser .footer .muted{
-  color:var(--fg-mute); font-family:var(--mono); font-size:9px;
+  color:#7e8a99; font-family:var(--mono); font-size:9px;
 }
 
 /* ─── Chunk chain viz ─── */
@@ -774,21 +868,36 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
 
 /* ─── Mock screens grid ─── */
 .ss{
-  display:grid; grid-template-columns: repeat(3, 1fr); gap:18px;
+  display:grid; grid-template-columns: repeat(3, 1fr); gap:28px 18px;
 }
+/* cellはモック画像だけを包む（キャプションは外出し） */
 .ss .cell{
+  display:flex; flex-direction:column; gap:14px;
+  transition: transform .5s;
+}
+.ss .cell:hover{ transform: translateY(-6px) }
+.ss .cell .frame{
   aspect-ratio: 4/3; border-radius:14px; border:1px solid var(--border);
-  background:var(--panel); overflow:hidden; position:relative;
-  transition: transform .5s, border-color .3s;
+  overflow:hidden; position:relative; background:var(--panel);
+  transition: border-color .3s;
+  box-shadow: 0 24px 60px -30px rgba(0,0,0,.8);
 }
-.ss .cell:hover{ transform: translateY(-6px); border-color:var(--accent)}
+.ss .cell:hover .frame{ border-color:var(--accent) }
+/* キャプションはフレームの外・下にゆとりを持って配置 */
 .ss .cell .cap{
-  position:absolute; bottom:0; left:0; right:0; padding:14px 16px;
-  background: linear-gradient(0deg, rgba(0,0,0,.9), transparent);
-  font-family:var(--mono); font-size:11px; color:var(--fg); letter-spacing:.02em;
-  display:flex; justify-content:space-between;
+  display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+  padding:2px 4px;
+  font-family:var(--mono); font-size:11px;
+  color:var(--fg); letter-spacing:.02em;
 }
-.ss .cell .cap span{ color:var(--fg-mute)}
+.ss .cell .cap b{
+  font-family:var(--display); font-weight:600; font-size:13px;
+  letter-spacing:-.01em;
+}
+.ss .cell .cap span{
+  color:var(--fg-mute); font-size:10px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
 
 /* ─── v0.5.0 — Viewer showcase (wrapper + annotation labels) ─── */
 .mock-viewer-full{
@@ -815,42 +924,64 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
 }
 .vlabel span:not(.dot){ color:var(--fg) }
 
-/* ─── v0.5.0 — Viewer chunk side sheet (right slide-in) ─── */
+/* ─── v0.5.0 — Viewer chunk side sheet (アプリ準拠: cream ライトテーマ) ─── */
 .mock-viewer .pages{ position:relative }
 .mock-viewer .side-sheet{
-  position:absolute; top:0; right:0; bottom:0; width:42%;
-  background: rgba(12, 14, 20, 0.96); backdrop-filter: blur(8px);
-  border-left:1px solid var(--border);
-  padding:10px; display:flex; flex-direction:column; gap:4px;
-  box-shadow: -12px 0 32px rgba(0,0,0,.5);
+  position:absolute; top:0; right:0; bottom:0; width:44%;
+  background: #f4f7fb;
+  border-left:1px solid #cfd9e4;
+  display:flex; flex-direction:column;
+  box-shadow: -12px 0 32px rgba(0,0,0,.4);
 }
 .mock-viewer .ss-head{
   display:flex; justify-content:space-between; align-items:center;
-  padding:6px 8px 10px; border-bottom:1px solid var(--border);
-  color:var(--fg-mute); font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+  padding:10px 14px; border-bottom:1px solid #cfd9e4;
+  background:#ffffff;
+}
+.mock-viewer .ss-head .ss-title{
+  font-family: "Noto Serif JP", "YuMincho", serif;
+  color:#0a1628; font-size:14px; font-weight:700; letter-spacing:-.01em;
+}
+.mock-viewer .ss-head .ss-sub{
+  font-family:var(--mono); font-size:8px; color:#7e8a99;
+  text-transform:uppercase; letter-spacing:.1em; margin-top:2px;
+}
+.mock-viewer .ss-head .closebtn{ color:#7e8a99; padding:4px }
+.mock-viewer .ss-body{
+  flex:1; overflow:hidden; padding:10px;
+  display:flex; flex-direction:column; gap:6px;
 }
 .mock-viewer .ss-row{
-  display:flex; align-items:center; gap:8px; padding:7px 8px;
-  border:1px solid var(--border); border-radius:6px;
-  background: rgba(255,255,255,.02);
+  display:grid; grid-template-columns: 14px 1fr auto; gap:8px; align-items:center;
+  padding:8px 10px; border-radius:10px;
+  background:#ffffff; border:1px solid #cfd9e4;
+  box-shadow: 0 1px 1px rgba(0,0,0,.04);
 }
 .mock-viewer .ss-row.selected{
-  border-color:var(--accent); background: rgba(var(--accent-rgb)/.12);
+  border-color:#2f8fd1; background: rgba(47,143,209,.12);
 }
-.mock-viewer .ss-row .idx{
-  font-family:var(--mono); font-size:9px; font-weight:700; color:var(--fg-mute);
-  padding:2px 4px; border:1px solid var(--border-2); border-radius:3px;
+.mock-viewer .ss-row .ssgrip{
+  display:grid; grid-template-columns: 3px 3px; gap:2px;
+  color:#b8c2cf;
 }
+.mock-viewer .ss-row .ssgrip i{ width:3px; height:3px; background:currentColor; border-radius:50% }
 .mock-viewer .ss-row .nm{
-  color:var(--fg); font-size:10px; font-family:var(--sans);
+  color:#0a1628; font-size:11px; font-weight:600;
+  font-family: "Noto Serif JP", "YuMincho", serif;
+  letter-spacing:-.01em;
 }
 .mock-viewer .ss-row .mt{
-  color:var(--fg-mute); font-size:9px; font-family:var(--mono); margin-top:1px;
+  color:#7e8a99; font-size:9px; font-family:var(--mono); margin-top:2px;
+}
+.mock-viewer .ss-row .ssbadge{
+  background:#9fd8e8; color:#0f1d4a;
+  padding:2px 7px; border-radius:999px;
+  font-family:var(--mono); font-size:8px; font-weight:700;
 }
 .mock-viewer .ss-add{
-  margin-top:auto; display:flex; justify-content:center; align-items:center; gap:6px;
-  padding:8px; border:1px dashed var(--border-2); border-radius:6px;
-  color:var(--fg-mute); font-family:var(--mono); font-size:9px; letter-spacing:.12em;
+  display:flex; justify-content:center; align-items:center; gap:6px;
+  padding:10px; border:1px dashed #cfd9e4; border-radius:10px;
+  color:#7e8a99; font-family:var(--sans); font-size:10px; font-weight:500;
 }
 
 /* ─── Keyboard shortcuts table ─── */
