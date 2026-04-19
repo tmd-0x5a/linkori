@@ -477,11 +477,7 @@ function PlaylistMock(){
         <div className="head">
           <div>
             <div className="title">VAGABOND</div>
-            <div className="meta">
-              <span className="tagpill" style={{background:TAG_COLORS.ocean.hex, color:TAG_COLORS.ocean.fg}}>seinen</span>
-              <span className="tagpill" style={{background:TAG_COLORS.coral.hex, color:TAG_COLORS.coral.fg}}>action</span>
-              <span className="metatxt">5 chunks · 330p · 72%</span>
-            </div>
+            <div className="meta"><span className="metatxt">5 チャンク</span></div>
           </div>
           <div className="actions">
             <span className="hdbtn">
@@ -689,11 +685,7 @@ function ChunkSelectPanel(){
         <div className="head">
           <div>
             <div className="title">VAGABOND</div>
-            <div className="meta">
-              <span className="tagpill" style={{background:TAG_COLORS.ocean.hex, color:TAG_COLORS.ocean.fg}}>seinen</span>
-              <span className="tagpill" style={{background:TAG_COLORS.coral.hex, color:TAG_COLORS.coral.fg}}>action</span>
-              <span className="metatxt">5 chunks · 340p · 72%</span>
-            </div>
+            <div className="meta"><span className="metatxt">5 チャンク</span></div>
           </div>
           <div className="actions">
             <span className="hdbtn">

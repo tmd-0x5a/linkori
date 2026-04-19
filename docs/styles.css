@@ -614,7 +614,9 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
   background:#2f8fd1; color:#fff; height:26px; padding:0 12px; border-radius:8px;
   font-size:10px; font-weight:600; font-family:var(--sans);
   box-shadow: 0 2px 6px rgba(47,143,209,.3);
+  white-space:nowrap; flex-shrink:0;
 }
+.mock-plist .main .hdbtn{ flex-shrink:0 }
 .mock-plist .main .chunks{
   padding:10px 14px; display:flex; flex-direction:column; gap:6px;
   overflow:hidden;
