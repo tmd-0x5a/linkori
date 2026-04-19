@@ -203,12 +203,12 @@ function BrowserSec(){
           <div className="section-counter">drives · search · thumbs</div>
         </div>
         <div className="feature-row">
-          <div className="mock reveal" data-par="0.4">
+          <div className="feature-copy reveal">
+            <ul>{c.bullets.map((b,i)=> <li key={i}>{mapLang(b,lang)}</li>)}</ul>
+          </div>
+          <div className="mock reveal" style={{'--d':'100ms'}} data-par="0.4">
             <WinChrome title="Linkori — File Browser"/>
             <BrowserMock/>
-          </div>
-          <div className="feature-copy reveal" style={{'--d':'100ms'}}>
-            <ul>{c.bullets.map((b,i)=> <li key={i}>{mapLang(b,lang)}</li>)}</ul>
           </div>
         </div>
       </div>
@@ -232,15 +232,14 @@ function ViewerSec(){
           </div>
           <div className="section-counter">spread · RTL · instant</div>
         </div>
-        <div className="reveal" style={{ display: 'flex', justifyContent: 'center', margin: '40px 0' }}>
-          <div className="feature-copy" style={{ maxWidth: 800 }}>
-            <ul>{c.bullets.map((b,i)=> <li key={i} style={{ wordBreak: 'keep-all', overflowWrap: 'break-word', fontSize: '16px', marginBottom: '12px' }}>{mapLang(b,lang)}</li>)}</ul>
+        {/* 左: モック / 右: 機能リスト（吹き出しなし・他セクションと合わせた feature-row） */}
+        <div className="feature-row reveal" style={{alignItems:'center'}}>
+          <div className="vshowcase" data-par="0.3">
+            <ViewerShowcaseMock/>
           </div>
-        </div>
-
-        {/* v0.5.0 — ビューア機能詳細モック（チャンク編集サイドバー込み） */}
-        <div className="reveal vshowcase" data-par="0.3" style={{marginTop:32}}>
-          <ViewerShowcaseMock/>
+          <div className="feature-copy">
+            <ul>{c.bullets.map((b,i)=> <li key={i} style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{mapLang(b,lang)}</li>)}</ul>
+          </div>
         </div>
 
         <div className="reveal" style={{marginTop:60}}>
@@ -674,13 +673,6 @@ function ChunkSelectMock(){
         <span className="ti">VAGABOND</span>
         <span className="mt">5 CHUNKS</span>
       </div>
-      {/* 選択時の浮遊アクションバー */}
-      <div className="cs-actionbar">
-        <span className="cnt">3</span>
-        <span className="act"><Ico name="check" size={9}/>選択中</span>
-        <span className="act"><Ico name="move" size={9}/>まとめて移動</span>
-        <span className="act"><Ico name="trash" size={9}/>削除</span>
-      </div>
       {rows.map((r,i)=>(
         <div key={i} className={'cs-row '+(r.sel?'selected':'')}>
           <div className="ssgrip"><i/><i/><i/><i/><i/><i/></div>
@@ -705,24 +697,13 @@ function ChunkSelectMock(){
   );
 }
 
-// ビューア機能詳細モック（ViewerSec 用、全機能を見せる）
+// ビューア機能詳細モック（ViewerSec 用）— クローム付き・吹き出しなし
 function ViewerShowcaseMock(){
   return (
     <div className="mock-viewer-full">
-      {/* 見開き + チャンク編集サイドバー */}
-      <ViewerMock showSidebar={true}/>
-      {/* 機能ラベル */}
-      <div className="vlabel l-top"   style={{top:'6%',   left:0}}>
-        <span className="dot"/><span>ホーム · フルスクリーン · チャンク編集 · 見開き切替</span>
-      </div>
-      <div className="vlabel l-right" style={{top:'38%',  right:0}}>
-        <span>チャンク追加 · 並び替え · 削除</span><span className="dot"/>
-      </div>
-      <div className="vlabel l-left"  style={{top:'48%',  left:0}}>
-        <span className="dot"/><span>右→左 · 見開き2ページ</span>
-      </div>
-      <div className="vlabel l-bot"   style={{bottom:'6%', left:0}}>
-        <span className="dot"/><span>チャンク境界 · 現チャンク名 · RTL進捗</span>
+      <WinChrome title="Linkori — Viewer"/>
+      <div style={{flex:1, minHeight:0, overflow:'hidden'}}>
+        <ViewerMock showSidebar={true}/>
       </div>
     </div>
   );

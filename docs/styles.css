@@ -465,24 +465,24 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
 .mock > .mock-plist,
 .mock > .mock-viewer,
 .mock > .mock-browser{ flex:1; min-height:0 }
-/* Windows 11 風タイトルバー（タイトル左 / ウィンドウ制御右） */
+/* Windows 11 風タイトルバー（ダーク: 実アプリに合わせた黒系） */
 .mock .chrome, .frame .chrome{
-  height:30px; background: #f3f3f3;
+  height:30px; background: #171717;
   display:flex; align-items:center; padding:0 0 0 12px;
-  border-bottom:1px solid #e5e5e5;
+  border-bottom:1px solid #0a0a0a;
   flex-shrink:0;
 }
 .mock .chrome .ti, .frame .chrome .ti{
   flex:1; font-family:var(--sans); font-size:12px;
-  color:#1f1f1f; letter-spacing:0; font-weight:400;
+  color:#e5e5e5; letter-spacing:0; font-weight:400;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .mock .chrome .wc, .frame .chrome .wc{
   width:44px; height:30px; display:inline-flex; align-items:center; justify-content:center;
-  color:#1f1f1f;
+  color:#e5e5e5;
 }
 .mock .chrome .wc svg, .frame .chrome .wc svg{ width:10px; height:10px; }
-.mock .chrome .wc.close, .frame .chrome .wc.close{ color:#1f1f1f; }
+.mock .chrome .wc.close, .frame .chrome .wc.close{ color:#e5e5e5; }
 
 /* ─── Playlist mock — Linkori アプリ準拠 ─── */
 .mock-plist{
@@ -917,11 +917,13 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
 
 /* ─── v0.5.0 — Viewer showcase (wrapper + annotation labels) ─── */
 .mock-viewer-full{
-  position:relative; aspect-ratio: 16/9;
+  position:relative; aspect-ratio: 16/10;
   border:1px solid var(--border-2); border-radius:16px; overflow:hidden;
   background:#05060a; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  display:flex; flex-direction:column;
 }
-.mock-viewer-full > .mock-viewer{
+.mock-viewer-full > .chrome{ flex-shrink:0 }
+.mock-viewer-full .mock-viewer{
   height:100%;
 }
 .vlabel{
@@ -1047,25 +1049,6 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
   padding:2px 7px; border-radius:999px;
   font-family:var(--mono); font-size:8px; font-weight:700;
 }
-/* 選択時アクションバー（上部フロート） */
-.mock-chunksel .cs-actionbar{
-  position:absolute; top:64px; left:50%; transform:translateX(-50%);
-  display:inline-flex; align-items:center; gap:8px;
-  padding:6px 10px; border-radius:999px;
-  background: rgba(15, 29, 74, 0.95); color:#fff;
-  font-family:var(--sans); font-size:10px; font-weight:600;
-  box-shadow: 0 8px 22px rgba(0,0,0,.45);
-  z-index:3;
-}
-.mock-chunksel .cs-actionbar .cnt{
-  background:#2f8fd1; padding:2px 7px; border-radius:999px;
-  font-family:var(--mono); font-size:9px; font-weight:700;
-}
-.mock-chunksel .cs-actionbar .act{
-  color:rgba(255,255,255,.8); padding:2px 4px;
-  display:inline-flex; align-items:center; gap:3px;
-}
-.mock-chunksel .cs-actionbar .act + .act{ border-left:1px solid rgba(255,255,255,.18); padding-left:8px; margin-left:2px; }
 /* ドラッグオーバーレイ（積み重ねカード + バッジ） */
 .mock-chunksel .cs-overlay{
   position:absolute; right:24px; bottom:52px;
