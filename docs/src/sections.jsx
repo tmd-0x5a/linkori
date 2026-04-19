@@ -139,7 +139,7 @@ function ChunksSec(){
         </div>
 
         <div className="feature-row reveal" style={{ margin: '40px 0', alignItems:'center' }}>
-          <div style={{ display:'flex', justifyContent:'center' }} data-par="0.3">
+          <div className="reveal" data-par="0.3">
             <ChunkSelectMock/>
           </div>
           <div className="feature-copy">
@@ -234,7 +234,7 @@ function ViewerSec(){
         </div>
         {/* 左: モック / 右: 機能リスト（吹き出しなし・他セクションと合わせた feature-row） */}
         <div className="feature-row reveal" style={{alignItems:'center'}}>
-          <div className="vshowcase" data-par="0.3">
+          <div className="reveal" data-par="0.3">
             <ViewerShowcaseMock/>
           </div>
           <div className="feature-copy">
@@ -739,10 +739,10 @@ function ChunkSelectMock(){
   );
 }
 
-// ビューア機能詳細モック（ViewerSec 用）— クローム付き・吹き出しなし
+// ビューア機能詳細モック（ViewerSec 用）— 他モックと同一パターン: .mock + WinChrome + ViewerMock
 function ViewerShowcaseMock(){
   return (
-    <div className="mock-viewer-full">
+    <div className="mock">
       <WinChrome title="Linkori — Viewer"/>
       <ViewerMock showSidebar={true}/>
     </div>
