@@ -419,21 +419,23 @@ const TAG_COLORS = {
   pomegranate: { hex:'#fc7981', fg:'#0a1628' },
 };
 
-// アプリ準拠のプレイリスト行
-function PListRow({ name, star, progress, status, active, tagColor }){
+// アプリ準拠のプレイリスト行（1行目: 名前/★/件数、2行目: 進捗バー+%）
+function PListRow({ name, star, progress, count=5, active, tagColor }){
   const tc = tagColor ? TAG_COLORS[tagColor] : null;
   const tint = tc ? `${tc.hex}33` : null;
   const border = tc ? `${tc.hex}66` : undefined;
-  const dot = status === 'read' ? '#42c97a' : status === 'unread' ? APP.yellow : null;
   return (
     <div className={'plrow '+(active?'active':'')}
          style={tint && !active ? {background:tint, borderColor:border}:undefined}>
-      <div className="plrow-left">
-        {dot && <span className="dot" style={{background:dot}}/>}
-        {star && <Ico name="star" size={10}/>}
+      <div className="plrow-top">
         <span className="nm">{name}</span>
+        <span className={'fav '+(star?'on':'')}>★</span>
+        <span className="cnt">{count}</span>
       </div>
-      <div className="pbar"><i style={{width:progress+'%'}}/></div>
+      <div className="plrow-bot">
+        <div className="pbar"><i style={{width:progress+'%'}}/></div>
+        <span className="pct">{progress}%</span>
+      </div>
     </div>
   );
 }
@@ -455,7 +457,7 @@ function PlaylistMock(){
           <span className="icobtn"><Ico name="plus" size={11}/></span>
         </div>
         <div className="filter">
-          <span className="chip active">All</span>
+          <span className="chip active">すべて</span>
           <span className="chip"><Ico name="star" size={9}/></span>
           <span className="chip" style={{background:TAG_COLORS.ocean.hex, color:TAG_COLORS.ocean.fg, border:'none'}}>seinen</span>
           <span className="chip" style={{background:TAG_COLORS.coral.hex, color:TAG_COLORS.coral.fg, border:'none'}}>action</span>
@@ -482,9 +484,20 @@ function PlaylistMock(){
             </div>
           </div>
           <div className="actions">
-            <span className="iconbtn"><Ico name="bars" size={12}/></span>
-            <span className="iconbtn"><Ico name="eye"  size={12}/></span>
-            <span className="cta"><Ico name="plus" size={12}/>Read</span>
+            <span className="hdbtn">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+              </svg>
+              サムネ表示
+            </span>
+            <span className="hdbtn">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/>
+              </svg>
+              並び替え
+            </span>
+            <span className="cta">ビューアで開く</span>
           </div>
         </div>
         <div className="chunks">
@@ -696,8 +709,20 @@ function ChunkSelectPanel(){
             </div>
           </div>
           <div className="actions">
-            <span className="iconbtn"><Ico name="bars" size={12}/></span>
-            <span className="cta"><Ico name="plus" size={12}/>Read</span>
+            <span className="hdbtn">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+              </svg>
+              サムネ表示
+            </span>
+            <span className="hdbtn">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/>
+              </svg>
+              並び替え
+            </span>
+            <span className="cta">ビューアで開く</span>
           </div>
         </div>
         <div className="chunks">
