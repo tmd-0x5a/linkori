@@ -139,8 +139,9 @@ function ChunksSec(){
         </div>
 
         <div className="feature-row reveal" style={{ margin: '40px 0', alignItems:'center' }}>
-          <div className="reveal" data-par="0.3">
-            <ChunkSelectMock/>
+          <div className="mock reveal" style={{'--d':'100ms'}} data-par="0.3">
+            <WinChrome title="Linkori"/>
+            <ChunkSelectPanel/>
           </div>
           <div className="feature-copy">
             <h3 style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{lang==='ja'?'柔軟な範囲指定。':'Flexible range.'}</h3>
@@ -234,8 +235,9 @@ function ViewerSec(){
         </div>
         {/* 左: モック / 右: 機能リスト（吹き出しなし・他セクションと合わせた feature-row） */}
         <div className="feature-row reveal" style={{alignItems:'center'}}>
-          <div className="reveal" data-par="0.3">
-            <ViewerShowcaseMock/>
+          <div className="mock reveal" style={{'--d':'100ms'}} data-par="0.3">
+            <WinChrome title="Linkori — Viewer"/>
+            <ViewerMock showSidebar={true}/>
           </div>
           <div className="feature-copy">
             <ul>{c.bullets.map((b,i)=> <li key={i} style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{mapLang(b,lang)}</li>)}</ul>
@@ -526,7 +528,7 @@ function ViewerMock({showSidebar=true}){
         <span className="topbtn"><Ico name="arrow" size={10}/>ホーム</span>
         <span className="topbtn icon"><Ico name="expand" size={11}/></span>
         <span className="topbtn icon"><Ico name="list" size={11}/></span>
-        <span className="seg"><span>1P</span><span className="on">2P</span></span>
+        <span className="seg"><span>1枚</span><span className="on">2枚</span></span>
       </div>
       <div className="pages">
         {/* 右→左読み: 先に R（次ページ）、続いて L */}
@@ -658,8 +660,8 @@ function BrowserMock(){
   );
 }
 
-// チャンク複数選択モック（プレイリストの逆レイアウト: メイン左・サイドバー右）
-function ChunkSelectMock(){
+// チャンク複数選択パネル（プレイリスト画面・実アプリ準拠: サイドバー左・メイン右）
+function ChunkSelectPanel(){
   const chunks = [
     {n:'序章 — 旅立ち',     start:'D:/manga/vol_01/001.jpg', end:'042.jpg', cnt:42},
     {n:'第一巻 — 出会い',   start:'D:/manga/vol_01_raw',     end:'',        cnt:86,  sel:true},
@@ -668,83 +670,59 @@ function ChunkSelectMock(){
     {n:'外伝 — 追憶',       start:'D:/manga/bonus',          end:'',        cnt:28},
   ];
   return (
-    <div className="mock">
-      <WinChrome title="Linkori"/>
-      <div className="mock-plist flip">
-        {/* メイン（左）: チャンク画面に焦点 */}
-        <div className="main">
-          <div className="head">
-            <div>
-              <div className="title">VAGABOND</div>
-              <div className="meta">
-                <span className="tagpill" style={{background:TAG_COLORS.ocean.hex, color:TAG_COLORS.ocean.fg}}>seinen</span>
-                <span className="tagpill" style={{background:TAG_COLORS.coral.hex, color:TAG_COLORS.coral.fg}}>action</span>
-                <span className="metatxt">5 chunks · 340p · 72%</span>
-              </div>
-            </div>
-            <div className="actions">
-              <span className="iconbtn"><Ico name="bars" size={12}/></span>
-              <span className="cta"><Ico name="plus" size={12}/>Read</span>
-            </div>
-          </div>
-          <div className="chunks">
-            {chunks.map((ch,i)=>(
-              <div key={i} className={'chunk '+(ch.sel?'selected':'')}>
-                <div className="grip"><i/><i/><i/><i/><i/><i/></div>
-                <div className="body">
-                  <div className="name">{ch.n}</div>
-                  <div className="pathline">
-                    <span className="lbl">START:</span>
-                    <span className="pth">{ch.start}</span>
-                  </div>
-                  {ch.end && (
-                    <div className="pathline">
-                      <span className="lbl">END:</span>
-                      <span className="pth">{ch.end}</span>
-                    </div>
-                  )}
-                  <span className="count-badge">{ch.cnt}枚</span>
-                </div>
-                <span className="eyebtn"><Ico name="eye" size={12}/></span>
-              </div>
-            ))}
-          </div>
-          {/* グループドラッグオーバーレイ（積み重ねカード） */}
-          <div className="drag-stack">
-            <div className="card"/>
-            <div className="card"/>
-            <div className="card">
-              <div className="nm">第一巻 — 出会い</div>
-              <div className="mt">Folder · 86枚</div>
-            </div>
-          </div>
+    <div className="mock-plist">
+      <div className="side">
+        <div className="brand-row">
+          <span className="brand">Linkori</span>
+          <span className="spacer"/>
+          <span className="icobtn">JA</span>
+          <span className="icobtn"><Ico name="plus" size={11}/></span>
         </div>
-        {/* サイドバー（右・mirror） */}
-        <div className="side">
-          <div className="brand-row">
-            <span className="brand">Linkori</span>
-            <span className="spacer"/>
-            <span className="icobtn">JA</span>
-            <span className="icobtn"><Ico name="plus" size={11}/></span>
-          </div>
-          <div className="list">
-            <PListRow name="VAGABOND"  star status="read" progress={72} active/>
-            <PListRow name="BERSERK"        status="unread" progress={34}  tagColor="coral"/>
-            <PListRow name="AKIRA"     star status="read"   progress={100} tagColor="lemon"/>
-            <PListRow name="HUNTER x"       status="unread" progress={12}  tagColor="forest"/>
-          </div>
+        <div className="list">
+          <PListRow name="VAGABOND"  star status="read" progress={72} active/>
+          <PListRow name="BERSERK"        status="unread" progress={34}  tagColor="coral"/>
+          <PListRow name="AKIRA"     star status="read"   progress={100} tagColor="lemon"/>
+          <PListRow name="HUNTER x"       status="unread" progress={12}  tagColor="forest"/>
         </div>
       </div>
-    </div>
-  );
-}
-
-// ビューア機能詳細モック（ViewerSec 用）— 他モックと同一パターン: .mock + WinChrome + ViewerMock
-function ViewerShowcaseMock(){
-  return (
-    <div className="mock">
-      <WinChrome title="Linkori — Viewer"/>
-      <ViewerMock showSidebar={true}/>
+      <div className="main">
+        <div className="head">
+          <div>
+            <div className="title">VAGABOND</div>
+            <div className="meta">
+              <span className="tagpill" style={{background:TAG_COLORS.ocean.hex, color:TAG_COLORS.ocean.fg}}>seinen</span>
+              <span className="tagpill" style={{background:TAG_COLORS.coral.hex, color:TAG_COLORS.coral.fg}}>action</span>
+              <span className="metatxt">5 chunks · 340p · 72%</span>
+            </div>
+          </div>
+          <div className="actions">
+            <span className="iconbtn"><Ico name="bars" size={12}/></span>
+            <span className="cta"><Ico name="plus" size={12}/>Read</span>
+          </div>
+        </div>
+        <div className="chunks">
+          {chunks.map((ch,i)=>(
+            <div key={i} className={'chunk '+(ch.sel?'selected':'')}>
+              <div className="grip"><i/><i/><i/><i/><i/><i/></div>
+              <div className="body">
+                <div className="name">{ch.n}</div>
+                <div className="pathline">
+                  <span className="lbl">START:</span>
+                  <span className="pth">{ch.start}</span>
+                </div>
+                {ch.end && (
+                  <div className="pathline">
+                    <span className="lbl">END:</span>
+                    <span className="pth">{ch.end}</span>
+                  </div>
+                )}
+                <span className="count-badge">{ch.cnt}枚</span>
+              </div>
+              <span className="eyebtn"><Ico name="eye" size={12}/></span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
