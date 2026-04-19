@@ -1032,6 +1032,31 @@ body.hero-bigtype h1{ font-size: clamp(72px, 12vw, 180px) }
 }
 .mock-plist .main{ position:relative }
 
+/* ─── チャンク焦点レイアウト（サイドバー無し・メイン全幅） ─── */
+.mock-plist.chunk-focus{ grid-template-columns: 1fr; }
+.mock-plist.chunk-focus .main{ display:flex; flex-direction:column; }
+
+/* 複数選択フローティングバー（実アプリ準拠: sticky bottom, blue tint） */
+.mock-plist .selbar{
+  margin-top:auto;
+  display:flex; align-items:center; gap:8px;
+  padding:8px 14px;
+  border-top:1px solid rgba(47,143,209,.3);
+  background: rgba(230,244,253,.95);
+  backdrop-filter: blur(4px);
+  font-family: var(--sans);
+}
+.mock-plist .selbar .sel-count{
+  flex:1; font-size:11px; font-weight:600; color:#0f1d4a;
+}
+.mock-plist .selbar .sel-link{
+  font-size:10px; color:#2f8fd1; padding:3px 7px; border-radius:6px;
+}
+.mock-plist .selbar .sel-delete{
+  font-size:10px; font-weight:700; color:#fff;
+  background:#e05560; padding:4px 10px; border-radius:8px;
+}
+
 /* チャンクグループドラッグオーバーレイ（積み重ねカード・カウント無し） */
 .mock-plist .drag-stack{
   position:absolute; right:18%; bottom:18%;

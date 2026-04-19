@@ -673,7 +673,7 @@ function BrowserMock(){
   );
 }
 
-// チャンク複数選択パネル（プレイリスト画面・実アプリ準拠: サイドバー左・メイン右）
+// チャンク複数選択モック（サイドバー無し・メインパネル全幅で「チャンク」に焦点）
 function ChunkSelectPanel(){
   const chunks = [
     {n:'序章 — 旅立ち',     start:'D:/manga/vol_01/001.jpg', end:'042.jpg', cnt:42},
@@ -682,22 +682,9 @@ function ChunkSelectPanel(){
     {n:'第三巻 — 決戦',     start:'D:/manga/vol_03.pdf',     end:'',        cnt:64,  sel:true},
     {n:'外伝 — 追憶',       start:'D:/manga/bonus',          end:'',        cnt:28},
   ];
+  const selCount = chunks.filter(c=>c.sel).length;
   return (
-    <div className="mock-plist">
-      <div className="side">
-        <div className="brand-row">
-          <span className="brand">Linkori</span>
-          <span className="spacer"/>
-          <span className="icobtn">JA</span>
-          <span className="icobtn"><Ico name="plus" size={11}/></span>
-        </div>
-        <div className="list">
-          <PListRow name="VAGABOND"  star status="read" progress={72} active/>
-          <PListRow name="BERSERK"        status="unread" progress={34}  tagColor="coral"/>
-          <PListRow name="AKIRA"     star status="read"   progress={100} tagColor="lemon"/>
-          <PListRow name="HUNTER x"       status="unread" progress={12}  tagColor="forest"/>
-        </div>
-      </div>
+    <div className="mock-plist chunk-focus">
       <div className="main">
         <div className="head">
           <div>
@@ -746,6 +733,13 @@ function ChunkSelectPanel(){
               <span className="eyebtn"><Ico name="eye" size={12}/></span>
             </div>
           ))}
+        </div>
+        {/* 複数選択フローティングバー（実アプリ準拠: 選択数・全選択・選択解除・削除） */}
+        <div className="selbar">
+          <span className="sel-count">{selCount}件選択中</span>
+          <span className="sel-link">全選択</span>
+          <span className="sel-link">選択解除</span>
+          <span className="sel-delete">{selCount}件を削除</span>
         </div>
       </div>
     </div>
