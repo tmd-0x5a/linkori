@@ -175,3 +175,29 @@ npm run tauri build
 - Node.js
 - Rust / Cargo
 - Tauri v2 CLI
+
+---
+
+## Changelog
+
+### v0.5.0
+- **In-viewer chunk editing panel**: a right-side slide-in sidebar opened from the viewer lets you add, edit, delete, reorder, and subfolder-split chunks without leaving the reader. After any change, the image list rebuilds while preserving your current page, so restructuring chunks mid-read never loses your place.
+- **Tag color system**: link a color to each tag; the first colored tag on a playlist paints the card edge-to-edge with a soft wash, while hover / active states fall back to the standard blue. Removes the previous per-playlist "spine color" picker and consolidates everything under tags.
+- **17-color palette**: extended from 6 to 17 swatches across blues, greens, warms, purples, and neutrals.
+- **Tag editor rework**: pick a color in the same panel where you add a tag; existing tags can be recolored inline. Tag pills no longer render the `#` prefix.
+- **Dark mode polish**:
+  - Selected chunk cards now use a translucent blue so text stays readable in both themes (previously went white-on-white in dark).
+  - Button hover text pinned to a dark foreground so yellow/cyan hover backgrounds don't collide with white text.
+  - `.btn-clay` hard shadow inverted in dark mode.
+- **Installer**:
+  - Japanese language selector in the NSIS installer.
+  - Installs to `%LOCALAPPDATA%` (per-user) so no UAC elevation prompt is required.
+  - `shortDescription` / `publisher` / `copyright` metadata populated.
+
+**About the Windows SmartScreen warning**: the installer and `.exe` are currently unsigned, so Windows SmartScreen will show an "unrecognized app" warning. Click **More info → Run anyway** to proceed. A signed release is not possible without an Authenticode code-signing certificate.
+
+### v0.4.0
+- Drag-anywhere reorder for playlists (no dedicated handle).
+- Multi-select + group drag for chunks with count badge DragOverlay.
+- Chunk preview, image count badge, sort-by-name/date.
+- Subfolder split with undo; batch delete with `Ctrl+Z`.

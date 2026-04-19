@@ -1,15 +1,27 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useId } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence, type Variants } from "motion/react";
 import { downloadDir, documentDir, desktopDir, pictureDir, videoDir, audioDir } from "@tauri-apps/api/path";
-import { browseDirectory, browseZip, readImageAsDataUrl, listDrives } from "@/lib/tauri";
+import { browseDirectory, browseZip, listDrives } from "@/lib/tauri";
 import type { FileEntry } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/cn";
 import { useT } from "@/hooks/useT";
 import { initDragDropListener, registerDropZone, unregisterDropZone } from "@/lib/dragDrop";
+import { IMAGE_EXTENSIONS_DOTTED, CONTAINER_EXTENSIONS_DOTTED } from "@/lib/constants";
+import { useSettingsStore } from "@/stores/settingsStore";
+import { SortIcon, SidebarFolderIcon } from "./FileBrowserIcons";
+import { FileRow } from "./FileRow";
+import { FileGridCard } from "./FileGridCard";
+
+/** ドロップ時のファイル判定用（画像 + コンテナ拡張子） */
+const DROPPABLE_FILE_EXTENSIONS: readonly string[] = [
+  ...IMAGE_EXTENSIONS_DOTTED,
+  ...CONTAINER_EXTENSIONS_DOTTED,
+];
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,13 +50,6 @@ export interface FileBrowserDialogProps {
    */
   restrictToDir?: string;
 }
-
-// ---------------------------------------------------------------------------
-// モジュールレベルでソート/表示モードを永続化（ダイアログ再マウント後も維持）
-// ---------------------------------------------------------------------------
-let _savedSortField: "name" | "date" = "name";
-let _savedSortDir: "asc" | "desc" = "asc";
-let _savedViewMode: "list" | "grid" = "list";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -120,11 +125,10 @@ export function FileBrowserDialog({
   // ダイアログ上へのドラッグ&ドロップ状態
   const [isDialogDragOver, setIsDialogDragOver] = useState(false);
   const dialogAreaRef = useRef<HTMLDivElement>(null);
-  // ソート（モジュールレベル変数から初期値を取得して再マウント後も維持）
-  const [sortField, setSortField] = useState<"name" | "date">(_savedSortField);
-  const [sortDir, setSortDir] = useState<"asc" | "desc">(_savedSortDir);
-  // 表示モード（同上）
-  const [viewMode, setViewMode] = useState<"list" | "grid">(_savedViewMode);
+  // ソート / 表示モード（Zustand で永続化、ダイアログ再マウント・アプリ再起動後も維持）
+  const sortField = useSettingsStore((s) => s.browserSortField);
+  const sortDir = useSettingsStore((s) => s.browserSortDir);
+  const viewMode = useSettingsStore((s) => s.browserViewMode);
   // 1=前進（フォルダへ入る）, -1=後退
   const [navDir, setNavDir] = useState<1 | -1>(1);
 
@@ -184,8 +188,7 @@ export function FileBrowserDialog({
         setIsDialogDragOver(false);
         const norm = paths[0];
         const lower = norm.toLowerCase();
-        const isFile = [".jpg",".jpeg",".png",".gif",".webp",".bmp",".tiff",".tif",".pdf",".zip",".cbz"]
-          .some((ext) => lower.endsWith(ext));
+        const isFile = DROPPABLE_FILE_EXTENSIONS.some((ext) => lower.endsWith(ext));
         const targetPath = isFile
           ? norm.slice(0, norm.lastIndexOf("/"))
           : norm;
@@ -239,13 +242,15 @@ export function FileBrowserDialog({
   // Navigation helpers
   // ----------------------------------------
 
-  function navigateInto(entry: FileEntry) {
+  // FileRow/FileGridCard へ安定参照で渡すため useCallback 化。
+  // setter は Zustand 同等の stable 参照なので依存は空。
+  const navigateInto = useCallback((entry: FileEntry) => {
     setNavDir(1);
     setLocationStack((prev) => [
       ...prev,
       { path: entry.path, name: entry.name, isZip: entry.is_zip },
     ]);
-  }
+  }, []);
 
   function goBack() {
     if (locationStack.length === 0) return;
@@ -317,31 +322,31 @@ export function FileBrowserDialog({
   // Selection
   // ----------------------------------------
 
-  function confirmSelect(path: string) {
+  const confirmSelect = useCallback((path: string) => {
     onSelect(path);
     onClose();
-  }
+  }, [onSelect, onClose]);
+
+  // FileRow/FileGridCard の onSelectEntry に渡すラッパー（entry → path）
+  const selectEntry = useCallback((entry: FileEntry) => {
+    confirmSelect(entry.path);
+  }, [confirmSelect]);
 
   // ----------------------------------------
   // フィルタリング＆ソート
   // ----------------------------------------
 
   function toggleSort(field: "name" | "date") {
+    const setBrowserSort = useSettingsStore.getState().setBrowserSort;
     if (sortField === field) {
-      const nd = sortDir === "asc" ? "desc" : "asc";
-      setSortDir(nd);
-      _savedSortDir = nd;
+      setBrowserSort(field, sortDir === "asc" ? "desc" : "asc");
     } else {
-      setSortField(field);
-      _savedSortField = field;
-      setSortDir("asc");
-      _savedSortDir = "asc";
+      setBrowserSort(field, "asc");
     }
   }
 
   function changeViewMode(mode: "list" | "grid") {
-    setViewMode(mode);
-    _savedViewMode = mode;
+    useSettingsStore.getState().setBrowserViewMode(mode);
   }
 
   const filteredEntries = entries
@@ -377,7 +382,9 @@ export function FileBrowserDialog({
   const canGoBack = locationStack.length > 0 &&
     (!normalizedRestrictDir || currentLocation?.path !== normalizedRestrictDir);
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -389,20 +396,20 @@ export function FileBrowserDialog({
           onClick={(e) => e.target === e.currentTarget && onClose()}
         >
           <motion.div
-            className="flex h-[88vh] w-[92vw] max-w-5xl flex-col rounded-2xl border border-[#dad4c8] bg-white shadow-[rgba(0,0,0,0.1)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset,rgba(0,0,0,0.05)_0px_-0.5px_1px] overflow-hidden"
+            className="flex h-[88vh] w-[92vw] max-w-5xl flex-col rounded-2xl border border-[var(--oat-border)] bg-[var(--panel-bg)] shadow-[rgba(0,0,0,0.1)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset,rgba(0,0,0,0.05)_0px_-0.5px_1px] overflow-hidden"
             initial={{ scale: 0.94, opacity: 0, y: 12 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.94, opacity: 0, y: 12 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
           >
             {/* ── ツールバー ── */}
-            <div className="flex shrink-0 items-center gap-2 border-b border-[#dad4c8] bg-[#faf9f7] px-3 py-2">
+            <div className="flex shrink-0 items-center gap-2 border-b border-[var(--oat-border)] bg-[var(--cream)] px-3 py-2">
               {/* 戻るボタン */}
               <button
                 type="button"
                 onClick={goBack}
                 disabled={!canGoBack}
-                className="flex h-7 w-7 items-center justify-center rounded text-[#9f9b93] transition-colors hover:bg-[#eee9df] hover:text-black disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-7 w-7 items-center justify-center rounded text-[var(--warm-silver)] transition-colors hover:bg-[var(--oat-light)] hover:text-[var(--panel-text)] disabled:cursor-not-allowed disabled:opacity-30"
                 title={t.back}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -423,15 +430,15 @@ export function FileBrowserDialog({
                       if (e.key === "Escape") setAddressEditing(false);
                     }}
                     onBlur={() => setAddressEditing(false)}
-                    className="h-7 w-full rounded-[4px] border border-[rgb(20,110,245)] bg-white px-2 text-sm text-black focus:outline-[rgb(20,110,245)_solid_2px]"
+                    className="h-7 w-full rounded-[4px] border border-[rgb(20,110,245)] bg-[var(--panel-bg)] px-2 text-sm text-[var(--panel-text)] focus:outline-[rgb(20,110,245)_solid_2px]"
                   />
                 ) : (
                   <button
                     type="button"
                     onClick={normalizedRestrictDir ? undefined : () => setAddressEditing(true)}
                     className={cn(
-                      "flex h-7 min-w-0 flex-1 items-center gap-1 truncate rounded border border-[#dad4c8] bg-white px-2 text-left text-sm text-[#333333]",
-                      !normalizedRestrictDir && "transition-colors hover:bg-[#eee9df]",
+                      "flex h-7 min-w-0 flex-1 items-center gap-1 truncate rounded border border-[var(--oat-border)] bg-[var(--panel-bg)] px-2 text-left text-sm text-[var(--panel-text)]",
+                      !normalizedRestrictDir && "transition-colors hover:bg-[var(--oat-light)]",
                       normalizedRestrictDir && "cursor-default"
                     )}
                     title={normalizedRestrictDir ? undefined : t.clickToEnterPath}
@@ -441,13 +448,13 @@ export function FileBrowserDialog({
                       <span className="truncate">
                         {locationStack.map((loc, i) => (
                           <span key={i}>
-                            {i > 0 && <span className="mx-1 text-[#dad4c8]">&gt;</span>}
+                            {i > 0 && <span className="mx-1 text-[var(--oat-border)]">&gt;</span>}
                             <span
                               className={cn(
                                 "cursor-pointer",
                                 i === locationStack.length - 1
-                                  ? "text-black"
-                                  : "text-[#9f9b93] hover:text-black"
+                                  ? "text-[var(--panel-text)]"
+                                  : "text-[var(--warm-silver)] hover:text-[var(--panel-text)]"
                               )}
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -463,7 +470,7 @@ export function FileBrowserDialog({
                         ))}
                       </span>
                     ) : (
-                      <span className="text-[#9f9b93]">{t.addressBarPlaceholder}</span>
+                      <span className="text-[var(--warm-silver)]">{t.addressBarPlaceholder}</span>
                     )}
                   </button>
                 )}
@@ -476,16 +483,16 @@ export function FileBrowserDialog({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t.searchPlaceholder}
-                  className="h-7 w-36 rounded-[4px] border border-[#dad4c8] bg-white pl-7 pr-6 text-xs text-black placeholder:text-[#9f9b93] focus:outline-[rgb(20,110,245)_solid_2px] transition-colors"
+                  className="h-7 w-36 rounded-[4px] border border-[var(--oat-border)] bg-[var(--panel-bg)] pl-7 pr-6 text-xs text-[var(--panel-text)] placeholder:text-[var(--warm-silver)] focus:outline-[rgb(20,110,245)_solid_2px] transition-colors"
                 />
-                <svg className="absolute left-2 top-1/2 -translate-y-1/2 text-[#9f9b93] pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--warm-silver)] pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#9f9b93] hover:text-black"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[var(--warm-silver)] hover:text-[var(--panel-text)]"
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -495,13 +502,13 @@ export function FileBrowserDialog({
               </div>
 
               {/* 表示モード切り替え */}
-              <div className="flex shrink-0 overflow-hidden rounded border border-[#dad4c8]">
+              <div className="flex shrink-0 overflow-hidden rounded border border-[var(--oat-border)]">
                 <button
                   type="button"
                   onClick={() => changeViewMode("list")}
                   className={cn(
                     "flex h-7 w-7 items-center justify-center transition-colors",
-                    viewMode === "list" ? "bg-[#eee9df] text-black" : "text-[#9f9b93] hover:bg-[#eee9df] hover:text-black"
+                    viewMode === "list" ? "bg-[var(--oat-light)] text-[var(--panel-text)]" : "text-[var(--warm-silver)] hover:bg-[var(--oat-light)] hover:text-[var(--panel-text)]"
                   )}
                   title={t.listView}
                 >
@@ -514,8 +521,8 @@ export function FileBrowserDialog({
                   type="button"
                   onClick={() => changeViewMode("grid")}
                   className={cn(
-                    "flex h-7 w-7 items-center justify-center border-l border-[#dad4c8] transition-colors",
-                    viewMode === "grid" ? "bg-[#eee9df] text-black" : "text-[#9f9b93] hover:bg-[#eee9df] hover:text-black"
+                    "flex h-7 w-7 items-center justify-center border-l border-[var(--oat-border)] transition-colors",
+                    viewMode === "grid" ? "bg-[var(--oat-light)] text-[var(--panel-text)]" : "text-[var(--warm-silver)] hover:bg-[var(--oat-light)] hover:text-[var(--panel-text)]"
                   )}
                   title={t.gridView}
                 >
@@ -543,8 +550,8 @@ export function FileBrowserDialog({
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded transition-colors",
                   showHidden
-                    ? "bg-[#eee9df] text-black"
-                    : "text-[#9f9b93] hover:bg-[#eee9df] hover:text-black"
+                    ? "bg-[var(--oat-light)] text-[var(--panel-text)]"
+                    : "text-[var(--warm-silver)] hover:bg-[var(--oat-light)] hover:text-[var(--panel-text)]"
                 )}
                 title={showHidden ? t.hideHiddenFiles : t.showHiddenFiles}
               >
@@ -567,7 +574,7 @@ export function FileBrowserDialog({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex h-7 w-7 items-center justify-center rounded text-[#9f9b93] transition-colors hover:bg-[#eee9df] hover:text-black"
+                className="flex h-7 w-7 items-center justify-center rounded text-[var(--warm-silver)] transition-colors hover:bg-[var(--oat-light)] hover:text-[var(--panel-text)]"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -582,24 +589,24 @@ export function FileBrowserDialog({
             >
               {/* ドラッグオーバー時のオーバーレイ */}
               {isDialogDragOver && (
-                <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#078a52]/20 backdrop-blur-[1px]">
-                  <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-[#078a52] bg-white/90 px-8 py-6 shadow-lg">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#078a52" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-[#2f8fd1]/20 backdrop-blur-[1px]">
+                  <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-[#2f8fd1] bg-[var(--panel-bg)]/90 px-8 py-6 shadow-lg">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2f8fd1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
                       <polyline points="8 12 12 8 16 12" />
                       <line x1="12" y1="8" x2="12" y2="16" />
                     </svg>
-                    <span className="text-sm font-semibold text-[#078a52]">{t.dropToNavigate}</span>
+                    <span className="text-sm font-semibold text-[#2f8fd1]">{t.dropToNavigate}</span>
                   </div>
                 </div>
               )}
 
               {/* ── 左サイドバー（Windows Explorer の PC セクション構成）：フォルダ制限時は非表示 ── */}
               {!normalizedRestrictDir && (
-                <div className="flex w-44 shrink-0 flex-col overflow-y-auto border-r border-[#02492a] bg-[#02492a] py-2 gap-0.5">
+                <div className="flex w-44 shrink-0 flex-col overflow-y-auto border-r border-[#0f1d4a] bg-[#0f1d4a] py-2 gap-0.5">
 
                   {/* PC セクション */}
-                  <p className="mb-0.5 px-3 text-[10px] font-semibold uppercase tracking-wider text-[#84e7a5]/50 select-none">
+                  <p className="mb-0.5 px-3 text-[10px] font-semibold uppercase tracking-wider text-[#9fd8e8]/50 select-none">
                     {t.pc}
                   </p>
 
@@ -615,8 +622,8 @@ export function FileBrowserDialog({
                         className={cn(
                           "flex items-center gap-2 px-3 py-1 text-left text-[13px] transition-colors",
                           isActive
-                            ? "bg-[#078a52] text-white"
-                            : "text-[#84e7a5]/80 hover:bg-[#078a52]/50 hover:text-white"
+                            ? "bg-[#2f8fd1] text-white"
+                            : "text-[#9fd8e8]/80 hover:bg-[#2f8fd1]/50 hover:text-white"
                         )}
                       >
                         <SidebarFolderIcon name={folder.name} />
@@ -627,7 +634,7 @@ export function FileBrowserDialog({
 
                   {/* ドライブ区切り */}
                   {quickFolders.length > 0 && drives.length > 0 && (
-                    <div className="mx-3 my-1 border-t border-[#084e30]" />
+                    <div className="mx-3 my-1 border-t border-[#1a2e6b]" />
                   )}
 
                   {/* ドライブ一覧（展開可能ツリー） */}
@@ -643,8 +650,8 @@ export function FileBrowserDialog({
                         <div className={cn(
                           "flex items-center text-[13px] transition-colors",
                           isActive
-                            ? "bg-[#078a52] text-white"
-                            : "text-[#84e7a5]/80 hover:bg-[#078a52]/50 hover:text-white"
+                            ? "bg-[#2f8fd1] text-white"
+                            : "text-[#9fd8e8]/80 hover:bg-[#2f8fd1]/50 hover:text-white"
                         )}>
                           {/* 展開ボタン（三角矢印） */}
                           <button
@@ -688,8 +695,8 @@ export function FileBrowserDialog({
                               className={cn(
                                 "flex w-full items-center gap-1.5 py-0.5 pl-7 pr-3 text-left text-[12px] transition-colors",
                                 childActive
-                                  ? "bg-[#078a52] text-white"
-                                  : "text-[#84e7a5]/70 hover:bg-[#078a52]/40 hover:text-white"
+                                  ? "bg-[#2f8fd1] text-white"
+                                  : "text-[#9fd8e8]/70 hover:bg-[#2f8fd1]/40 hover:text-white"
                               )}
                             >
                               {/* フォルダアイコン */}
@@ -713,10 +720,10 @@ export function FileBrowserDialog({
                 {!currentLocation && (
                   <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8">
                     <div className="text-center">
-                      <p className="heading-clay text-xl text-black">
+                      <p className="heading-clay text-xl text-[var(--panel-text)]">
                         {t.selectDriveOrFolder}
                       </p>
-                      <p className="mt-2 text-sm text-[#9f9b93] leading-relaxed">
+                      <p className="mt-2 text-sm text-[var(--warm-silver)] leading-relaxed">
                         {t.selectDriveDesc}
                       </p>
                     </div>
@@ -744,10 +751,10 @@ export function FileBrowserDialog({
 
                     {/* カラムヘッダー（リストモードのみ） */}
                     {viewMode === "list" && (
-                      <div className="flex shrink-0 items-center border-b border-[#dad4c8] bg-[#faf9f7] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#9f9b93] select-none">
+                      <div className="flex shrink-0 items-center border-b border-[var(--oat-border)] bg-[var(--cream)] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--warm-silver)] select-none">
                         <button
                           type="button"
-                          className="flex flex-1 items-center gap-1 hover:text-black transition-colors"
+                          className="flex flex-1 items-center gap-1 hover:text-[var(--panel-text)] transition-colors"
                           onClick={() => toggleSort("name")}
                         >
                           {t.colName}
@@ -757,7 +764,7 @@ export function FileBrowserDialog({
                         </button>
                         <button
                           type="button"
-                          className="flex w-36 items-center justify-end gap-1 hover:text-black transition-colors"
+                          className="flex w-36 items-center justify-end gap-1 hover:text-[var(--panel-text)] transition-colors"
                           onClick={() => toggleSort("date")}
                         >
                           {sortField === "date" && (
@@ -786,10 +793,10 @@ export function FileBrowserDialog({
                           {isLoading && (
                             <div className="flex h-40 items-center justify-center gap-3">
                               <div
-                                className="size-5 rounded-full border-2 border-[#dad4c8] border-t-[#078a52]"
+                                className="size-5 rounded-full border-2 border-[var(--oat-border)] border-t-[#2f8fd1]"
                                 style={{ animation: "spin 0.8s linear infinite" }}
                               />
-                              <p className="text-xs text-[#9f9b93]">{t.loading}</p>
+                              <p className="text-xs text-[var(--warm-silver)]">{t.loading}</p>
                             </div>
                           )}
 
@@ -804,7 +811,7 @@ export function FileBrowserDialog({
                           {!isLoading && !error && (
                             <>
                               {filteredEntries.length === 0 ? (
-                                <div className="flex h-40 items-center justify-center text-sm text-[#9f9b93]">
+                                <div className="flex h-40 items-center justify-center text-sm text-[var(--warm-silver)]">
                                   {searchQuery ? t.noResults : t.emptyFolder}
                                 </div>
                               ) : viewMode === "list" ? (
@@ -812,18 +819,19 @@ export function FileBrowserDialog({
                                   <FileRow
                                     key={entry.path}
                                     entry={entry}
-                                    onNavigate={() => navigateInto(entry)}
-                                    onSelect={() => confirmSelect(entry.path)}
+                                    modifiedLabel={formatDate(entry.modified_at)}
+                                    onNavigateEntry={navigateInto}
+                                    onSelectEntry={selectEntry}
                                   />
                                 ))
                               ) : (
                                 <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-2 p-3">
                                   {filteredEntries.map((entry) => (
-                                    <GridCard
+                                    <FileGridCard
                                       key={entry.path}
                                       entry={entry}
-                                      onNavigate={() => navigateInto(entry)}
-                                      onSelect={() => confirmSelect(entry.path)}
+                                      onNavigateEntry={navigateInto}
+                                      onSelectEntry={selectEntry}
                                     />
                                   ))}
                                 </div>
@@ -839,7 +847,7 @@ export function FileBrowserDialog({
             </div>
 
             {/* ── フッター ── */}
-            <div className="flex shrink-0 items-center justify-between border-t border-[#dad4c8] bg-[#faf9f7] px-4 py-2.5">
+            <div className="flex shrink-0 items-center justify-between border-t border-[var(--oat-border)] bg-[var(--cream)] px-4 py-2.5">
               <div className="flex items-center gap-2">
                 {currentLocation && (
                   <Button
@@ -850,7 +858,7 @@ export function FileBrowserDialog({
                     {currentLocation.isZip ? t.selectThisZip : t.selectThisFolder}
                   </Button>
                 )}
-                <p className="text-xs text-[#9f9b93]">
+                <p className="text-xs text-[var(--warm-silver)]">
                   {t.helpText}
                 </p>
               </div>
@@ -861,25 +869,14 @@ export function FileBrowserDialog({
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 
 // ---------------------------------------------------------------------------
 // ソートアイコン
 // ---------------------------------------------------------------------------
-
-function SortIcon({ dir }: { dir: "asc" | "desc" }) {
-  return (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-[#078a52]">
-      {dir === "asc" ? (
-        <polyline points="18 15 12 9 6 15" />
-      ) : (
-        <polyline points="6 9 12 15 18 9" />
-      )}
-    </svg>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // 日時フォーマット
@@ -896,233 +893,4 @@ function formatDate(ts: number | null): string {
   return `${y}/${m}/${day} ${h}:${min}`;
 }
 
-// ---------------------------------------------------------------------------
-// FileRow（エクスプローラー風の行）
-// ---------------------------------------------------------------------------
 
-interface FileRowProps {
-  entry: FileEntry;
-  onNavigate: () => void;
-  onSelect: () => void;
-}
-
-function FileRow({ entry, onNavigate, onSelect }: FileRowProps) {
-  const t = useT();
-  const isNavigable = entry.is_dir || entry.is_zip;
-  const [imgSrc, setImgSrc] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!entry.is_image) return;
-    let cancelled = false;
-    readImageAsDataUrl(entry.path)
-      .then((url) => { if (!cancelled) setImgSrc(url); })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [entry.path, entry.is_image]);
-
-  const typeLabel = entry.is_dir
-    ? t.folderType
-    : entry.is_zip
-    ? t.zipType
-    : entry.is_pdf
-    ? "PDF"
-    : entry.is_image
-    ? (entry.name.split(".").pop()?.toUpperCase() ?? t.imageType)
-    : "";
-
-  return (
-    <div
-      className={cn(
-        "group flex cursor-pointer items-center gap-3 border-b border-[#eee9df] px-3 py-1.5 transition-colors hover:bg-[#eee9df]",
-        entry.is_hidden && "opacity-50"
-      )}
-      onClick={isNavigable ? onNavigate : onSelect}
-      title={entry.path}
-    >
-      {/* アイコン or サムネイル */}
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded">
-        {imgSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imgSrc} alt={entry.name} className="h-full w-full object-contain" />
-        ) : entry.is_dir ? (
-          <svg className="text-amber-500" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M10.59 4.59A2 2 0 0 0 9.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-1.41-1.41z" />
-          </svg>
-        ) : entry.is_zip ? (
-          <svg className="text-green-600" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-            <polyline points="14 2 14 8 20 8" />
-            <rect x="10" y="9" width="4" height="3" rx="0.5" />
-            <line x1="12" y1="13" x2="12" y2="18" />
-          </svg>
-        ) : entry.is_pdf ? (
-          <PdfIcon size={20} />
-        ) : (
-          <svg className="text-[#078a52]" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
-        )}
-      </div>
-
-      {/* ファイル名 */}
-      <span className="flex-1 truncate text-sm text-[#333333] group-hover:text-black">
-        {entry.name}
-      </span>
-
-      {/* 更新日時 */}
-      <span className="w-36 shrink-0 text-right text-xs text-[#9f9b93]">
-        {formatDate(entry.modified_at)}
-      </span>
-
-      {/* 種類 */}
-      <span className="w-20 shrink-0 text-right text-xs text-[#9f9b93]">
-        {typeLabel}
-      </span>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// GridCard（グリッド表示）
-// ---------------------------------------------------------------------------
-
-interface GridCardProps {
-  entry: FileEntry;
-  onNavigate: () => void;
-  onSelect: () => void;
-}
-
-function GridCard({ entry, onNavigate, onSelect }: GridCardProps) {
-  const isNavigable = entry.is_dir || entry.is_zip;
-  const [imgSrc, setImgSrc] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!entry.is_image) return;
-    let cancelled = false;
-    readImageAsDataUrl(entry.path)
-      .then((url) => { if (!cancelled) setImgSrc(url); })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [entry.path, entry.is_image]);
-
-  return (
-    <div
-      className={cn(
-        "group flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-[#dad4c8] bg-white p-2 transition-colors hover:border-[#078a52] hover:bg-[#eee9df]",
-        entry.is_hidden && "opacity-50"
-      )}
-      onClick={isNavigable ? onNavigate : onSelect}
-      title={entry.path}
-    >
-      <div className="flex h-24 w-full items-center justify-center overflow-hidden rounded bg-[#faf9f7]">
-        {imgSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imgSrc} alt={entry.name} className="h-full w-full object-contain" />
-        ) : entry.is_dir ? (
-          <svg className="text-amber-500" width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M10.59 4.59A2 2 0 0 0 9.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-1.41-1.41z" />
-          </svg>
-        ) : entry.is_zip ? (
-          <svg className="text-green-600" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-            <polyline points="14 2 14 8 20 8" />
-            <rect x="10" y="9" width="4" height="3" rx="0.5" />
-            <line x1="12" y1="13" x2="12" y2="18" />
-          </svg>
-        ) : entry.is_pdf ? (
-          <PdfIcon size={42} />
-        ) : (
-          <svg className="text-[#078a52]" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
-        )}
-      </div>
-      <span className="w-full truncate text-center text-[11px] leading-tight text-[#9f9b93] group-hover:text-black">
-        {entry.name}
-      </span>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// PDF アイコン
-// ---------------------------------------------------------------------------
-
-function PdfIcon({ size }: { size: number }) {
-  return (
-    <svg className="text-red-500" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-      <text x="5" y="18" fontSize="5" fill="currentColor" stroke="none" fontWeight="bold" fontFamily="sans-serif">PDF</text>
-    </svg>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// サイドバーフォルダアイコン（フォルダ名に応じて切り替え）
-// ---------------------------------------------------------------------------
-
-function SidebarFolderIcon({ name }: { name: string }) {
-  const lower = name.toLowerCase();
-  if (lower.includes("download") || lower.includes("ダウンロード")) {
-    return (
-      <svg className="shrink-0 text-[#84e7a5]/70" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-        <polyline points="7 10 12 15 17 10" />
-        <line x1="12" y1="15" x2="12" y2="3" />
-      </svg>
-    );
-  }
-  if (lower.includes("desktop") || lower.includes("デスクトップ")) {
-    return (
-      <svg className="shrink-0 text-[#84e7a5]/70" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2" />
-        <line x1="8" y1="21" x2="16" y2="21" />
-        <line x1="12" y1="17" x2="12" y2="21" />
-      </svg>
-    );
-  }
-  if (lower.includes("picture") || lower.includes("photo") || lower.includes("ピクチャ") || lower.includes("写真")) {
-    return (
-      <svg className="shrink-0 text-[#84e7a5]/70" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" />
-        <circle cx="8.5" cy="8.5" r="1.5" />
-        <polyline points="21 15 16 10 5 21" />
-      </svg>
-    );
-  }
-  if (lower.includes("video") || lower.includes("movie") || lower.includes("ビデオ") || lower.includes("動画")) {
-    return (
-      <svg className="shrink-0 text-[#84e7a5]/70" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="2" width="20" height="20" rx="2.18" />
-        <line x1="7" y1="2" x2="7" y2="22" />
-        <line x1="17" y1="2" x2="17" y2="22" />
-        <line x1="2" y1="12" x2="22" y2="12" />
-        <line x1="2" y1="7" x2="7" y2="7" />
-        <line x1="2" y1="17" x2="7" y2="17" />
-        <line x1="17" y1="17" x2="22" y2="17" />
-        <line x1="17" y1="7" x2="22" y2="7" />
-      </svg>
-    );
-  }
-  if (lower.includes("music") || lower.includes("audio") || lower.includes("ミュージック") || lower.includes("音楽")) {
-    return (
-      <svg className="shrink-0 text-[#84e7a5]/70" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 18V5l12-2v13" />
-        <circle cx="6" cy="18" r="3" />
-        <circle cx="18" cy="16" r="3" />
-      </svg>
-    );
-  }
-  // Documents / ドキュメント（デフォルト）
-  return (
-    <svg className="shrink-0 text-[#84e7a5]/70" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-    </svg>
-  );
-}

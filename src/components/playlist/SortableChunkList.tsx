@@ -64,18 +64,18 @@ function GroupDragOverlay({
     <div className="relative cursor-grabbing select-none">
       {/* 奥行き表現（3件以上） */}
       {groupCount > 2 && (
-        <div className="absolute top-3 left-3 right-[-3px] bottom-[-3px] rounded-2xl border border-[#078a52]/30 bg-[#e8faf1]/80" />
+        <div className="absolute top-3 left-3 right-[-3px] bottom-[-3px] rounded-2xl border border-[#2f8fd1]/30 bg-[var(--panel-bg)]" />
       )}
       {/* 背面カード（2件以上） */}
       {groupCount > 1 && (
-        <div className="absolute top-1.5 left-1.5 right-[-1.5px] bottom-[-1.5px] rounded-2xl border border-[#078a52]/50 bg-[#e8faf1]/90" />
+        <div className="absolute top-1.5 left-1.5 right-[-1.5px] bottom-[-1.5px] rounded-2xl border border-[#2f8fd1]/50 bg-[var(--panel-bg)]" />
       )}
       {/* 前面カード */}
-      <div className="relative rounded-2xl border-2 border-[#078a52] bg-[#e8faf1] px-4 py-3 shadow-[rgba(0,0,0,0.22)_0px_10px_28px]">
+      <div className="relative rounded-2xl border-2 border-[#2f8fd1] bg-[#2f8fd1]/25 px-4 py-3 shadow-[rgba(0,0,0,0.22)_0px_10px_28px]">
         <div className="flex items-center gap-2">
-          <span className="flex-1 truncate text-sm font-medium text-black">{displayName}</span>
+          <span className="flex-1 truncate text-sm font-medium text-[var(--panel-text)]">{displayName}</span>
           {groupCount > 1 && (
-            <span className="shrink-0 rounded-full bg-[#078a52] px-2.5 py-0.5 text-xs font-bold text-white">
+            <span className="shrink-0 rounded-full bg-[#2f8fd1] px-2.5 py-0.5 text-xs font-bold text-white">
               {groupCount}件
             </span>
           )}

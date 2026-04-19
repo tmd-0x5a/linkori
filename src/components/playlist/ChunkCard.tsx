@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Chunk } from "@/types";
@@ -11,45 +12,9 @@ import { ContextMenu } from "@/components/ui/ContextMenu";
 import { ImageFilePicker } from "@/components/ImageFilePicker";
 import { useT } from "@/hooks/useT";
 import { resolveChunkImages, readImageThumbnail, validateChunk as validateChunkTauri, listSplitCandidates } from "@/lib/tauri";
-import { getPdfPageCount, makePdfPagePath, isPdfPagePath, renderPdfThumbnail } from "@/lib/pdf";
-
-const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "tif"];
-
-function isPdfFile(path: string): boolean {
-  return path.trim().toLowerCase().endsWith(".pdf");
-}
-
-function getParentPath(path: string): string | undefined {
-  if (!path.trim()) return undefined;
-  const normalized = path.replace(/\\/g, "/").replace(/\/+$/, "");
-  const lastSlash = normalized.lastIndexOf("/");
-  if (lastSlash <= 0) return undefined;
-  return normalized.slice(0, lastSlash);
-}
-
-/** 終了パス選択を制限するディレクトリを開始パスから算出する */
-function getRestrictDir(startPath: string): string | undefined {
-  if (!startPath.trim()) return undefined;
-  const norm = startPath.replace(/\\/g, "/");
-  const lower = norm.toLowerCase();
-  for (const ext of [".zip/", ".cbz/"]) {
-    const idx = lower.indexOf(ext);
-    if (idx !== -1) return norm.slice(0, idx + ext.length - 1);
-  }
-  return getParentPath(norm);
-}
-
-function isDirectoryLike(path: string): boolean {
-  if (!path.trim()) return false;
-  // PDF はページ数が可変なのでディレクトリ扱い（終了パス不要）
-  if (isPdfFile(path)) return true;
-  const normalized = path.replace(/\\/g, "/").replace(/\/+$/, "");
-  const lastSegment = normalized.split("/").pop() ?? "";
-  const dotIdx = lastSegment.lastIndexOf(".");
-  if (dotIdx < 0) return true;
-  const ext = lastSegment.slice(dotIdx + 1).toLowerCase();
-  return !IMAGE_EXTENSIONS.includes(ext);
-}
+import { getPdfPageCount, makePdfPagePath, isPdfPagePath, parsePdfPagePath, renderPdfThumbnail } from "@/lib/pdf";
+import { isPdfFile, getParentPath, getRestrictDir, isDirectoryLike } from "@/lib/paths";
+import { useSettingsStore } from "@/stores/settingsStore";
 
 interface ChunkCardProps {
   chunk: Chunk;
@@ -81,6 +46,7 @@ interface ChunkCardProps {
 
 export function ChunkCard({ chunk, index, onUpdate, onRemove, onSplit, onUndoSplit, selected, selectedCount, onBatchDeleteSelected, isDraggingGroup, onCardClick, onCardMouseDown, onCardMouseEnter }: ChunkCardProps) {
   const t = useT();
+  const showChunkThumbnails = useSettingsStore((s) => s.showChunkThumbnails);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(chunk.name ?? "");
   const [editStart, setEditStart] = useState(chunk.startPath);
@@ -205,10 +171,10 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove, onSplit, onUndoSpl
         className={cn(
           "relative rounded-2xl border p-4 outline-none transition-colors",
           "shadow-[rgba(0,0,0,0.1)_0px_1px_1px,rgba(0,0,0,0.04)_0px_-1px_1px_inset,rgba(0,0,0,0.05)_0px_-0.5px_1px]",
-          "focus-visible:ring-2 focus-visible:ring-[#078a52]/50",
+          "focus-visible:ring-2 focus-visible:ring-[#2f8fd1]/50",
           selected
-            ? "border-[#078a52] bg-[#e8faf1]"
-            : "border-[#dad4c8] bg-white",
+            ? "border-[#2f8fd1] bg-[#2f8fd1]/25"
+            : "border-[var(--oat-border)] bg-[var(--panel-bg)]",
           // ドラッグ中は本体を非表示（DragOverlay が視覚を担う）
           isDragging && "opacity-0",
           // グループドラッグ中の選択済みチャンクも非表示
@@ -226,10 +192,15 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove, onSplit, onUndoSpl
         }}
         onMouseEnter={() => onCardMouseEnter?.(index)}
       >
+        <div className={cn(showChunkThumbnails && !isEditing && chunk.startPath ? "flex items-start gap-3" : "")}>
+          {showChunkThumbnails && !isEditing && chunk.startPath && (
+            <ChunkThumbnail chunk={chunk} />
+          )}
+          <div className={cn(showChunkThumbnails && !isEditing && chunk.startPath ? "flex-1 min-w-0" : "")}>
         {/* ヘッダー */}
         <div className="mb-3 flex items-center gap-3">
           <button
-            className="flex size-8 shrink-0 cursor-grab items-center justify-center rounded-lg text-[#dad4c8] hover:bg-[#eee9df] hover:text-[#9f9b93] active:cursor-grabbing transition-colors"
+            className="flex size-8 shrink-0 cursor-grab items-center justify-center rounded-lg text-[var(--oat-border)] hover:bg-[var(--oat-light)] hover:text-[var(--warm-silver)] active:cursor-grabbing transition-colors"
             aria-label={t.dragToReorder}
             {...attributes}
             {...listeners}
@@ -247,8 +218,8 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove, onSplit, onUndoSpl
           <span className={cn(
             "flex-1 truncate",
             chunk.name?.trim()
-              ? "heading-clay text-base text-black"
-              : "tabular-nums text-sm text-[#9f9b93]"
+              ? "heading-clay text-base text-[var(--panel-text)]"
+              : "tabular-nums text-sm text-[var(--warm-silver)]"
           )}>
             {displayName}
           </span>
@@ -259,7 +230,7 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove, onSplit, onUndoSpl
               type="button"
               onClick={openPreview}
               title={t.previewChunk}
-              className="flex size-7 shrink-0 items-center justify-center rounded-lg text-[#9f9b93] hover:bg-[#eee9df] hover:text-[#078a52] transition-colors"
+              className="flex size-7 shrink-0 items-center justify-center rounded-lg text-[var(--warm-silver)] hover:bg-[var(--oat-light)] hover:text-[#2f8fd1] transition-colors"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -273,13 +244,13 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove, onSplit, onUndoSpl
         {isEditing ? (
           <div className="space-y-3">
             <div className="flex flex-col gap-1.5">
-              <label className="label-clay text-[#55534e]">{t.chunkNameLabel}</label>
+              <label className="label-clay text-[var(--warm-charcoal)]">{t.chunkNameLabel}</label>
               <input
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 placeholder={`#${index + 1}`}
-                className="h-9 w-full rounded-[4px] border border-[#717989] bg-white px-3 text-sm text-black placeholder:text-[#9f9b93] focus:outline-[rgb(20,110,245)_solid_2px] transition-colors"
+                className="h-9 w-full rounded-[4px] border border-[#717989] bg-[var(--panel-bg)] px-3 text-sm text-[var(--panel-text)] placeholder:text-[var(--warm-silver)] focus:outline-[rgb(20,110,245)_solid_2px] transition-colors"
               />
             </div>
             <ImageFilePicker
@@ -306,21 +277,21 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove, onSplit, onUndoSpl
         ) : (
           <div className="space-y-1.5">
             <div className="flex items-baseline gap-2">
-              <span className="label-clay shrink-0 text-[#9f9b93]">{t.startLabel}</span>
-              <span className="truncate text-sm text-[#333333]">{chunk.startPath || t.notSet}</span>
+              <span className="label-clay shrink-0 text-[var(--warm-silver)]">{t.startLabel}</span>
+              <span className="truncate text-sm text-[var(--panel-text)]">{chunk.startPath || t.notSet}</span>
             </div>
             {!isDirectoryLike(chunk.startPath) && (
               <div className="flex items-baseline gap-2">
-                <span className="label-clay shrink-0 text-[#9f9b93]">{t.endLabel}</span>
-                <span className="truncate text-sm text-[#333333]">
-                  {chunk.endPath || <span className="text-[#9f9b93]">{t.wholeFolder}</span>}
+                <span className="label-clay shrink-0 text-[var(--warm-silver)]">{t.endLabel}</span>
+                <span className="truncate text-sm text-[var(--panel-text)]">
+                  {chunk.endPath || <span className="text-[var(--warm-silver)]">{t.wholeFolder}</span>}
                 </span>
               </div>
             )}
             {/* 画像枚数バッジ */}
             <div className="flex items-center gap-1.5 pt-0.5">
               {imageCount !== null ? (
-                <span className="inline-flex items-center rounded-full bg-[#84e7a5] px-2 py-0.5 text-[10px] font-semibold text-[#02492a]">
+                <span className="inline-flex items-center rounded-full bg-[#9fd8e8] px-2 py-0.5 text-[10px] font-semibold text-[#0f1d4a]">
                   {t.chunkImageCount(imageCount)}
                 </span>
               ) : countInvalid ? (
@@ -331,11 +302,13 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove, onSplit, onUndoSpl
                   NG
                 </span>
               ) : chunk.startPath ? (
-                <span className="text-[10px] text-[#dad4c8]">…</span>
+                <span className="text-[10px] text-[var(--oat-border)]">…</span>
               ) : null}
             </div>
           </div>
         )}
+          </div>
+        </div>
       </div>
 
       {contextMenu && (
@@ -389,25 +362,25 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove, onSplit, onUndoSpl
         onConfirm={() => onRemove(chunk.id)}
       />
 
-      {/* ── プレビューモーダル ── */}
-      {previewOpen && (
+      {/* ── プレビューモーダル（サイドバーの transform から逃がすため portal） ── */}
+      {previewOpen && typeof document !== "undefined" && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) setPreviewOpen(false); }}
         >
-          <div className="flex h-[85vh] w-[90vw] max-w-4xl flex-col rounded-2xl border border-[#dad4c8] bg-white shadow-[rgba(0,0,0,0.15)_0px_8px_32px] overflow-hidden">
+          <div className="flex h-[85vh] w-[90vw] max-w-4xl flex-col rounded-2xl border border-[var(--oat-border)] bg-[var(--panel-bg)] shadow-[rgba(0,0,0,0.15)_0px_8px_32px] overflow-hidden">
             {/* ヘッダー */}
-            <div className="flex shrink-0 items-center justify-between border-b border-[#dad4c8] bg-[#faf9f7] px-4 py-3">
+            <div className="flex shrink-0 items-center justify-between border-b border-[var(--oat-border)] bg-[var(--cream)] px-4 py-3">
               <div>
-                <p className="heading-clay text-base text-black">{t.previewChunk}</p>
+                <p className="heading-clay text-base text-[var(--panel-text)]">{t.previewChunk}</p>
                 {!previewLoading && previewPaths.length > 0 && (
-                  <p className="text-xs text-[#9f9b93]">{t.imagesCount(previewPaths.length)}</p>
+                  <p className="text-xs text-[var(--warm-silver)]">{t.imagesCount(previewPaths.length)}</p>
                 )}
               </div>
               <button
                 type="button"
                 onClick={() => setPreviewOpen(false)}
-                className="flex h-7 w-7 items-center justify-center rounded text-[#9f9b93] hover:bg-[#eee9df] hover:text-black transition-colors"
+                className="flex h-7 w-7 items-center justify-center rounded text-[var(--warm-silver)] hover:bg-[var(--oat-light)] hover:text-[var(--panel-text)] transition-colors"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -419,8 +392,8 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove, onSplit, onUndoSpl
             <div className="flex-1 overflow-y-auto p-4">
               {previewLoading && (
                 <div className="flex h-40 items-center justify-center gap-3">
-                  <div className="size-5 rounded-full border-2 border-[#dad4c8] border-t-[#078a52]" style={{ animation: "spin 0.8s linear infinite" }} />
-                  <p className="text-sm text-[#9f9b93]">{t.loading}</p>
+                  <div className="size-5 rounded-full border-2 border-[var(--oat-border)] border-t-[#2f8fd1]" style={{ animation: "spin 0.8s linear infinite" }} />
+                  <p className="text-sm text-[var(--warm-silver)]">{t.loading}</p>
                 </div>
               )}
               {!previewLoading && previewError && (
@@ -438,13 +411,14 @@ export function ChunkCard({ chunk, index, onUpdate, onRemove, onSplit, onUndoSpl
             </div>
 
             {/* フッター */}
-            <div className="flex shrink-0 justify-end border-t border-[#dad4c8] bg-[#faf9f7] px-4 py-2.5">
+            <div className="flex shrink-0 justify-end border-t border-[var(--oat-border)] bg-[var(--cream)] px-4 py-2.5">
               <Button variant="ghost" size="sm" onClick={() => setPreviewOpen(false)}>
                 {t.previewClose}
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
@@ -494,21 +468,87 @@ function ThumbItem({ path, index }: { path: string; index: number }) {
 
   return (
     <div ref={ref} className="flex flex-col gap-1">
-      <div className="aspect-[3/4] overflow-hidden rounded-lg border border-[#dad4c8] bg-[#faf9f7]">
+      <div className="aspect-[3/4] overflow-hidden rounded-lg border border-[var(--oat-border)] bg-[var(--cream)]">
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={url} alt={filename} className="h-full w-full object-contain" />
         ) : failed ? (
           <div className="flex h-full items-center justify-center text-xs text-[#fc7981]">!</div>
         ) : (
-          <div className="flex h-full items-center justify-center text-[10px] text-[#9f9b93]">
+          <div className="flex h-full items-center justify-center text-[10px] text-[var(--warm-silver)]">
             {index + 1}
           </div>
         )}
       </div>
-      <p className="truncate text-center text-[9px] text-[#9f9b93]" title={filename}>
+      <p className="truncate text-center text-[9px] text-[var(--warm-silver)]" title={filename}>
         {filename}
       </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ChunkThumbnail: チャンクカード左側に表示する先頭ページのサムネ
+// ---------------------------------------------------------------------------
+
+function ChunkThumbnail({ chunk }: { chunk: Chunk }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let cancelled = false;
+
+    const observer = new IntersectionObserver(
+      async (entries) => {
+        if (!entries[0].isIntersecting) return;
+        observer.disconnect();
+
+        try {
+          // 先頭ページのパスを決定
+          let firstPath: string;
+          if (isPdfFile(chunk.startPath)) {
+            firstPath = makePdfPagePath(chunk.startPath, 1);
+          } else if (isDirectoryLike(chunk.startPath)) {
+            const paths = await resolveChunkImages(chunk.startPath, chunk.endPath);
+            if (paths.length === 0) throw new Error("画像なし");
+            firstPath = paths[0];
+          } else {
+            firstPath = chunk.startPath;
+          }
+
+          if (isPdfPagePath(firstPath)) {
+            const parsed = parsePdfPagePath(firstPath);
+            if (!parsed) throw new Error("無効なPDFパス");
+            const u = await renderPdfThumbnail(parsed.pdfPath, parsed.pageNum, 120);
+            if (!cancelled) setUrl(u);
+          } else {
+            const u = await readImageThumbnail(firstPath, 120);
+            if (!cancelled) setUrl(u);
+          }
+        } catch {
+          if (!cancelled) setFailed(true);
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => { cancelled = true; observer.disconnect(); };
+  }, [chunk.startPath, chunk.endPath]);
+
+  return (
+    <div
+      ref={ref}
+      className="aspect-[3/4] w-14 shrink-0 overflow-hidden rounded-md border border-[var(--oat-border)] bg-[var(--cream)]"
+    >
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="" className="h-full w-full object-cover" draggable={false} />
+      ) : failed ? (
+        <div className="flex h-full items-center justify-center text-[10px] text-[#fc7981]">!</div>
+      ) : null}
     </div>
   );
 }

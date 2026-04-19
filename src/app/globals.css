@@ -1,14 +1,28 @@
 @import "tailwindcss";
 
-:root {
-  /* Clay デザインシステム */
-  --cream: #faf9f7;
-  --clay-black: #000000;
-  --oat-border: #dad4c8;
-  --oat-light: #eee9df;
-  --warm-silver: #9f9b93;
-  --warm-charcoal: #55534e;
-  --dark-charcoal: #333333;
+:root,
+:root[data-theme="light"] {
+  /* Linkori デザインシステム（ライト・アイコン基準のクールブルー） */
+  --cream: #f4f7fb;            /* キャンバス（メイン背景） */
+  --clay-black: #0a1628;       /* ネイビーインク（本文テキスト） */
+  --oat-border: #cfd9e4;       /* ミスト（境界線） */
+  --oat-light: #e6edf4;        /* フォグ（hover/淡い面） */
+  --warm-silver: #7e8a99;      /* クールスレート（ミュート） */
+  --warm-charcoal: #2a3440;    /* ネイビー墨（見出し） */
+  --dark-charcoal: #1a2432;
+
+  /* パネル（カード・ヘッダ等の明るい面） */
+  --panel-bg: #ffffff;
+  --panel-text: #0a1628;
+  --panel-muted: #7e8a99;
+  --noise-blend: multiply;
+  --noise-opacity: 0.035;
+
+  /* ブランドブルー（アイコンの3層） */
+  --link-cyan: #4dc8d9;        /* 上段ターコイズ */
+  --link-blue: #2f8fd1;        /* 中段ブルー（プライマリ） */
+  --link-deep: #1f35b8;        /* 下段ディープブルー */
+  --link-chain: #c8d0da;       /* 鎖のシルバー */
 
   /* スウォッチパレット */
   --matcha-300: #84e7a5;
@@ -25,7 +39,26 @@
   --blueberry-800: #01418d;
 
   /* Clay Shadow */
-  --shadow-clay: rgba(0,0,0,0.1) 0px 1px 1px, rgba(0,0,0,0.04) 0px -1px 1px inset, rgba(0,0,0,0.05) 0px -0.5px 1px;
+  --shadow-clay: rgba(10,22,40,0.12) 0px 1px 1px, rgba(10,22,40,0.04) 0px -1px 1px inset, rgba(10,22,40,0.05) 0px -0.5px 1px;
+}
+
+/* ダークモード（html[data-theme="dark"] で切替） */
+:root[data-theme="dark"] {
+  --cream: #0c1220;            /* キャンバス（深海紺） */
+  --clay-black: #e8eef7;       /* 本文テキスト（オフホワイト） */
+  --oat-border: #25324a;       /* 境界線（深ネイビーミスト） */
+  --oat-light: #1a2438;        /* hover/淡い面 */
+  --warm-silver: #9aa8bc;      /* ミュート（明るめスレート） */
+  --warm-charcoal: #dce4f0;    /* 見出し（ほぼ白） */
+  --dark-charcoal: #eff3fa;
+
+  --panel-bg: #141c2e;         /* カード面 */
+  --panel-text: #e8eef7;
+  --panel-muted: #9aa8bc;
+  --noise-blend: screen;
+  --noise-opacity: 0.05;
+
+  --shadow-clay: rgba(0,0,0,0.4) 0px 1px 1px, rgba(255,255,255,0.03) 0px -1px 1px inset, rgba(0,0,0,0.3) 0px -0.5px 1px;
 }
 
 @theme inline {
@@ -50,6 +83,52 @@ body {
   line-height: 1.1;
 }
 
+/* 和文明朝（Zen Old Mincho） — 作品名・チャンク名に使用 */
+.font-mincho {
+  font-family: var(--font-zen-mincho), "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* プレイリストカード：背表紙色オーバーレイ（idle はタグ色で全面塗り、hover/active で透明化） */
+.card-accent {
+  position: relative;
+}
+.card-accent::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-color: var(--accent-tint);
+  opacity: 1;
+  transition: opacity 0.15s ease;
+  z-index: 0;
+}
+.card-accent:hover::before,
+.card-accent[data-active="true"]::before {
+  opacity: 0;
+}
+.card-accent > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 紙の微ノイズ（feTurbulence） — 明るい面に重ねる */
+.paper-noise {
+  position: relative;
+}
+.paper-noise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--noise-opacity);
+  mix-blend-mode: var(--noise-blend);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.04  0 0 0 0 0.08  0 0 0 0 0.16  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+}
+
 /* アッパーケースラベル */
 .label-clay {
   font-size: 12px;
@@ -69,11 +148,18 @@ body {
 }
 .btn-clay:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: rgb(0,0,0) -3px 3px;
+  box-shadow: var(--clay-black) -3px 3px;
 }
 .btn-clay:active:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: rgb(0,0,0) -2px 2px;
+  box-shadow: var(--clay-black) -2px 2px;
+}
+/* ダークモードでは --clay-black が白系になるので、ハードシャドウも黒系に上書き */
+:root[data-theme="dark"] .btn-clay:hover:not(:disabled) {
+  box-shadow: rgba(0, 0, 0, 0.55) -3px 3px;
+}
+:root[data-theme="dark"] .btn-clay:active:not(:disabled) {
+  box-shadow: rgba(0, 0, 0, 0.55) -2px 2px;
 }
 
 /* スクロールバー */
@@ -102,6 +188,6 @@ input[type="range"]::-webkit-slider-thumb {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--matcha-600);
+  background: var(--link-blue);
   cursor: pointer;
 }

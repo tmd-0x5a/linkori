@@ -45,6 +45,8 @@ interface ViewerState {
 
   // --- アクション ---
   loadImagesForPlaylist: (playlistId: string) => Promise<void>;
+  /** チャンク変更後に画像リストを再構築（現在表示中のページパスを可能な限り維持） */
+  reloadChunksPreservingPosition: () => Promise<void>;
   goToPage: (index: number) => void;
   nextPage: () => void;
   prevPage: () => void;
@@ -187,6 +189,96 @@ export const useViewerStore = create<ViewerState>((set, get) => ({
         loadError: error instanceof Error ? error.message : t.viewerLoadFailed,
       });
     }
+  },
+
+  reloadChunksPreservingPosition: async () => {
+    const { activePlaylistId, flatImageList, currentPageIndex } = get();
+    if (!activePlaylistId) return;
+
+    const playlist = usePlaylistStore
+      .getState()
+      .playlists.find((pl) => pl.id === activePlaylistId);
+    if (!playlist) return;
+
+    const t = translations[useSettingsStore.getState().lang];
+
+    // 現在表示中のページパスを記憶（リロード後に同じパスを探してジャンプ）
+    const savedPath = flatImageList[currentPageIndex];
+
+    // チャンクを再解決（loadImagesForPlaylist と同じロジック、isLoading は触らない）
+    const allImagePaths: string[] = [];
+    const boundaries: ChunkBoundary[] = [];
+    const chunkErrors: string[] = [];
+    for (let ci = 0; ci < playlist.chunks.length; ci++) {
+      const chunk = playlist.chunks[ci];
+      try {
+        const isPdf = chunk.startPath.toLowerCase().endsWith(".pdf");
+        if (isPdf) {
+          const pageCount = await getPdfPageCount(chunk.startPath);
+          const pdfPaths = Array.from({ length: pageCount }, (_, i) =>
+            makePdfPagePath(chunk.startPath, i + 1)
+          );
+          boundaries.push({
+            chunkIndex: ci,
+            name: chunk.name?.trim() || undefined,
+            startPage: allImagePaths.length,
+          });
+          allImagePaths.push(...pdfPaths);
+        } else {
+          const paths = await resolveChunkImages(chunk.startPath, chunk.endPath);
+          boundaries.push({
+            chunkIndex: ci,
+            name: chunk.name?.trim() || undefined,
+            startPage: allImagePaths.length,
+          });
+          allImagePaths.push(...paths);
+        }
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        chunkErrors.push(`[${chunk.startPath}]: ${msg}`);
+      }
+    }
+
+    if (allImagePaths.length === 0) {
+      // 全チャンク無効化 → エラー表示に切替
+      set({
+        flatImageList: [],
+        totalPages: 0,
+        currentPageIndex: 0,
+        loadError: chunkErrors.length > 0
+          ? t.chunkLoadErrors(chunkErrors.join("\n"))
+          : t.noImagesInPlaylist,
+        chunkBoundaries: [],
+      });
+      return;
+    }
+
+    // 保存したパスを新リストで検索。見つからなければ旧インデックスをクランプ
+    let restoredIndex = savedPath ? allImagePaths.indexOf(savedPath) : -1;
+    if (restoredIndex === -1) {
+      restoredIndex = Math.min(currentPageIndex, allImagePaths.length - 1);
+      if (restoredIndex < 0) restoredIndex = 0;
+    }
+
+    const { settings, progressMap } = get();
+    set({
+      flatImageList: allImagePaths,
+      totalPages: allImagePaths.length,
+      currentPageIndex: restoredIndex,
+      loadError: null,
+      chunkWarning: chunkErrors.length > 0
+        ? t.chunkPartialErrors(chunkErrors.join("\n"))
+        : null,
+      chunkBoundaries: boundaries,
+      progressMap: {
+        ...progressMap,
+        [activePlaylistId]: {
+          pageIndex: restoredIndex,
+          totalPages: allImagePaths.length,
+          settings,
+        },
+      },
+    });
   },
 
   goToPage: (index: number) => {

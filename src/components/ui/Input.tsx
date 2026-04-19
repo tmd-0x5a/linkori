@@ -17,7 +17,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="label-clay text-[#55534e]"
+            className="label-clay text-[var(--warm-charcoal)]"
           >
             {label}
           </label>
@@ -26,8 +26,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            "w-full rounded-[4px] border bg-white px-3 py-2 text-sm text-black",
-            "placeholder:text-[#9f9b93]",
+            "w-full rounded-[4px] border bg-[var(--panel-bg)] px-3 py-2 text-sm text-[var(--panel-text)]",
+            "placeholder:text-[var(--warm-silver)]",
             "focus:outline-[rgb(20,110,245)_solid_2px] focus:outline-offset-0",
             error
               ? "border-[#fc7981]"

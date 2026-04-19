@@ -28,15 +28,11 @@ enum PathType {
 }
 
 fn classify_path(path: &str) -> PathType {
-    // バックスラッシュをフォワードスラッシュに正規化してから処理する。
-    // これにより "D:\manga\001.jpg" と "D:/manga/001.jpg" を同一視できる。
+    // バックスラッシュをフォワードスラッシュに正規化してから処理する
     let normalized = path.replace('\\', "/");
 
     // パストラバーサル対策: ".." セグメントを含むパスを拒否
-    // （ZIP内エントリパスを含むすべてのパスに適用）
     if normalized.split('/').any(|seg| seg == "..") {
-        // PathType に Error バリアントはないため File に空文字を返してエラーを伝播させる
-        // 呼び出し側で is_dir() / is_file() が false になり適切に処理される
         return PathType::File(String::new(), String::new());
     }
 
@@ -50,7 +46,6 @@ fn classify_path(path: &str) -> PathType {
         if p.is_dir() {
             PathType::Directory(normalized)
         } else {
-            // ファイルパスの場合、親ディレクトリとファイル名に分離
             let dir = p.parent()
                 .map(|d| d.to_string_lossy().replace('\\', "/"))
                 .unwrap_or_default();
@@ -63,270 +58,180 @@ fn classify_path(path: &str) -> PathType {
     }
 }
 
+// ---------------------------------------------------------------------------
+// ChunkValidationResult 構築ヘルパー
+// ---------------------------------------------------------------------------
+
+#[inline]
+fn ok_result(paths: Vec<String>) -> ChunkValidationResult {
+    ChunkValidationResult {
+        is_valid: true,
+        image_count: paths.len(),
+        error_message: None,
+        image_paths: paths,
+    }
+}
+
+#[inline]
+fn err_result(msg: impl Into<String>) -> ChunkValidationResult {
+    ChunkValidationResult {
+        is_valid: false,
+        image_count: 0,
+        error_message: Some(msg.into()),
+        image_paths: vec![],
+    }
+}
+
+/// Result<Vec<String>, String> を ChunkValidationResult にラップする
+#[inline]
+fn wrap_range_result(r: Result<Vec<String>, String>) -> ChunkValidationResult {
+    match r {
+        Ok(paths) => ok_result(paths),
+        Err(e) => err_result(e),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 種別ペアごとの検証関数
+// ---------------------------------------------------------------------------
+
+/// 両方がディレクトリのケース
+fn validate_dir_pair(dir1: &str, dir2: &str) -> ChunkValidationResult {
+    if dir1 != dir2 {
+        return err_result("開始パスと終了パスが異なるディレクトリを指しています");
+    }
+    match directory::list_images_recursively(Path::new(dir1)) {
+        Ok(images) => {
+            let paths = images.iter().map(|p| p.to_string_lossy().to_string()).collect();
+            ok_result(paths)
+        }
+        Err(e) => err_result(e),
+    }
+}
+
+/// 両方がファイル（同一ディレクトリ下）のケース
+fn validate_file_pair(dir1: &str, file1: &str, dir2: &str, file2: &str) -> ChunkValidationResult {
+    if dir1 != dir2 {
+        return err_result("開始ファイルと終了ファイルが異なるディレクトリにあります");
+    }
+    if !Path::new(dir1).is_dir() {
+        return err_result(format!("ディレクトリが存在しません: {}", dir1));
+    }
+    let r = directory::list_images_in_range(Path::new(dir1), Some(file1), Some(file2))
+        .map(|images| images.iter().map(|p| p.to_string_lossy().to_string()).collect());
+    wrap_range_result(r)
+}
+
+/// ZIP 内のエントリリストを zip:// URL 形式のパスに整形する
+#[inline]
+fn zip_entries_to_paths(zip_path: &str, entries: &[String]) -> Vec<String> {
+    entries.iter().map(|e| format!("zip://{}///{}", zip_path, e)).collect()
+}
+
+/// 両方が ZIP 全体のケース
+fn validate_zip_whole_pair(zip1: &str, zip2: &str) -> ChunkValidationResult {
+    if zip1 != zip2 {
+        return err_result("開始と終了が異なるZIPファイルを指しています");
+    }
+    if !Path::new(zip1).is_file() {
+        return err_result(format!("ZIPファイルが存在しません: {}", zip1));
+    }
+    match zip_reader::list_images_in_zip(Path::new(zip1)) {
+        Ok(images) => ok_result(zip_entries_to_paths(zip1, &images)),
+        Err(e) => err_result(e),
+    }
+}
+
+/// ZIP 内の範囲検証（ZipEntry×ZipEntry / ZipEntry×ZipWhole / ZipWhole×ZipEntry 共通化）
+fn validate_zip_range(
+    zip1: &str,
+    zip2: &str,
+    start_entry: Option<&str>,
+    end_entry: Option<&str>,
+) -> ChunkValidationResult {
+    if zip1 != zip2 {
+        return err_result("開始と終了が異なるZIPファイルを参照しています");
+    }
+    if !Path::new(zip1).is_file() {
+        return err_result(format!("ZIPファイルが存在しません: {}", zip1));
+    }
+    let r = zip_reader::list_images_in_zip_range(Path::new(zip1), start_entry, end_entry)
+        .map(|images| zip_entries_to_paths(zip1, &images));
+    wrap_range_result(r)
+}
+
+// ---------------------------------------------------------------------------
+// Tauri コマンド
+// ---------------------------------------------------------------------------
+
 /// チャンクのバリデーション
-/// start_path, end_pathが同じ階層/ZIPに存在し、順序が正しいか検証する
+/// start_path, end_path が同じ階層/ZIP に存在し、順序が正しいか検証する
 #[tauri::command]
 pub async fn validate_chunk(
     start_path: String,
     end_path: String,
 ) -> Result<ChunkValidationResult, String> {
-    // end_path が空 → resolve_from_start_only と同じ挙動（フォルダ/ZIP全体）
+    // end_path が空 → start_path 単体（フォルダ/ZIP全体）
     if end_path.trim().is_empty() {
         let paths = resolve_from_start_only(&start_path)?;
-        return Ok(ChunkValidationResult {
-            is_valid: true,
-            image_count: paths.len(),
-            error_message: None,
-            image_paths: paths,
-        });
+        return Ok(ok_result(paths));
     }
 
     let start_type = classify_path(&start_path);
     let end_type = classify_path(&end_path);
 
-    match (start_type, end_type) {
-        // 両方がディレクトリ → 同じディレクトリである必要がある
-        (PathType::Directory(dir1), PathType::Directory(dir2)) => {
-            if dir1 != dir2 {
-                return Ok(ChunkValidationResult {
-                    is_valid: false,
-                    image_count: 0,
-                    error_message: Some("開始パスと終了パスが異なるディレクトリを指しています".to_string()),
-                    image_paths: vec![],
-                });
-            }
-            // ディレクトリ全体（サブフォルダを再帰的に走査）
-            let images = directory::list_images_recursively(Path::new(&dir1))?;
-            let paths: Vec<String> = images.iter().map(|p| p.to_string_lossy().to_string()).collect();
-            Ok(ChunkValidationResult {
-                is_valid: true,
-                image_count: paths.len(),
-                error_message: None,
-                image_paths: paths,
-            })
-        }
+    let result = match (start_type, end_type) {
+        (PathType::Directory(dir1), PathType::Directory(dir2)) => validate_dir_pair(&dir1, &dir2),
 
-        // 両方がファイル → 同じディレクトリ内である必要がある
         (PathType::File(dir1, file1), PathType::File(dir2, file2)) => {
-            if dir1 != dir2 {
-                return Ok(ChunkValidationResult {
-                    is_valid: false,
-                    image_count: 0,
-                    error_message: Some("開始ファイルと終了ファイルが異なるディレクトリにあります".to_string()),
-                    image_paths: vec![],
-                });
-            }
-            if !Path::new(&dir1).is_dir() {
-                return Ok(ChunkValidationResult {
-                    is_valid: false,
-                    image_count: 0,
-                    error_message: Some(format!("ディレクトリが存在しません: {}", dir1)),
-                    image_paths: vec![],
-                });
-            }
-            match directory::list_images_in_range(Path::new(&dir1), Some(&file1), Some(&file2)) {
-                Ok(images) => {
-                    let paths: Vec<String> = images.iter().map(|p| p.to_string_lossy().to_string()).collect();
-                    Ok(ChunkValidationResult {
-                        is_valid: true,
-                        image_count: paths.len(),
-                        error_message: None,
-                        image_paths: paths,
-                    })
-                }
-                Err(e) => Ok(ChunkValidationResult {
-                    is_valid: false,
-                    image_count: 0,
-                    error_message: Some(e),
-                    image_paths: vec![],
-                }),
-            }
+            validate_file_pair(&dir1, &file1, &dir2, &file2)
         }
 
-        // 開始がディレクトリ、終了もディレクトリ（同じ） → ディレクトリ全体
-        // 開始がファイル、終了がディレクトリ → エラー（混在不可）
-        (PathType::Directory(_dir), PathType::File(_, _))
-        | (PathType::File(_, _), PathType::Directory(_dir)) => {
-            Ok(ChunkValidationResult {
-                is_valid: false,
-                image_count: 0,
-                error_message: Some("開始パスと終了パスの種類が異なります（ディレクトリとファイル）".to_string()),
-                image_paths: vec![],
-            })
+        (PathType::Directory(_), PathType::File(_, _))
+        | (PathType::File(_, _), PathType::Directory(_)) => {
+            err_result("開始パスと終了パスの種類が異なります（ディレクトリとファイル）")
         }
 
-        // 両方がZIP全体 → 同じZIPである必要がある
-        (PathType::ZipWhole(zip1), PathType::ZipWhole(zip2)) => {
-            if zip1 != zip2 {
-                return Ok(ChunkValidationResult {
-                    is_valid: false,
-                    image_count: 0,
-                    error_message: Some("開始と終了が異なるZIPファイルを指しています".to_string()),
-                    image_paths: vec![],
-                });
-            }
-            if !Path::new(&zip1).is_file() {
-                return Ok(ChunkValidationResult {
-                    is_valid: false,
-                    image_count: 0,
-                    error_message: Some(format!("ZIPファイルが存在しません: {}", zip1)),
-                    image_paths: vec![],
-                });
-            }
-            let images = zip_reader::list_images_in_zip(Path::new(&zip1))?;
-            let paths: Vec<String> = images
-                .iter()
-                .map(|entry| format!("zip://{}///{}", zip1, entry))
-                .collect();
-            Ok(ChunkValidationResult {
-                is_valid: true,
-                image_count: paths.len(),
-                error_message: None,
-                image_paths: paths,
-            })
-        }
+        (PathType::ZipWhole(zip1), PathType::ZipWhole(zip2)) => validate_zip_whole_pair(&zip1, &zip2),
 
-        // 両方がZIPエントリ → 同じZIP内である必要がある
         (PathType::ZipEntry(zip1, entry1), PathType::ZipEntry(zip2, entry2)) => {
-            if zip1 != zip2 {
-                return Ok(ChunkValidationResult {
-                    is_valid: false,
-                    image_count: 0,
-                    error_message: Some("開始と終了が異なるZIPファイルを参照しています".to_string()),
-                    image_paths: vec![],
-                });
-            }
-            if !Path::new(&zip1).is_file() {
-                return Ok(ChunkValidationResult {
-                    is_valid: false,
-                    image_count: 0,
-                    error_message: Some(format!("ZIPファイルが存在しません: {}", zip1)),
-                    image_paths: vec![],
-                });
-            }
-            match zip_reader::list_images_in_zip_range(Path::new(&zip1), Some(&entry1), Some(&entry2)) {
-                Ok(images) => {
-                    let paths: Vec<String> = images
-                        .iter()
-                        .map(|entry| format!("zip://{}///{}", zip1, entry))
-                        .collect();
-                    Ok(ChunkValidationResult {
-                        is_valid: true,
-                        image_count: paths.len(),
-                        error_message: None,
-                        image_paths: paths,
-                    })
-                }
-                Err(e) => Ok(ChunkValidationResult {
-                    is_valid: false,
-                    image_count: 0,
-                    error_message: Some(e),
-                    image_paths: vec![],
-                }),
-            }
+            validate_zip_range(&zip1, &zip2, Some(&entry1), Some(&entry2))
         }
 
-        // ZIP全体とZIPエントリ → 同じZIPならエントリ側を範囲とみなす
         (PathType::ZipWhole(zip1), PathType::ZipEntry(zip2, entry2)) => {
-            if zip1 != zip2 {
-                return Ok(ChunkValidationResult {
-                    is_valid: false,
-                    image_count: 0,
-                    error_message: Some("開始と終了が異なるZIPファイルを参照しています".to_string()),
-                    image_paths: vec![],
-                });
-            }
-            // ZIPの先頭からentry2まで
-            match zip_reader::list_images_in_zip_range(Path::new(&zip1), None, Some(&entry2)) {
-                Ok(images) => {
-                    let paths: Vec<String> = images
-                        .iter()
-                        .map(|entry| format!("zip://{}///{}", zip1, entry))
-                        .collect();
-                    Ok(ChunkValidationResult {
-                        is_valid: true,
-                        image_count: paths.len(),
-                        error_message: None,
-                        image_paths: paths,
-                    })
-                }
-                Err(e) => Ok(ChunkValidationResult {
-                    is_valid: false,
-                    image_count: 0,
-                    error_message: Some(e),
-                    image_paths: vec![],
-                }),
-            }
+            validate_zip_range(&zip1, &zip2, None, Some(&entry2))
         }
 
         (PathType::ZipEntry(zip1, entry1), PathType::ZipWhole(zip2)) => {
-            if zip1 != zip2 {
-                return Ok(ChunkValidationResult {
-                    is_valid: false,
-                    image_count: 0,
-                    error_message: Some("開始と終了が異なるZIPファイルを参照しています".to_string()),
-                    image_paths: vec![],
-                });
-            }
-            // entry1からZIPの末尾まで
-            match zip_reader::list_images_in_zip_range(Path::new(&zip1), Some(&entry1), None) {
-                Ok(images) => {
-                    let paths: Vec<String> = images
-                        .iter()
-                        .map(|entry| format!("zip://{}///{}", zip1, entry))
-                        .collect();
-                    Ok(ChunkValidationResult {
-                        is_valid: true,
-                        image_count: paths.len(),
-                        error_message: None,
-                        image_paths: paths,
-                    })
-                }
-                Err(e) => Ok(ChunkValidationResult {
-                    is_valid: false,
-                    image_count: 0,
-                    error_message: Some(e),
-                    image_paths: vec![],
-                }),
-            }
+            validate_zip_range(&zip1, &zip2, Some(&entry1), None)
         }
 
-        // その他の組み合わせ（ディレクトリ/ファイルとZIPの混在）
-        _ => {
-            Ok(ChunkValidationResult {
-                is_valid: false,
-                image_count: 0,
-                error_message: Some("開始パスと終了パスの種類が異なります（ディレクトリ/ファイルとZIPの混在は不可）".to_string()),
-                image_paths: vec![],
-            })
-        }
-    }
+        _ => err_result("開始パスと終了パスの種類が異なります（ディレクトリ/ファイルとZIPの混在は不可）"),
+    };
+
+    Ok(result)
 }
 
 /// end_path が空のとき、start_path の種別に応じてフォルダ全体を解決する
 fn resolve_from_start_only(start_path: &str) -> Result<Vec<String>, String> {
     match classify_path(start_path) {
         PathType::Directory(dir) => {
-            // サブフォルダを再帰的に走査
             let images = directory::list_images_recursively(Path::new(&dir))?;
             Ok(images.iter().map(|p| p.to_string_lossy().to_string()).collect())
         }
         PathType::ZipWhole(zip) => {
             let images = zip_reader::list_images_in_zip(Path::new(&zip))?;
-            Ok(images.iter().map(|e| format!("zip://{}///{}", zip, e)).collect())
+            Ok(zip_entries_to_paths(&zip, &images))
         }
         PathType::ZipEntry(zip, entry) => {
             if is_image_entry(&entry) {
-                // 単一画像エントリ
                 Ok(vec![format!("zip://{}///{}", zip, entry)])
             } else {
-                // サブディレクトリとして扱い、配下の全画像を返す
                 let images = zip_reader::list_images_in_zip_prefix(Path::new(&zip), &entry)?;
-                Ok(images.iter().map(|e| format!("zip://{}///{}", zip, e)).collect())
+                Ok(zip_entries_to_paths(&zip, &images))
             }
         }
         PathType::File(dir, file) => {
-            // 単一ファイル
             Ok(vec![format!("{}/{}", dir, file)])
         }
     }
@@ -339,7 +244,6 @@ pub async fn resolve_chunk_images(
     start_path: String,
     end_path: String,
 ) -> Result<Vec<String>, String> {
-    // end_path が空 → start_path をフォルダ全体として解決
     if end_path.trim().is_empty() {
         return resolve_from_start_only(&start_path);
     }

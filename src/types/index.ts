@@ -18,7 +18,42 @@ export interface Playlist {
   isFavorite?: boolean;
   /** カスタムタグ */
   tags?: string[];
+  /** 背表紙色（パレットキー）。ビューアーのアクセントに継承される */
+  accent?: AccentKey;
 }
+
+/** タグ色パレット（Clay 命名を流用） */
+export type AccentKey =
+  | "blueberry" | "ocean" | "slushie" | "sky" | "turquoise"
+  | "forest" | "matcha" | "mint"
+  | "lemon" | "apricot" | "coral" | "pomegranate" | "rose"
+  | "grape" | "ube" | "cocoa" | "charcoal";
+
+/** タグ色の表示用定義（HSL 順に並ぶと選びやすい） */
+export const ACCENT_PALETTE: Record<AccentKey, { label: string; hex: string; darkText: boolean }> = {
+  // 青系
+  blueberry:   { label: "ブルーベリー",   hex: "#01418d", darkText: false },
+  ocean:       { label: "オーシャン",     hex: "#2f8fd1", darkText: false },
+  slushie:     { label: "スラッシー",     hex: "#0089ad", darkText: false },
+  sky:         { label: "スカイ",         hex: "#9fd8e8", darkText: true  },
+  turquoise:   { label: "ターコイズ",     hex: "#4dc8d9", darkText: true  },
+  // 緑系
+  forest:      { label: "フォレスト",     hex: "#078a52", darkText: false },
+  matcha:      { label: "マッチャ",       hex: "#84e7a5", darkText: true  },
+  mint:        { label: "ミント",         hex: "#3bd3fd", darkText: true  },
+  // 黄・オレンジ・赤系
+  lemon:       { label: "レモン",         hex: "#fbbd41", darkText: true  },
+  apricot:     { label: "アプリコット",   hex: "#f8cc65", darkText: true  },
+  coral:       { label: "コーラル",       hex: "#f0673f", darkText: false },
+  pomegranate: { label: "ポメグラネート", hex: "#fc7981", darkText: true  },
+  rose:        { label: "ローズ",         hex: "#d94f7a", darkText: false },
+  // 紫系
+  grape:       { label: "グレープ",       hex: "#c1b0ff", darkText: true  },
+  ube:         { label: "ウベ",           hex: "#43089f", darkText: false },
+  // 無彩・中間
+  cocoa:       { label: "ココア",         hex: "#6b4c32", darkText: false },
+  charcoal:    { label: "チャコール",     hex: "#2a3440", darkText: false },
+};
 
 /** ビューア設定 */
 export interface ViewerSettings {

@@ -62,79 +62,6 @@ export async function readImageThumbnail(path: string, maxSize: number = 120): P
 }
 
 /**
- * 画像パスのリストを manga:// プロトコル URL に変換する（IPC版）。
- */
-export async function convertToMangaUrls(imagePaths: string[]): Promise<string[]> {
-  return invoke<string[]>("convert_to_manga_urls", { imagePaths });
-}
-
-/**
- * 画像パスのリストを縮小サムネイル用の manga:// URL に変換する（IPC版）。
- */
-export async function convertToMangaThumbUrls(imagePaths: string[], maxSize: number): Promise<string[]> {
-  return invoke<string[]>("convert_to_manga_thumb_urls", { imagePaths, maxSize });
-}
-
-// ---------------------------------------------------------------------------
-// 純粋 JS 版 manga URL 変換（IPC 不要、同期、即座に呼べる）
-// ---------------------------------------------------------------------------
-
-/** UTF-8 文字列を URL-safe Base64（パディングなし）にエンコード */
-function urlSafeBase64(str: string): string {
-  const bytes = new TextEncoder().encode(str);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-}
-
-/** パス内の .zip/.cbz 境界を検出 */
-function findZipBoundary(path: string): [string, string | null] | null {
-  const parts = path.split("/");
-  const zipParts: string[] = [];
-  for (let i = 0; i < parts.length; i++) {
-    zipParts.push(parts[i]);
-    const lower = parts[i].toLowerCase();
-    if (lower.endsWith(".zip") || lower.endsWith(".cbz")) {
-      const zipPath = zipParts.join("/");
-      const innerPath = i + 1 < parts.length ? parts.slice(i + 1).join("/") : null;
-      return [zipPath, innerPath];
-    }
-  }
-  return null;
-}
-
-/** 画像パスを manga プロトコル URL に同期変換（IPC 不要） */
-export function imagePathToMangaUrl(imagePath: string): string {
-  const normalized = imagePath.replace(/\\/g, "/");
-
-  if (normalized.startsWith("zip://")) {
-    const rest = normalized.slice(6);
-    const sep = rest.indexOf("///");
-    if (sep !== -1) {
-      const zipPath = rest.slice(0, sep);
-      const entry = rest.slice(sep + 3);
-      return `https://manga.localhost/zip/${urlSafeBase64(zipPath)}/${urlSafeBase64(entry)}`;
-    }
-    return "https://manga.localhost/error/invalid-zip-path";
-  }
-
-  const boundary = findZipBoundary(normalized);
-  if (boundary) {
-    const [zipPath, entryPath] = boundary;
-    if (entryPath) {
-      return `https://manga.localhost/zip/${urlSafeBase64(zipPath)}/${urlSafeBase64(entryPath)}`;
-    }
-  }
-
-  return `https://manga.localhost/dir/${urlSafeBase64(normalized)}`;
-}
-
-/**
  * ファイルを base64 文字列として読み込む（PDF など、フロントで処理するファイル用）
  */
 export async function readFileAsBase64(path: string): Promise<string> {
@@ -157,13 +84,12 @@ export async function listSplitCandidates(path: string): Promise<Array<{ name: s
   return invoke<Array<{ name: string; path: string }>>("list_split_candidates", { path });
 }
 
-/** 画像パスをサムネイル用 manga URL に同期変換（IPC 不要） */
-export function imagePathToMangaThumbUrl(imagePath: string, maxSize: number): string {
-  const fullUrl = imagePathToMangaUrl(imagePath);
-  const prefix = "https://manga.localhost/";
-  if (fullUrl.startsWith(prefix)) {
-    const rest = fullUrl.slice(prefix.length);
-    return `${prefix}thumb/${maxSize}/${rest}`;
-  }
-  return fullUrl;
-}
+// ---------------------------------------------------------------------------
+// 同期版 manga URL 変換の再エクスポート（呼び出し元が @/lib/tauri を期待する場合用）
+// 実装は @/lib/mangaUrl に一本化
+// ---------------------------------------------------------------------------
+export {
+  imagePathToMangaUrl,
+  imagePathsToMangaUrls,
+  imagePathToMangaThumbUrl,
+} from "./mangaUrl";

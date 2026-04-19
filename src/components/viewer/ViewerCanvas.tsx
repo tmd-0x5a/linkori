@@ -3,11 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useViewerStore } from "@/stores/viewerStore";
+import { usePlaylistStore } from "@/stores/playlistStore";
+import { ACCENT_PALETTE } from "@/types";
 import { readImageAsDataUrl, readImageThumbnail } from "@/lib/tauri";
 import { isPdfPagePath, parsePdfPagePath, renderPdfPage, renderPdfThumbnail, clearPdfCache } from "@/lib/pdf";
 import { cn } from "@/lib/cn";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useT } from "@/hooks/useT";
+import { HomeIcon, FullscreenIcon, ExitFullscreenIcon } from "./ViewerIcons";
+import { ChunkSidebar } from "./ChunkSidebar";
 
 interface ViewerCanvasProps {
   onBack: () => void;
@@ -40,8 +44,21 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
     (b) => b.startPage <= currentPageIndex
   ) ?? chunkBoundaries[0];
 
+  // アクティブプレイリストの背表紙色（ビューアーアクセントに継承）
+  const viewerAccentHex = usePlaylistStore((s) => {
+    const id = useViewerStore.getState().activePlaylistId;
+    const pl = s.playlists.find((p) => p.id === id);
+    return pl?.accent ? ACCENT_PALETTE[pl.accent].hex : null;
+  });
+
   // フルスクリーン状態
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // チャンク編集サイドバーの開閉
+  const [chunkSidebarOpen, setChunkSidebarOpen] = useState(false);
+  // ページ番号ジャンプ入力
+  const [jumpOpen, setJumpOpen] = useState(false);
+  const [jumpValue, setJumpValue] = useState("");
+  const jumpInputRef = useRef<HTMLInputElement>(null);
   const isFullscreenRef = useRef(false);
 
   const toggleFullscreen = useCallback(async () => {
@@ -64,6 +81,32 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
       // キャッシュのクリアは handleBack() で行う。
     };
   }, []);
+
+  // ジャンプ入力が開いたらフォーカス
+  useEffect(() => {
+    if (jumpOpen) {
+      setJumpValue("");
+      // 次フレームで focus（入力要素がマウントされるのを待つ）
+      queueMicrotask(() => jumpInputRef.current?.focus());
+    }
+  }, [jumpOpen]);
+
+  function openJump() {
+    setJumpOpen(true);
+  }
+
+  function closeJump() {
+    setJumpOpen(false);
+    setJumpValue("");
+  }
+
+  function submitJump() {
+    const n = parseInt(jumpValue, 10);
+    if (!isNaN(n) && n >= 1 && n <= totalPages) {
+      goToPage(n - 1);
+    }
+    closeJump();
+  }
 
   // ホームへ戻る（PDF キャッシュをここでクリアする）
   const handleBack = useCallback(() => {
@@ -97,6 +140,8 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
   const CACHE_AHEAD = 10;
 
   // flatImageList が変わったらキャッシュクリア
+  // path → index の逆引きマップ（キャッシュウィンドウ外削除を O(1) 化）
+  const pathIndexMapRef = useRef<Map<string, number>>(new Map());
   const prevListIdRef = useRef("");
   const listId = flatImageList.length > 0 ? `${flatImageList.length}:${flatImageList[0]}` : "";
   if (listId !== prevListIdRef.current) {
@@ -108,6 +153,10 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
       thumbCacheRef.current.clear();
       thumbLoadingRef.current.clear();
     }
+    // 新しい flatImageList に合わせて path → index マップを再構築
+    const map = new Map<string, number>();
+    for (let i = 0; i < flatImageList.length; i++) map.set(flatImageList[i], i);
+    pathIndexMapRef.current = map;
     prevListIdRef.current = listId;
   }
 
@@ -115,7 +164,8 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
   // loadingPathsRef で重複リクエスト防止
   if (flatImageList.length > 0) {
     const step = settings.spreadMode ? 2 : 1;
-    for (let i = currentPageIndex; i < Math.min(currentPageIndex + step * 3, flatImageList.length); i++) {
+    // プリフェッチ範囲を step*4 まで広げて体感速度を改善
+    for (let i = currentPageIndex; i < Math.min(currentPageIndex + step * 4, flatImageList.length); i++) {
       const path = flatImageList[i];
       if (!path || imageCacheRef.current.has(path) || failedPathsRef.current.has(path) || loadingPathsRef.current.has(path)) continue;
       loadingPathsRef.current.add(path);
@@ -134,11 +184,12 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
           imageCacheRef.current.set(path, url);
           loadingPathsRef.current.delete(path);
           pdfRetryCountRef.current.delete(path);
-          // キャッシュウィンドウ外を削除
+          // キャッシュウィンドウ外を削除（pathIndexMap で O(1) lookup）
           const ci = useViewerStore.getState().currentPageIndex;
+          const idxMap = pathIndexMapRef.current;
           for (const [p] of imageCacheRef.current) {
-            const pIdx = flatImageList.indexOf(p);
-            if (pIdx !== -1 && (pIdx < ci - CACHE_BEHIND || pIdx > ci + CACHE_AHEAD)) {
+            const pIdx = idxMap.get(p);
+            if (pIdx !== undefined && (pIdx < ci - CACHE_BEHIND || pIdx > ci + CACHE_AHEAD)) {
               imageCacheRef.current.delete(p);
             }
           }
@@ -197,14 +248,19 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
 
     let stopped = false;
     const THUMB_SIZE = 80;
+    // BATCH=4: サムネ生成は CPU バウンド（image::load_from_memory が主コスト）。
+    // 並列度を絞るとスループットが直線的に落ちるため 4 を維持。
     const BATCH = 4;
+    // center±100 のみプリフェッチ。シークバーで遠くへ跳んだ場合は
+    // onMouseMove 側の pending フォールバックで遅延生成する。
+    const PREFETCH_RANGE = 100;
 
-    // 現在ページから外側に広がるインデックス順を生成
+    // 現在ページから外側に広がるインデックス順を生成（±PREFETCH_RANGE に制限）
     function buildOrder(center: number, total: number): number[] {
       const order: number[] = [];
       const seen = new Set<number>();
-      // まず中心付近を優先
-      for (let d = 0; d < total; d++) {
+      const maxD = Math.min(total, PREFETCH_RANGE + 1);
+      for (let d = 0; d < maxD; d++) {
         for (const idx of [center + d, center - d]) {
           if (idx >= 0 && idx < total && !seen.has(idx)) {
             seen.add(idx);
@@ -288,6 +344,15 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return;
+      if (e.target instanceof HTMLTextAreaElement) return;
+      // サイドバーが開いているときはビューアーのキーバインドを停止（Escape でクローズのみ許可）
+      if (chunkSidebarOpen) {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setChunkSidebarOpen(false);
+        }
+        return;
+      }
       switch (e.key) {
         case "ArrowLeft":
         case "ArrowUp":
@@ -338,6 +403,12 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
           e.preventDefault();
           toggleFullscreen();
           break;
+        case "g":
+        case "G":
+        case "/":
+          e.preventDefault();
+          openJump();
+          break;
         case "Escape":
           e.preventDefault();
           if (isFullscreenRef.current) {
@@ -348,12 +419,15 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
           break;
       }
     },
-    [settings, nextSpread, prevSpread, goToFirst, goToLast, handleBack, updateSettings, prevChunk, nextChunk, toggleFullscreen]
+    [settings, nextSpread, prevSpread, goToFirst, goToLast, handleBack, updateSettings, prevChunk, nextChunk, toggleFullscreen, chunkSidebarOpen]
   );
 
   const lastWheelTime = useRef(0);
   const handleWheel = useCallback(
     (e: WheelEvent) => {
+      // サイドバーなどの内部スクロール領域ではビューアーが吸わない
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("[data-viewer-allow-scroll]")) return;
       e.preventDefault();
       const now = Date.now();
       if (now - lastWheelTime.current < 300) return;
@@ -445,9 +519,13 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
     );
   }
 
+  // 通し番号は桁を揃えたゼロパディング（total の桁数に合わせる）
+  const pageDigits = Math.max(3, String(totalPages).length);
+  const pad = (n: number) => String(n).padStart(pageDigits, "0");
   const displayPageNum = settings.spreadMode
-    ? `${currentPageIndex + 1}–${Math.min(currentPageIndex + 2, totalPages)}`
-    : `${currentPageIndex + 1}`;
+    ? `${pad(currentPageIndex + 1)}–${pad(Math.min(currentPageIndex + 2, totalPages))}`
+    : pad(currentPageIndex + 1);
+  const displayTotal = pad(totalPages);
 
   const remaining = settings.spreadMode
     ? Math.max(0, Math.ceil((totalPages - currentPageIndex - 2) / 2))
@@ -513,10 +591,10 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
                     src={slot.url}
                     alt={`Page ${currentPageIndex + i + 1}`}
                     className={cn(
-                      "object-contain",
+                      "object-contain h-full w-auto",
                       settings.spreadMode
                         ? "max-h-dvh max-w-[50%]"
-                        : "max-h-dvh max-w-full w-auto h-full"
+                        : "max-h-dvh max-w-full"
                     )}
                     draggable={false}
                   />
@@ -550,6 +628,20 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
           className="flex items-center gap-1.5 rounded-lg bg-black/40 px-2.5 py-1.5 text-xs text-zinc-400 opacity-0 backdrop-blur-sm transition-all duration-200 group-hover/top:opacity-100 hover:bg-black/70 hover:text-zinc-100"
         >
           {isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setChunkSidebarOpen(true);
+          }}
+          title={t.editChunksInViewer}
+          className="flex items-center gap-1.5 rounded-lg bg-black/40 px-2.5 py-1.5 text-xs text-zinc-400 opacity-0 backdrop-blur-sm transition-all duration-200 group-hover/top:opacity-100 hover:bg-black/70 hover:text-zinc-100"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+            <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+          </svg>
         </button>
 
         <div className="flex overflow-hidden rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm opacity-0 group-hover/top:opacity-100 transition-opacity duration-200">
@@ -625,10 +717,38 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
                 </span>
               )}
 
-              <span className="tabular-nums font-medium text-zinc-200">
-                {displayPageNum}
-                <span className="ml-1 font-normal text-zinc-500">/ {totalPages}</span>
-              </span>
+              {jumpOpen ? (
+                <form
+                  onSubmit={(e) => { e.preventDefault(); submitJump(); }}
+                  className="flex items-center gap-1"
+                >
+                  <input
+                    ref={jumpInputRef}
+                    type="number"
+                    min={1}
+                    max={totalPages}
+                    value={jumpValue}
+                    onChange={(e) => setJumpValue(e.target.value)}
+                    onBlur={closeJump}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") { e.preventDefault(); closeJump(); }
+                    }}
+                    placeholder={String(currentPageIndex + 1)}
+                    className="w-16 rounded-md border border-white/20 bg-black/60 px-2 py-0.5 text-right font-mono tabular-nums text-zinc-100 outline-none focus:border-[var(--spine,rgb(96_165_250))] [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
+                  />
+                  <span className="font-mono tabular-nums text-zinc-500">/ {displayTotal}</span>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={openJump}
+                  title={t.jumpToPage}
+                  className="group/jump flex items-center gap-1 font-mono tabular-nums rounded px-1 transition-colors hover:bg-[var(--panel-bg)]/10"
+                >
+                  <span className="font-medium text-zinc-200">{displayPageNum}</span>
+                  <span className="font-normal text-zinc-500">/ {displayTotal}</span>
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -648,8 +768,14 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
               <div className="relative flex flex-1 items-center" onMouseLeave={() => setHoverInfo(null)}>
                 <div className="absolute inset-0 rounded-full bg-zinc-700/60" />
                 <div
-                  className="absolute right-0 top-0 h-full rounded-full bg-blue-500/70 transition-all duration-100"
-                  style={{ width: `${progressPct}%` }}
+                  className={cn(
+                    "absolute right-0 top-0 h-full rounded-full transition-all duration-100",
+                    viewerAccentHex ? "" : "bg-blue-500/70"
+                  )}
+                  style={{
+                    width: `${progressPct}%`,
+                    ...(viewerAccentHex ? { backgroundColor: viewerAccentHex, opacity: 0.82 } : {}),
+                  }}
                 />
                 {totalPages > 1 && chunkBoundaries.slice(1).map((b) => {
                   const pct = (b.startPage / (totalPages - 1)) * 100;
@@ -663,7 +789,9 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
                       className="absolute z-20 h-3 w-0.5 -translate-x-1/2 cursor-pointer rounded-full transition-colors"
                       style={{
                         right: `${pct}%`,
-                        backgroundColor: isCurrentChunk ? "rgb(96 165 250)" : "rgba(255,255,255,0.4)",
+                        backgroundColor: isCurrentChunk
+                          ? (viewerAccentHex ?? "rgb(96 165 250)")
+                          : "rgba(255,255,255,0.4)",
                       }}
                     />
                   );
@@ -750,33 +878,13 @@ export function ViewerCanvas({ onBack }: ViewerCanvasProps) {
           </div>
         </div>
       </div>
+
+      {/* チャンク編集サイドバー */}
+      <ChunkSidebar
+        open={chunkSidebarOpen}
+        onClose={() => setChunkSidebarOpen(false)}
+      />
     </div>
   );
 }
 
-function HomeIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
-    </svg>
-  );
-}
-
-function FullscreenIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" />
-      <line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" />
-    </svg>
-  );
-}
-
-function ExitFullscreenIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" />
-      <line x1="10" y1="14" x2="3" y2="21" /><line x1="21" y1="3" x2="14" y2="10" />
-    </svg>
-  );
-}

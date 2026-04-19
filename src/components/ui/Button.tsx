@@ -11,16 +11,18 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize;
 }
 
-/* Clay デザインシステム: ホバー時に回転 + ハードシャドウ */
+/* Clay デザインシステム: ホバー時に回転 + ハードシャドウ
+   hover の明色背景では text-[var(--panel-text)] がダーク時に白になり潰れるので、
+   明色背景の上で使う色は固定の暗色 #0a1628 を指定する。 */
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-[#078a52] text-white hover:bg-[#02492a] hover:text-[#84e7a5]",
+    "bg-[#2f8fd1] text-white hover:bg-[#0f1d4a] hover:text-[#9fd8e8]",
   secondary:
-    "bg-white text-black border border-[#dad4c8] hover:bg-[#fbbd41] hover:border-[#fbbd41] hover:text-black",
+    "bg-[var(--panel-bg)] text-[var(--panel-text)] border border-[var(--oat-border)] hover:bg-[#fbbd41] hover:border-[#fbbd41] hover:text-[#0a1628]",
   danger:
-    "bg-[#fc7981] text-black hover:bg-[#e05560] hover:text-white",
+    "bg-[#fc7981] text-[#0a1628] hover:bg-[#e05560] hover:text-white",
   ghost:
-    "bg-transparent text-black border border-[#dad4c8] hover:bg-[#3bd3fd] hover:border-[#3bd3fd] hover:text-black",
+    "bg-transparent text-[var(--panel-text)] border border-[var(--oat-border)] hover:bg-[#3bd3fd] hover:border-[#3bd3fd] hover:text-[#0a1628]",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {

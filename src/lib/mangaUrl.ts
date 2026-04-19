@@ -74,3 +74,16 @@ export function imagePathToMangaUrl(imagePath: string): string {
 export function imagePathsToMangaUrls(imagePaths: string[]): string[] {
   return imagePaths.map(imagePathToMangaUrl);
 }
+
+/**
+ * 画像パスをサムネイル用 manga URL に同期変換（IPC 不要）
+ * `/thumb/{maxSize}/` を dir / zip セグメントの前に挿入する。
+ */
+export function imagePathToMangaThumbUrl(imagePath: string, maxSize: number): string {
+  const fullUrl = imagePathToMangaUrl(imagePath);
+  const prefix = "https://manga.localhost/";
+  if (fullUrl.startsWith(prefix)) {
+    return `${prefix}thumb/${maxSize}/${fullUrl.slice(prefix.length)}`;
+  }
+  return fullUrl;
+}

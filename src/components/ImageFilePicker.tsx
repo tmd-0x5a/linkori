@@ -5,8 +5,7 @@ import { readImageAsDataUrl } from "@/lib/tauri";
 import { FileBrowserDialog } from "@/components/playlist/FileBrowserDialog";
 import { useT } from "@/hooks/useT";
 import { initDragDropListener, registerDropZone, unregisterDropZone } from "@/lib/dragDrop";
-
-const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "tif"];
+import { IMAGE_EXTENSIONS } from "@/lib/constants";
 
 const FORMAT_LABEL: Record<string, string> = {
   jpg: "JPEG", jpeg: "JPEG", png: "PNG", gif: "GIF",
@@ -22,7 +21,7 @@ function getFilename(path: string): string {
 }
 
 function isImage(path: string): boolean {
-  return IMAGE_EXTENSIONS.includes(getExt(path));
+  return (IMAGE_EXTENSIONS as readonly string[]).includes(getExt(path));
 }
 
 export interface ImageFilePickerProps {
@@ -83,21 +82,21 @@ export function ImageFilePicker({ label, value, onChange, placeholder, disabled,
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="label-clay text-[#55534e]">{label}</label>
+      <label className="label-clay text-[var(--warm-charcoal)]">{label}</label>
 
       {/* ドロップゾーン全体 */}
       <div
         ref={containerRef}
         className={`relative flex gap-2 rounded-lg transition-all duration-150 ${
           isDragOver
-            ? "outline outline-2 outline-[#078a52] bg-[#e8fdf2] shadow-[0_0_0_4px_rgba(7,138,82,0.15)]"
+            ? "outline outline-2 outline-[#2f8fd1] bg-[#e6f4fd] shadow-[0_0_0_4px_rgba(47,143,209,0.18)]"
             : ""
         }`}
       >
         {/* ドラッグオーバー時のオーバーレイ */}
         {isDragOver && (
           <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg">
-            <span className="rounded-full bg-[#078a52] px-3 py-1 text-xs font-semibold text-white shadow-md">
+            <span className="rounded-full bg-[#2f8fd1] px-3 py-1 text-xs font-semibold text-white shadow-md">
               {t.dropHere}
             </span>
           </div>
@@ -105,7 +104,7 @@ export function ImageFilePicker({ label, value, onChange, placeholder, disabled,
 
         {/* サムネイル */}
         {thumbnailUrl && !disabled && !isDragOver && (
-          <div className="shrink-0 h-9 w-9 overflow-hidden rounded-lg border border-[#dad4c8] bg-[#faf9f7]">
+          <div className="shrink-0 h-9 w-9 overflow-hidden rounded-lg border border-[var(--oat-border)] bg-[var(--cream)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={thumbnailUrl} alt={filename ?? ""} className="h-full w-full object-contain" />
           </div>
@@ -119,10 +118,10 @@ export function ImageFilePicker({ label, value, onChange, placeholder, disabled,
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
-            className="h-9 w-full rounded-[4px] border border-[#717989] bg-white px-3 text-sm text-black placeholder:text-[#9f9b93] focus:outline-[rgb(20,110,245)_solid_2px] transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-9 w-full rounded-[4px] border border-[#717989] bg-[var(--panel-bg)] px-3 text-sm text-[var(--panel-text)] placeholder:text-[var(--warm-silver)] focus:outline-[rgb(20,110,245)_solid_2px] transition-colors disabled:cursor-not-allowed disabled:opacity-40"
           />
           {hasValue && formatLabel && !disabled && (
-            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-[#84e7a5] px-1.5 py-0.5 text-[9.6px] font-semibold uppercase tracking-wide text-[#02492a]">
+            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-[#9fd8e8] px-1.5 py-0.5 text-[9.6px] font-semibold uppercase tracking-wide text-[#0f1d4a]">
               {formatLabel}
             </span>
           )}
@@ -134,7 +133,7 @@ export function ImageFilePicker({ label, value, onChange, placeholder, disabled,
           onClick={() => setBrowserOpen(true)}
           disabled={disabled}
           title={t.browseTitle}
-          className="btn-clay flex shrink-0 items-center justify-center h-9 w-9 rounded-lg border border-[#dad4c8] bg-white text-[#9f9b93] hover:border-[#078a52] hover:bg-[#84e7a5] hover:text-[#02492a] disabled:cursor-not-allowed disabled:opacity-40"
+          className="btn-clay flex shrink-0 items-center justify-center h-9 w-9 rounded-lg border border-[var(--oat-border)] bg-[var(--panel-bg)] text-[var(--warm-silver)] hover:border-[#2f8fd1] hover:bg-[#9fd8e8] hover:text-[#0f1d4a] disabled:cursor-not-allowed disabled:opacity-40"
         >
           <BrowseIcon />
         </button>
@@ -142,7 +141,7 @@ export function ImageFilePicker({ label, value, onChange, placeholder, disabled,
 
       {/* ファイル名補助表示 */}
       {hasValue && !disabled && filename && filename !== value && (
-        <p className="truncate text-[11px] text-[#9f9b93]" title={value}>
+        <p className="truncate text-[11px] text-[var(--warm-silver)]" title={value}>
           {filename}
         </p>
       )}

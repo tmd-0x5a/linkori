@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Chunk, Playlist } from "@/types";
+import type { AccentKey, Chunk, Playlist } from "@/types";
 
 function generateId(): string {
   return crypto.randomUUID();
@@ -9,6 +9,8 @@ interface PlaylistState {
   // --- データ ---
   playlists: Playlist[];
   activePlaylistId: string | null;
+  /** タグ → 背表紙色のマッピング（プレイリスト横断） */
+  tagColors: Record<string, AccentKey>;
   /** ディスクからのロード完了フラグ（HMR でストアがリセットされると false に戻る） */
   _hydrated: boolean;
 
@@ -46,9 +48,14 @@ interface PlaylistState {
   // --- お気に入り / タグ ---
   toggleFavorite: (id: string) => void;
   setTags: (id: string, tags: string[]) => void;
+  /** 背表紙色を設定（undefined でデフォルトに戻す） */
+  setAccent: (id: string, accent: AccentKey | undefined) => void;
+  /** タグに色を割り当てる。null でクリア */
+  setTagColor: (tag: string, color: AccentKey | null) => void;
 
   // --- 永続化 ---
   hydrate: (playlists: Playlist[]) => void;
+  hydrateTagColors: (tagColors: Record<string, AccentKey>) => void;
   markHydrated: () => void;
 }
 
@@ -73,6 +80,7 @@ function updatePlaylistChunks(
 export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   playlists: [],
   activePlaylistId: null,
+  tagColors: {},
   _hydrated: false,
 
   activePlaylist: () => {
@@ -223,8 +231,28 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     }));
   },
 
+  setAccent: (id: string, accent: AccentKey | undefined) => {
+    set((state) => ({
+      playlists: state.playlists.map((pl) =>
+        pl.id === id ? { ...pl, accent, updatedAt: Date.now() } : pl
+      ),
+    }));
+  },
+
+  setTagColor: (tag: string, color: AccentKey | null) => {
+    set((state) => {
+      const next = { ...state.tagColors };
+      if (color === null) delete next[tag]; else next[tag] = color;
+      return { tagColors: next };
+    });
+  },
+
   hydrate: (playlists: Playlist[]) => {
     set({ playlists, _hydrated: true });
+  },
+
+  hydrateTagColors: (tagColors: Record<string, AccentKey>) => {
+    set({ tagColors });
   },
 
   markHydrated: () => {
