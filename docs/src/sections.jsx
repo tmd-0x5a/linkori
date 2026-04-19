@@ -658,40 +658,82 @@ function BrowserMock(){
   );
 }
 
-// チャンク複数選択モック（v0.4 group-drag 機能のプレビュー）
+// チャンク複数選択モック（プレイリストの逆レイアウト: メイン左・サイドバー右）
 function ChunkSelectMock(){
-  const rows = [
-    {n:'序章 — 旅立ち',   mt:'JPG · 42枚',    cnt:'42'},
-    {n:'第一巻 — 出会い', mt:'Folder · 86枚', cnt:'86', sel:true},
-    {n:'第二巻 — 修練',   mt:'ZIP · 120枚',   cnt:'120', sel:true},
-    {n:'第三巻 — 決戦',   mt:'PDF · 64枚',    cnt:'64', sel:true},
-    {n:'外伝 — 追憶',     mt:'Folder · 28枚', cnt:'28'},
+  const chunks = [
+    {n:'序章 — 旅立ち',     start:'D:/manga/vol_01/001.jpg', end:'042.jpg', cnt:42},
+    {n:'第一巻 — 出会い',   start:'D:/manga/vol_01_raw',     end:'',        cnt:86,  sel:true},
+    {n:'第二巻 — 修練',     start:'D:/manga/vol_02.zip',     end:'',        cnt:120, sel:true},
+    {n:'第三巻 — 決戦',     start:'D:/manga/vol_03.pdf',     end:'',        cnt:64,  sel:true},
+    {n:'外伝 — 追憶',       start:'D:/manga/bonus',          end:'',        cnt:28},
   ];
   return (
-    <div className="mock-chunksel">
-      <div className="cs-head">
-        <span className="ti">VAGABOND</span>
-        <span className="mt">5 CHUNKS</span>
-      </div>
-      {rows.map((r,i)=>(
-        <div key={i} className={'cs-row '+(r.sel?'selected':'')}>
-          <div className="ssgrip"><i/><i/><i/><i/><i/><i/></div>
-          <div>
-            <div className="nm">{r.n}</div>
-            <div className="mt">{r.mt}</div>
+    <div className="mock">
+      <WinChrome title="Linkori"/>
+      <div className="mock-plist flip">
+        {/* メイン（左）: チャンク画面に焦点 */}
+        <div className="main">
+          <div className="head">
+            <div>
+              <div className="title">VAGABOND</div>
+              <div className="meta">
+                <span className="tagpill" style={{background:TAG_COLORS.ocean.hex, color:TAG_COLORS.ocean.fg}}>seinen</span>
+                <span className="tagpill" style={{background:TAG_COLORS.coral.hex, color:TAG_COLORS.coral.fg}}>action</span>
+                <span className="metatxt">5 chunks · 340p · 72%</span>
+              </div>
+            </div>
+            <div className="actions">
+              <span className="iconbtn"><Ico name="bars" size={12}/></span>
+              <span className="cta"><Ico name="plus" size={12}/>Read</span>
+            </div>
           </div>
-          <span className="ssbadge">{r.cnt}</span>
+          <div className="chunks">
+            {chunks.map((ch,i)=>(
+              <div key={i} className={'chunk '+(ch.sel?'selected':'')}>
+                <div className="grip"><i/><i/><i/><i/><i/><i/></div>
+                <div className="body">
+                  <div className="name">{ch.n}</div>
+                  <div className="pathline">
+                    <span className="lbl">START:</span>
+                    <span className="pth">{ch.start}</span>
+                  </div>
+                  {ch.end && (
+                    <div className="pathline">
+                      <span className="lbl">END:</span>
+                      <span className="pth">{ch.end}</span>
+                    </div>
+                  )}
+                  <span className="count-badge">{ch.cnt}枚</span>
+                </div>
+                <span className="eyebtn"><Ico name="eye" size={12}/></span>
+              </div>
+            ))}
+          </div>
+          {/* グループドラッグオーバーレイ（積み重ねカード） */}
+          <div className="drag-stack">
+            <div className="card"/>
+            <div className="card"/>
+            <div className="card">
+              <div className="nm">第一巻 — 出会い</div>
+              <div className="mt">Folder · 86枚</div>
+            </div>
+          </div>
         </div>
-      ))}
-      {/* ドラッグオーバーレイ（選択カード積み重ね + カウントバッジ） */}
-      <div className="cs-overlay">
-        <div className="card"/>
-        <div className="card"/>
-        <div className="card">
-          <div className="nm">第一巻 — 出会い</div>
-          <div className="mt">Folder · 86枚</div>
+        {/* サイドバー（右・mirror） */}
+        <div className="side">
+          <div className="brand-row">
+            <span className="brand">Linkori</span>
+            <span className="spacer"/>
+            <span className="icobtn">JA</span>
+            <span className="icobtn"><Ico name="plus" size={11}/></span>
+          </div>
+          <div className="list">
+            <PListRow name="VAGABOND"  star status="read" progress={72} active/>
+            <PListRow name="BERSERK"        status="unread" progress={34}  tagColor="coral"/>
+            <PListRow name="AKIRA"     star status="read"   progress={100} tagColor="lemon"/>
+            <PListRow name="HUNTER x"       status="unread" progress={12}  tagColor="forest"/>
+          </div>
         </div>
-        <span className="cs-count">3</span>
       </div>
     </div>
   );
@@ -702,9 +744,7 @@ function ViewerShowcaseMock(){
   return (
     <div className="mock-viewer-full">
       <WinChrome title="Linkori — Viewer"/>
-      <div style={{flex:1, minHeight:0, overflow:'hidden'}}>
-        <ViewerMock showSidebar={true}/>
-      </div>
+      <ViewerMock showSidebar={true}/>
     </div>
   );
 }
