@@ -2995,4 +2995,32 @@ kbd.mouse {
     width: 100%; /* ボタンを全幅に */
     justify-content: center;
   }
+
+  /* ======= プレビュー・モックアップの画面はみ出し（横揺れ）防止 ======= */
+
+  /* 1. GridやFlexの親要素が中身(540px)に引っ張られて広がるのを強制ストップ */
+  .ss,
+  .ss .cell,
+  .feature-row,
+  .feature-row > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* 2. フレーム幅を画面幅(100%)に固定し、はみ出た分だけをスクロール枠に閉じ込める */
+  .mock,
+  .ss .cell .frame,
+  .mock-viewer-full {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 3. JSXのインラインスタイル(overflow:hidden)による右側の見切れを防ぐ */
+  .mock > div,
+  .ss .cell .frame > div {
+    min-width: 540px;
+  }
 }
