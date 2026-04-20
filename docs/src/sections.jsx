@@ -118,7 +118,7 @@ function ChunksSec(){
         </div>
 
         {/* Chunk chain visualization */}
-        <div className="reveal" style={{overflow:'hidden', marginBottom:60}}>
+        <div className="reveal" style={{overflowX:'auto', overflowY:'hidden', marginBottom:60}}>
           <div className="chain-track" style={{paddingBottom:20}}>
             {[
               {n:'01', name:'Vol.01 — prologue', meta:'ZIP · 42p'},
