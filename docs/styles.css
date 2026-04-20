@@ -1243,7 +1243,8 @@ body.hero-bigtype h1 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-family: "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif;
+  font-family:
+    "Georgia", "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif; /* Updated */
   font-size: 12px;
 }
 /* ★お気に入り: デフォルト透明・ホバー薄グレー、on で黄色 */
@@ -1307,7 +1308,7 @@ body.hero-bigtype h1 {
 .mock-plist .main .head {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center; /* Updated from flex-start */
   gap: 12px;
   padding: 14px 18px;
   border-bottom: 1px solid #cfd9e4;
@@ -1315,13 +1316,13 @@ body.hero-bigtype h1 {
 }
 /* 明朝体タイトル（実アプリは font-mincho text-3xl） */
 .mock-plist .main .title {
-  font-family: "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif;
+  font-family:
+    "Georgia", "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif; /* Updated */
   font-weight: 700;
   font-size: 18px;
   color: #0a1628;
   letter-spacing: -0.02em;
-  margin-bottom: 5px;
-  line-height: 1.1;
+  line-height: 1.1; /* margin-bottom removed */
 }
 .mock-plist .main .meta {
   display: flex;
@@ -1444,7 +1445,8 @@ body.hero-bigtype h1 {
   color: #0a1628;
   font-size: 12px;
   font-weight: 600;
-  font-family: "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif;
+  font-family:
+    "Georgia", "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif; /* Updated */
   letter-spacing: -0.01em;
 }
 .mock-plist .chunk .pathline {
@@ -2107,7 +2109,7 @@ body.hero-bigtype h1 {
   background: #ffffff;
 }
 .mock-viewer .ss-head .ss-title {
-  font-family: "Noto Serif JP", "YuMincho", serif;
+  font-family: "Georgia", "Noto Serif JP", "YuMincho", serif; /* Updated */
   color: #0a1628;
   font-size: 14px;
   font-weight: 700;
@@ -2164,7 +2166,7 @@ body.hero-bigtype h1 {
   color: #0a1628;
   font-size: 11px;
   font-weight: 600;
-  font-family: "Noto Serif JP", "YuMincho", serif;
+  font-family: "Georgia", "Noto Serif JP", "YuMincho", serif; /* Updated */
   letter-spacing: -0.01em;
 }
 .mock-viewer .ss-row .mt {
@@ -2288,7 +2290,8 @@ body.hero-bigtype h1 {
   color: #0a1628;
   font-size: 12px;
   font-weight: 700;
-  font-family: "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif;
+  font-family:
+    "Georgia", "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif; /* Updated */
   letter-spacing: -0.01em;
 }
 .mock-plist .drag-stack .mt {
