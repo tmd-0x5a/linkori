@@ -159,9 +159,18 @@ body {
   font-feature-settings: "ss01", "cv11";
   letter-spacing: -0.01em;
   line-height: 1.5;
+  width: 100%;
+  max-width: 100vw;
   overflow-x: hidden;
   scroll-behavior: smooth;
 }
+
+main {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 body {
   background:
     radial-gradient(
@@ -350,10 +359,6 @@ hr {
 }
 
 /* ───────── Section basics ───────── */
-main {
-  position: relative;
-  z-index: 1;
-}
 section {
   position: relative;
 }
@@ -391,11 +396,10 @@ section {
   font-family: var(--display);
   font-weight: 700;
   letter-spacing: -0.03em;
-  white-space: pre-line;
   font-size: clamp(38px, 5.4vw, 72px);
   line-height: 1.02;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: anywhere;
   white-space: pre-line;
   line-break: strict;
   text-wrap: balance;
@@ -405,8 +409,8 @@ section {
   font-size: 18px;
   line-height: 1.65;
   max-width: 640px;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: anywhere;
   white-space: pre-line;
   line-break: strict;
 }
@@ -444,7 +448,7 @@ section {
 }
 .hero p,
 .hero .hero-lede {
-  word-break: keep-all;
+  word-break: normal;
   overflow-wrap: anywhere;
 }
 .hero-badge {
@@ -475,8 +479,8 @@ section {
   font-size: clamp(48px, 7vw, 104px);
   line-height: 0.98;
   margin: 22px 0 18px;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: anywhere;
 }
 .hero h1 .h1-line {
   display: block;
@@ -945,8 +949,8 @@ body.hero-bigtype h1 {
   font-size: 14px;
   color: var(--fg-dim);
   line-height: 1.6;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: anywhere;
   white-space: pre-line;
   line-break: strict;
 }
@@ -1038,8 +1042,8 @@ body.hero-bigtype h1 {
   letter-spacing: -0.03em;
   line-height: 1.1;
   margin-bottom: 16px;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: anywhere;
   white-space: pre-line;
   line-break: strict;
   text-wrap: balance;
@@ -1048,8 +1052,8 @@ body.hero-bigtype h1 {
   color: var(--fg-dim);
   font-size: 16px;
   line-height: 1.65;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: anywhere;
   white-space: pre-line;
   line-break: strict;
 }
@@ -1231,11 +1235,16 @@ body.hero-bigtype h1 {
   color: #fff;
   border-color: #2f8fd1;
 }
+
+/* ★ベースラインによる水平方向の完璧な配置★ */
 .mock-plist .side .plrow-top {
   display: flex;
-  align-items: center;
+  align-items: baseline; /* フォントが違っても下揃えでピタッと一致 */
   gap: 5px;
   width: 100%;
+  transform: translateY(
+    -1px
+  ); /* 綺麗に揃った塊のまま、全体を少しだけ上に引き上げる */
 }
 .mock-plist .side .plrow-top .nm {
   flex: 1;
@@ -1244,14 +1253,14 @@ body.hero-bigtype h1 {
   overflow: hidden;
   text-overflow: ellipsis;
   font-family:
-    "Georgia", "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif; /* Updated */
+    "Georgia", "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif;
   font-size: 12px;
+  line-height: 1.1;
 }
-/* ★お気に入り: デフォルト透明・ホバー薄グレー、on で黄色 */
 .mock-plist .side .plrow-top .fav {
   flex-shrink: 0;
   font-size: 11px;
-  line-height: 1;
+  line-height: 1.1;
   color: transparent;
 }
 .mock-plist .side .plrow-top .fav.on {
@@ -1262,11 +1271,14 @@ body.hero-bigtype h1 {
   font-family: var(--mono);
   font-size: 10px;
   opacity: 0.6;
+  line-height: 1.1;
 }
+
 .mock-plist .side .plrow-bot {
   display: flex;
   align-items: center;
   gap: 5px;
+  margin-top: 1px;
 }
 .mock-plist .side .plrow .pbar {
   flex: 1;
@@ -1308,7 +1320,7 @@ body.hero-bigtype h1 {
 .mock-plist .main .head {
   display: flex;
   justify-content: space-between;
-  align-items: center; /* Updated from flex-start */
+  align-items: center;
   gap: 12px;
   padding: 14px 18px;
   border-bottom: 1px solid #cfd9e4;
@@ -1317,12 +1329,13 @@ body.hero-bigtype h1 {
 /* 明朝体タイトル（実アプリは font-mincho text-3xl） */
 .mock-plist .main .title {
   font-family:
-    "Georgia", "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif; /* Updated */
+    "Georgia", "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif;
   font-weight: 700;
   font-size: 18px;
   color: #0a1628;
   letter-spacing: -0.02em;
-  line-height: 1.1; /* margin-bottom removed */
+  line-height: 1.1;
+  transform: translateY(-2px); /* 右側のボタン群の中央に揃える */
 }
 .mock-plist .main .meta {
   display: flex;
@@ -1446,8 +1459,10 @@ body.hero-bigtype h1 {
   font-size: 12px;
   font-weight: 600;
   font-family:
-    "Georgia", "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif; /* Updated */
+    "Georgia", "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif;
   letter-spacing: -0.01em;
+  line-height: 1.1;
+  transform: translateY(-1px);
 }
 .mock-plist .chunk .pathline {
   display: flex;
@@ -2109,11 +2124,13 @@ body.hero-bigtype h1 {
   background: #ffffff;
 }
 .mock-viewer .ss-head .ss-title {
-  font-family: "Georgia", "Noto Serif JP", "YuMincho", serif; /* Updated */
+  font-family: "Georgia", "Noto Serif JP", "YuMincho", serif;
   color: #0a1628;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: -0.01em;
+  line-height: 1.1;
+  transform: translateY(-1.5px);
 }
 .mock-viewer .ss-head .ss-sub {
   font-family: var(--mono);
@@ -2166,8 +2183,10 @@ body.hero-bigtype h1 {
   color: #0a1628;
   font-size: 11px;
   font-weight: 600;
-  font-family: "Georgia", "Noto Serif JP", "YuMincho", serif; /* Updated */
+  font-family: "Georgia", "Noto Serif JP", "YuMincho", serif;
   letter-spacing: -0.01em;
+  line-height: 1.1;
+  transform: translateY(-1px);
 }
 .mock-viewer .ss-row .mt {
   color: #7e8a99;
@@ -2291,8 +2310,10 @@ body.hero-bigtype h1 {
   font-size: 12px;
   font-weight: 700;
   font-family:
-    "Georgia", "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif; /* Updated */
+    "Georgia", "Noto Serif JP", "YuMincho", "Hiragino Mincho ProN", serif;
   letter-spacing: -0.01em;
+  line-height: 1.1;
+  transform: translateY(-1px);
 }
 .mock-plist .drag-stack .mt {
   color: #7e8a99;
@@ -2421,8 +2442,8 @@ kbd.mouse {
   font-size: 14px;
   color: var(--fg-dim);
   line-height: 1.55;
-  word-break: keep-all;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: anywhere;
   white-space: pre-line;
   line-break: strict;
 }
@@ -2769,12 +2790,16 @@ kbd.mouse {
     max-height: 340px;
   }
 }
+
 @media (max-width: 640px) {
   :root {
     --gap-sec: 80px;
   }
   .wrap {
     padding: 0 18px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   /* Nav — スマホ: CTAを非表示、内側をコンパクトに */
@@ -2960,9 +2985,9 @@ kbd.mouse {
   /* 1. モックアップの「縦潰れ」を解除し、高さを固定 */
   .mock,
   .ss .cell .frame {
-    aspect-ratio: auto; /* 4/3 による縦の潰れを解除 */
-    height: 400px; /* スマホでもUIがしっかり見える高さを確保 */
-    overflow-x: auto; /* 横幅が足りない分はスワイプ可能にする */
+    aspect-ratio: auto;
+    height: 400px;
+    overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
   }
@@ -2971,37 +2996,35 @@ kbd.mouse {
   .mock-plist,
   .mock-viewer,
   .mock-browser,
-  .mock .chrome,       /* タイトルバーの背景がスクロール途中で切れないようにする */
+  .mock .chrome,
   .frame .chrome {
-    min-width: 540px; /* PCライクなUIが綺麗に収まる最低幅 */
+    min-width: 540px;
   }
 
   .mock-plist,
   .mock-viewer,
   .mock-browser {
-    height: calc(100% - 30px); /* chromeバー(30px)を引いた高さに調整 */
+    height: calc(100% - 30px);
   }
 
-  /* 3. フルスクリーンモック（v0.5.0セクション等）の調整 */
+  /* 3. フルスクリーンモックの調整 */
   .mock-viewer-full {
     aspect-ratio: auto;
     height: 360px;
   }
 
-  /* 4. アクションボタンをスマホ向けにタップしやすく */
+  /* 4. アクションボタンをスマホ向けに */
   .hero-ctas {
     width: 100%;
   }
   .hero-ctas .btn-primary,
   .hero-ctas .btn-ghost,
   .download-card .btn-primary {
-    width: 100%; /* ボタンを全幅に */
+    width: 100%;
     justify-content: center;
   }
 
-  /* ======= プレビュー・モックアップの画面はみ出し（横揺れ）防止 ======= */
-
-  /* 1. GridやFlexの親要素が中身(540px)に引っ張られて広がるのを強制ストップ */
+  /* ======= プレビュー・モックアップの画面はみ出し防止 ======= */
   .ss,
   .ss .cell,
   .feature-row,
@@ -3010,7 +3033,6 @@ kbd.mouse {
     max-width: 100%;
   }
 
-  /* 2. フレーム幅を画面幅(100%)に固定し、はみ出た分だけをスクロール枠に閉じ込める */
   .mock,
   .ss .cell .frame,
   .mock-viewer-full {
@@ -3021,7 +3043,6 @@ kbd.mouse {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* 3. JSXのインラインスタイル(overflow:hidden)による右側の見切れを防ぐ */
   .mock > div,
   .ss .cell .frame > div {
     min-width: 540px;
