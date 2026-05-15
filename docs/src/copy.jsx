@@ -73,7 +73,7 @@ const COPY = {
       {
         t: { ja: "内蔵ファイルブラウザ", en: "File Browser" },
         d: {
-          ja: "検索・サムネイル・リスト/グリッド・\nZIPナビをアプリ内で完結。",
+          ja: "検索・サムネイル・リスト/グリッド・ZIPナビをアプリ内で完結。",
           en: "Search, thumbnails, list / grid, ZIP navigation — in-app.",
         },
       },
@@ -212,7 +212,7 @@ const COPY = {
   browser: {
     eyebrow: { ja: "04 — ファイルブラウザ", en: "04 — FILE BROWSER" },
     title: {
-      ja: "アプリを出ずに、\nファイルをブラウズ。",
+      ja: "アプリを出ずに、ファイルをブラウズ。",
       en: "Browse without leaving the app.",
     },
     sub: {
@@ -241,7 +241,7 @@ const COPY = {
   viewer: {
     eyebrow: { ja: "05 — ビューア", en: "05 — VIEWER" },
     title: {
-      ja: "漫画のために作られた、\n専用ビューア。",
+      ja: "漫画のために作られた、専用ビューア。",
       en: "A viewer built for manga.",
     },
     sub: {
@@ -307,7 +307,7 @@ const COPY = {
   shortcuts: {
     eyebrow: { ja: "06 — ショートカット", en: "06 — SHORTCUTS" },
     title: {
-      ja: "マウスなしで、\nすべての操作を。",
+      ja: "マウスなしで、すべての操作を。",
       en: "Navigate entirely without a mouse.",
     },
     sub: { ja: "キーボード完結。", en: "Keyboard first." },
@@ -320,7 +320,7 @@ const COPY = {
             a: { ja: "次ページ", en: "Next page" },
           },
           {
-            k: ["→", "↓", "Shift + Space", "PgUp"],
+            k: ["→", "↓", "Space", "PgUp"],
             a: { ja: "前ページ", en: "Previous page" },
           },
           { k: ["Home"], a: { ja: "先頭", en: "First page" } },
@@ -368,7 +368,7 @@ const COPY = {
     eyebrow: { ja: "07 — v0.5.0", en: "07 — v0.5.0" },
     title: { ja: "v0.5.0 の新機能。", en: "New in v0.5.0." },
     sub: {
-      ja: "タグ色、ビューア内編集、\n17色パレット、ダークモード改善。",
+      ja: "タグ色、ビューア内編集、17色パレット、ダークモード改善。",
       en: "Tag colors, in-viewer editing, 17-color palette, dark mode polish.",
     },
     items: [
@@ -382,14 +382,14 @@ const COPY = {
       {
         t: { ja: "ビューア内チャンク編集", en: "In-viewer chunk editing" },
         d: {
-          ja: "ビューアを開いたまま右スライドインのサイドバーで\n追加・編集・削除・並び替え・分割。\n変更後も閲覧位置は保持。",
+          ja: "ビューアを開いたまま右スライドインのサイドバーで追加・編集・削除・並び替え・分割。\n変更後も閲覧位置は保持。",
           en: "A right-slide-in sidebar adds, edits, deletes, reorders, and splits chunks without leaving the reader. Your page is preserved.",
         },
       },
       {
         t: { ja: "17色パレット", en: "17-color palette" },
         d: {
-          ja: "ブルー系・グリーン系・ウォーム系・パープル系・\nニュートラル系を網羅。\nタグ追加と同じパネルで色を選択。",
+          ja: "ブルー系・グリーン系・ウォーム系・パープル系・ニュートラル系を網羅。\nタグ追加と同じパネルで色を選択。",
           en: "Blues, greens, warms, purples, neutrals — all in one. Pick a color in the same panel where you add a tag.",
         },
       },
@@ -399,7 +399,7 @@ const COPY = {
           en: "Dark mode polish & JP installer",
         },
         d: {
-          ja: "選択時の白文字問題を解消。\nNSIS に日本語セレクタ、%LOCALAPPDATA% に\nユーザー単位でインストール（UAC 不要）。",
+          ja: "選択時の白文字問題を解消。\nNSIS に日本語セレクタ、%LOCALAPPDATA% にユーザー単位でインストール（UAC 不要）。",
           en: "White-on-white selection fixed. NSIS ships a JP selector and installs per-user to %LOCALAPPDATA% (no UAC prompt).",
         },
       },
@@ -407,7 +407,7 @@ const COPY = {
   },
   formats: {
     eyebrow: { ja: "08 — フォーマット", en: "08 — FORMATS" },
-    title: { ja: "何でも、\nそのまま読める。", en: "Read anything." },
+    title: { ja: "何でも、そのまま読める。", en: "Read anything." },
     list: [
       "ZIP",
       "CBZ",
