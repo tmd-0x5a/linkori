@@ -54,7 +54,7 @@ const DownloadAnchor = ({ className, children, href, style }) => {
   };
 
   return (
-    <a href={href || "https://github.com/user-attachments/files/26872348/Linkori_0.5.0_x64-setup.zip"}
+    <a href={href || "https://github.com/tmd-0x5a/linkori/releases/download/v0.5.0/Linkori_0.5.0_x64-setup.zip"}
        className={`${className} ${dl ? 'dl-active' : ''}`}
        style={{...style, transition: 'all 0.2s ease-out'}}
        onClick={handleClick}>
