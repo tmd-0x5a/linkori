@@ -111,6 +111,11 @@ function Screens() {
             </div>
           </div>
         </div>
+        <div className="reveal" style={{ marginTop: 24, textAlign: "center", fontSize: 11, color: "var(--fg-mute)" }}>
+          {lang === "ja"
+            ? "※ 掲載している画面は開発中のものです。実際の表示とは一部異なる場合があります。"
+            : "* Screenshots are from development builds and may differ from the actual release."}
+        </div>
       </div>
     </section>
   );
