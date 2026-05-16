@@ -16,8 +16,8 @@ const COPY = {
     line2: { ja: "", en: "" },
     line3: { ja: "一続きに。", en: "woven as one." },
     lede: {
-      ja: "Linkoriは「Link（繋ぐ）× Ori（栞）」。\n複数のフォルダ・ZIP・PDFをチャンクで結び、ひとつの読書につなげるローカル漫画ビューア。",
-      en: "Linkori — Link × Ori (bookmark).\nChain folders, ZIPs and PDFs into chunks, and weave them into one seamless local read.",
+      ja: "Linkori = Link（繋ぐ）+ Ori（栞）。\nフォルダ・ZIP・PDFの読みたい範囲だけを連結し、\n1つのプレイリストとして通して読めるローカル漫画ビューア。",
+      en: "Linkori — Link × Ori (bookmark).\nChain folders, ZIPs and PDFs into chunks,\nand weave them into one seamless local read.",
     },
     cta: { ja: "Windows版をダウンロード", en: "Download for Windows" },
     ghost: { ja: "GitHubで見る", en: "View on GitHub" },
@@ -40,7 +40,7 @@ const COPY = {
       { ja: "見開き", en: "Spread view" },
       { ja: "即起動", en: "Instant open" },
       { ja: "プレイリスト", en: "Playlist" },
-      { ja: "チャンク", en: "Chunks" },
+      { ja: "範囲連結", en: "Range chain" },
       { ja: "グループドラッグ", en: "Group drag" },
       { ja: "元に戻す", en: "Undo" },
     ],
@@ -48,54 +48,54 @@ const COPY = {
   overview: {
     eyebrow: { ja: "01 — 概要", en: "01 — OVERVIEW" },
     title: {
-      ja: "読むために必要な、すべての機能。",
+      ja: "読むために必要な、\nすべての機能。",
       en: "Everything you need to read.",
     },
     sub: {
-      ja: "フォルダ、ZIP、PDF、プレイリスト — ひとつのアプリに統合。",
+      ja: "フォルダ、ZIP、PDF、プレイリスト —\nひとつのアプリに統合。",
       en: "Folders, ZIPs, PDFs, playlists — all in one app.",
     },
     items: [
       {
         t: { ja: "見開き＆1枚表示", en: "Spread & Single" },
         d: {
-          ja: "2ページ見開きと1枚表示を瞬時に切替。漫画に最適な右→左読み。",
-          en: "Two-page spread or single page. Right-to-left reading for manga.",
+          ja: "2ページ見開きと1枚表示を瞬時に切替。\n漫画に最適な右→左読み。",
+          en: "Two-page spread or single page.\nRight-to-left reading for manga.",
         },
       },
       {
         t: { ja: "プレイリスト", en: "Playlist" },
         d: {
-          ja: "フォルダ・ZIPをチャンクで連結。タグ・お気に入り・既読管理。",
-          en: "Chain folders and ZIPs into chunks. Tags, favorites, read status.",
+          ja: "フォルダ・ZIPを範囲指定で連結。\nタグ・お気に入り・既読管理。",
+          en: "Chain folders and ZIPs by range.\nTags, favorites, read status.",
         },
       },
       {
         t: { ja: "内蔵ファイルブラウザ", en: "File Browser" },
         d: {
-          ja: "検索・サムネイル・リスト/グリッド・ZIPナビをアプリ内で完結。",
-          en: "Search, thumbnails, list / grid, ZIP navigation — in-app.",
+          ja: "検索・サムネイル・リスト/グリッド切替。\nZIP内ナビもアプリ内で完結。",
+          en: "Search, thumbnails, list / grid toggle.\nZIP navigation — all in-app.",
         },
       },
       {
         t: { ja: "即起動", en: "Instant open" },
         d: {
-          ja: "ビューアは即座に起動。画像は読み進めながらオンデマンドで。",
-          en: "Viewer starts instantly. Images load on demand.",
+          ja: "ビューアは即座に起動。\n画像は読み進めながらオンデマンドで。",
+          en: "Viewer starts instantly.\nImages load on demand.",
         },
       },
       {
         t: { ja: "ZIP・CBZ・PDF", en: "ZIP, CBZ, PDF" },
         d: {
-          ja: "アーカイブとPDFを直接読み込み。Shift-JISファイル名にも対応。",
-          en: "Read archives and PDFs directly. Shift-JIS filenames supported.",
+          ja: "アーカイブとPDFを直接読み込み。\nShift-JISファイル名にも対応。",
+          en: "Read archives and PDFs directly.\nShift-JIS filenames supported.",
         },
       },
       {
         t: { ja: "日本語 / English", en: "EN / JA" },
         d: {
-          ja: "UI言語を日本語・英語で切替。設定は自動保存。",
-          en: "Switch UI language. Saved across sessions.",
+          ja: "UI言語を日本語・英語で切替。\n設定は自動保存。",
+          en: "Switch UI language.\nSaved across sessions.",
         },
       },
     ],
@@ -103,41 +103,41 @@ const COPY = {
   playlist: {
     eyebrow: { ja: "02 — プレイリスト", en: "02 — PLAYLIST" },
     title: {
-      ja: "すべてを、ひとつのサイドバーに。",
+      ja: "すべてを、\nひとつのサイドバーに。",
       en: "Organize everything.",
     },
     sub: {
-      ja: "お気に入り、タグ、既読ステータス。サイドバーにすべて揃う。",
-      en: "Favorites, tags, read status — all in the sidebar.",
+      ja: "お気に入り、タグ、既読ステータス。\nサイドバーにすべて揃う。",
+      en: "Favorites, tags, read status —\nall in the sidebar.",
     },
     bullets: [
       {
-        ja: "プレイリストをスター登録。★フィルタで瞬時に絞込。",
-        en: "Star any playlist. ★ filter narrows instantly.",
+        ja: "プレイリストをスター登録。\n★フィルタで瞬時に絞込。",
+        en: "Star any playlist.\n★ filter narrows instantly.",
       },
       {
-        ja: "テキストタグを付与。#tagクリックで即絞込。",
-        en: "Text tags per playlist. Click #tag to filter.",
+        ja: "テキストタグを付与。\n#tagクリックで即絞込。",
+        en: "Text tags per playlist.\nClick #tag to filter.",
       },
       {
-        ja: "既読/未読の切替と進捗バーを各アイテムに表示。",
-        en: "Unread / read toggle with per-item progress bar.",
+        ja: "既読/未読の切替と、\n進捗バーを各アイテムに表示。",
+        en: "Unread / read toggle with\nper-item progress bar.",
       },
       {
-        ja: "ドラッグで並び替え。ダブルクリックでその場リネーム。",
-        en: "Drag to reorder. Double-click to rename in place.",
+        ja: "ドラッグで並び替え。\nダブルクリックでその場リネーム。",
+        en: "Drag to reorder.\nDouble-click to rename in place.",
       },
     ],
   },
   chunk: {
-    eyebrow: { ja: "03 — チャンク", en: "03 — CHUNKS" },
+    eyebrow: { ja: "03 — 範囲指定", en: "03 — RANGE" },
     title: {
-      ja: "バラバラのファイルを、ひと続きの作品に。",
+      ja: "バラバラのファイルを、\nひと続きの作品に。",
       en: "Stitch scattered files into one.",
     },
     sub: {
-      ja: "差分や不要なページが混ざっていても大丈夫。読みたい範囲だけを抽出・連結して、途切れない読書体験を。",
-      en: "Skip variations and clutter. Extract only the ranges you want and chain them into a seamless read.",
+      ja: "差分や不要なページが混ざっていても大丈夫。\n読みたい範囲だけを抽出・連結して、\n途切れない読書体験を。",
+      en: "Skip variations and clutter.\nExtract only the ranges you want\nand chain them into a seamless read.",
     },
     bullets: [
       {
@@ -149,19 +149,19 @@ const COPY = {
         en: "Or select whole folder / ZIP",
       },
       {
-        ja: "逆順指定: 終了が開始より前 → 逆順再生",
-        en: "Reverse order: end before start → reverse",
+        ja: "逆順指定:\n終了が開始より前 → 逆順再生",
+        en: "Reverse order:\nend before start → reverse",
       },
       {
-        ja: "各チャンクに枚数バッジ & サムネプレビュー",
-        en: "Count badge & thumbnail preview",
+        ja: "各区間に枚数バッジ &\nサムネプレビュー",
+        en: "Count badge &\nthumbnail preview per range",
       },
     ],
     group: {
       title: { ja: "複数を、まとめて動かす。", en: "Move them all at once." },
       sub: {
-        ja: "複数選択 → ドラッグ。すべてが同時に移動。",
-        en: "Multi-select → drag. All move together.",
+        ja: "複数選択 → ドラッグ。\nすべてが同時に移動。",
+        en: "Multi-select → drag.\nAll move together.",
       },
       actions: [
         {
@@ -186,7 +186,7 @@ const COPY = {
       title: { ja: "ソート。分割。元に戻す。", en: "Sort. Split. Undo." },
       items: [
         {
-          t: { ja: "チャンクをソート", en: "Sort chunks" },
+          t: { ja: "区間をソート", en: "Sort ranges" },
           d: {
             ja: "名前・更新日・作成日で昇降順",
             en: "By name, modified, or created — asc/desc",
@@ -195,15 +195,15 @@ const COPY = {
         {
           t: { ja: "サブフォルダで分割", en: "Split by subfolder" },
           d: {
-            ja: "1チャンクをサブフォルダ単位に自動分割。ネスト対応。",
-            en: "One chunk → per-subfolder chunks. Nested.",
+            ja: "1区間をサブフォルダ単位に自動分割。\nネスト対応。",
+            en: "One range → per-subfolder ranges.\nNested.",
           },
         },
         {
           t: { ja: "一括削除と復元", en: "Batch delete & undo" },
           d: {
-            ja: "複数チャンクをまとめて削除。Ctrl+Zで復元。",
-            en: "Delete many at once. Ctrl+Z restores.",
+            ja: "複数区間をまとめて削除。\nCtrl+Zで復元。",
+            en: "Delete many at once.\nCtrl+Z restores.",
           },
         },
       ],
@@ -212,7 +212,7 @@ const COPY = {
   browser: {
     eyebrow: { ja: "04 — ファイルブラウザ", en: "04 — FILE BROWSER" },
     title: {
-      ja: "アプリを出ずに、ファイルをブラウズ。",
+      ja: "アプリを出ずに、\nファイルをブラウズ。",
       en: "Browse without leaving the app.",
     },
     sub: {
@@ -221,32 +221,32 @@ const COPY = {
     },
     bullets: [
       {
-        ja: "ドライブサイドバー: 利用可能なドライブを自動表示",
-        en: "Drive sidebar — all drives auto-listed",
+        ja: "ドライブサイドバー:\n利用可能なドライブを自動表示",
+        en: "Drive sidebar —\nall drives auto-listed",
       },
       {
-        ja: "クイックアクセス: Desktop / Downloads / Documents ...",
-        en: "Quick access: Desktop / Downloads / Documents ...",
+        ja: "クイックアクセス:\nDesktop / Downloads / Documents ...",
+        en: "Quick access:\nDesktop / Downloads / Documents ...",
       },
       {
-        ja: "パンくずナビ / 直接パス入力 / 検索 / List・Grid切替",
-        en: "Breadcrumb or path input. Search. List/Grid.",
+        ja: "パンくずナビ / 直接パス入力 /\n検索 / List・Grid切替",
+        en: "Breadcrumb or path input.\nSearch. List/Grid.",
       },
       {
-        ja: "ZIP・CBZ内をそのままナビ。Shift-JIS対応。",
-        en: "Navigate into ZIP / CBZ. Shift-JIS support.",
+        ja: "ZIP・CBZ内をそのままナビ。\nShift-JIS対応。",
+        en: "Navigate into ZIP / CBZ.\nShift-JIS support.",
       },
     ],
   },
   viewer: {
     eyebrow: { ja: "05 — ビューア", en: "05 — VIEWER" },
     title: {
-      ja: "漫画のために作られた専用ビューア。",
+      ja: "漫画のために作られた、\n専用ビューア。",
       en: "A viewer built for manga.",
     },
     sub: {
-      ja: "見開き。右→左。即起動。待ち時間ゼロ。",
-      en: "Spread. RTL. Instant. Zero wait.",
+      ja: "見開き。右→左。即起動。\n待ち時間ゼロ。",
+      en: "Spread. RTL. Instant.\nZero wait.",
     },
     bullets: [
       {
@@ -258,21 +258,21 @@ const COPY = {
         en: "Right-to-left for Japanese manga",
       },
       {
-        ja: "ページ遷移アニメーション・フルスクリーン（F）",
-        en: "Page transition animation. Fullscreen (F)",
+        ja: "ページ遷移アニメーション・\nフルスクリーン（F）",
+        en: "Page transition animation.\nFullscreen (F)",
       },
       {
-        ja: "閲覧位置をプレイリストごとに自動保存",
-        en: "Reading position saved per playlist",
+        ja: "閲覧位置を\nプレイリストごとに自動保存",
+        en: "Reading position saved\nper playlist",
       },
       {
-        ja: "スマートシーク: 現在ページ優先でサムネ生成",
-        en: "Smart seek thumbnails prioritized from current page",
+        ja: "スマートシーク:\n現在ページ優先でサムネ生成",
+        en: "Smart seek thumbnails\nprioritized from current page",
       },
     ],
     bar: {
       title: {
-        ja: "現在地を正確にナビゲート。",
+        ja: "現在地を、\n正確にナビゲート。",
         en: "Navigate with precision.",
       },
       sub: {
@@ -288,17 +288,17 @@ const COPY = {
           },
         },
         {
-          t: { ja: "チャンク境界マーク", en: "Chunk tick marks" },
+          t: { ja: "区間境界マーク", en: "Range tick marks" },
           d: {
-            ja: "各チャンクの先頭へ1クリックで移動。",
-            en: "Jump to any chunk's first page.",
+            ja: "各区間の先頭へ1クリックで移動。",
+            en: "Jump to any range's first page.",
           },
         },
         {
-          t: { ja: "前/次チャンクボタン", en: "Prev / next chunk" },
+          t: { ja: "前/次区間ボタン", en: "Prev / next range" },
           d: {
-            ja: "バー両端に配置。中央に現チャンク名。",
-            en: "Flanking the bar. Current chunk in the middle.",
+            ja: "バー両端に配置。\n中央に現区間名。",
+            en: "Flanking the bar.\nCurrent range in the middle.",
           },
         },
       ],
@@ -308,46 +308,46 @@ const COPY = {
     eyebrow: { ja: "06 — v0.5.0", en: "06 — v0.5.0" },
     title: { ja: "v0.5.0の新機能。", en: "New in v0.5.0." },
     sub: {
-      ja: "タグ色、ビューア内編集、17色パレット、ダークモード改善。",
-      en: "Tag colors, in-viewer editing, 17-color palette, dark mode polish.",
+      ja: "タグ色、ビューア内編集、\n17色パレット、ダークモード改善。",
+      en: "Tag colors, in-viewer editing,\n17-color palette, dark mode polish.",
     },
     items: [
       {
         t: { ja: "タグ色システム", en: "Tag color system" },
         d: {
-          ja: "各タグに色を紐付け。プレイリストカードが最初の色付きタグで一面に淡く染まる。ホバー・選択時はブルーに切替。",
-          en: "Link a color to each tag. Playlist cards wash edge-to-edge with the first colored tag; hover and active fall back to blue.",
+          ja: "各タグに色を紐付け。\nプレイリストカードが最初の色付きタグで淡く染まる。\nホバー・選択時はブルーに切替。",
+          en: "Link a color to each tag.\nPlaylist cards tint with the first colored tag.\nHover and selection switch to blue.",
         },
       },
       {
-        t: { ja: "ビューア内チャンク編集", en: "In-viewer chunk editing" },
+        t: { ja: "ビューア内編集", en: "In-viewer editing" },
         d: {
-          ja: "ビューアを開いたまま右スライドインのサイドバーで追加・編集・削除・並び替え・分割。変更後も閲覧位置は保持。",
-          en: "A right-slide-in sidebar adds, edits, deletes, reorders, and splits chunks without leaving the reader. Your page is preserved.",
+          ja: "ビューアを開いたまま右スライドインの\nサイドバーで追加・編集・削除・並び替え・分割。\n変更後も閲覧位置は保持。",
+          en: "A right-slide-in sidebar adds, edits,\ndeletes, reorders, and splits ranges\nwithout leaving the reader.",
         },
       },
       {
         t: { ja: "17色パレット", en: "17-color palette" },
         d: {
-          ja: "ブルー系・グリーン系・ウォーム系・パープル系・ニュートラル系を網羅。タグ追加と同じパネルで色を選択。",
-          en: "Blues, greens, warms, purples, neutrals — all in one. Pick a color in the same panel where you add a tag.",
+          ja: "ブルー系・グリーン系・ウォーム系・\nパープル系・ニュートラル系を網羅。\nタグ追加と同じパネルで色を選択。",
+          en: "Blues, greens, warms,\npurples, neutrals — all in one.\nPick a color where you add a tag.",
         },
       },
       {
         t: {
-          ja: "ダークモード改善 & 日本語インストーラー",
-          en: "Dark mode polish & JP installer",
+          ja: "ダークモード改善 &\n日本語インストーラー",
+          en: "Dark mode polish &\nJP installer",
         },
         d: {
-          ja: "選択時の白文字問題を解消。NSISに日本語セレクタ、%LOCALAPPDATA%にユーザー単位でインストール（UAC不要）。",
-          en: "White-on-white selection fixed. NSIS ships a JP selector and installs per-user to %LOCALAPPDATA% (no UAC prompt).",
+          ja: "選択時の白文字問題を解消。\nNSISに日本語セレクタ、\n%LOCALAPPDATA%にユーザー単位でインストール。",
+          en: "White-on-white selection fixed.\nNSIS ships a JP selector and installs\nper-user to %LOCALAPPDATA%.",
         },
       },
     ],
   },
   formats: {
     eyebrow: { ja: "07 — フォーマット", en: "07 — FORMATS" },
-    title: { ja: "何でも、そのまま読める。", en: "Read anything." },
+    title: { ja: "何でも、\nそのまま読める。", en: "Read anything." },
     list: [
       "ZIP",
       "CBZ",
@@ -365,8 +365,8 @@ const COPY = {
   shortcuts: {
     eyebrow: { ja: "08 — ショートカット", en: "08 — SHORTCUTS" },
     title: {
-      ja: "マウスなしで、すべての操作を。",
-      en: "Navigate entirely without a mouse.",
+      ja: "マウスなしで、\nすべての操作を。",
+      en: "Navigate entirely\nwithout a mouse.",
     },
     sub: { ja: "キーボード完結。", en: "Keyboard first." },
     groups: [
@@ -409,11 +409,11 @@ const COPY = {
         ],
       },
       {
-        t: { ja: "プレイリスト・チャンク", en: "Playlist & chunks" },
+        t: { ja: "プレイリスト・区間", en: "Playlist & ranges" },
         rows: [
           {
             k: ["[", "]"],
-            a: { ja: "前 / 次チャンク", en: "Prev / next chunk" },
+            a: { ja: "前 / 次区間", en: "Prev / next range" },
           },
           { k: ["F2"], a: { ja: "リネーム", en: "Rename" } },
           { k: ["Delete"], a: { ja: "削除", en: "Delete" } },
@@ -425,8 +425,8 @@ const COPY = {
   download: {
     title: { ja: "さあ、読み始めよう。", en: "Start reading." },
     sub: {
-      ja: "Windows 10 / 11 (x64) 対応。無料・オープンソース。",
-      en: "Windows 10 / 11 (x64). Free & open source.",
+      ja: "Windows 10 / 11 (x64) 対応。\n無料・オープンソース。",
+      en: "Windows 10 / 11 (x64).\nFree & open source.",
     },
     cta: { ja: "Windows版をダウンロード", en: "Download for Windows" },
     sys: {

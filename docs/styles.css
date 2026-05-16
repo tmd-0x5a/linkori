@@ -1940,9 +1940,16 @@ body.hero-bigtype h1 {
   display: flex;
   gap: 16px;
   padding: 0 32px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.chain-track::-webkit-scrollbar {
+  display: none;
 }
 .chain-node {
-  flex: 0 0 220px;
+  flex: 1 1 160px;
+  max-width: 220px;
+  min-width: 120px;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -2888,16 +2895,16 @@ kbd.mouse {
     font-size: clamp(22px, 6vw, 32px);
   }
 
-  /* chain — 横スクロール */
+  /* chain — 画面幅に収める */
   .chain-track {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
+    flex-wrap: wrap;
+    gap: 12px;
     padding-bottom: 12px;
   }
   .chain-node {
-    flex: 0 0 200px;
-    scroll-snap-align: start;
+    flex: 1 1 140px;
+    min-width: 100px;
+    max-width: 180px;
   }
 
   /* Mocks */

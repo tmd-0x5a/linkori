@@ -1,0 +1,967 @@
+################################################################################
+# manga-viewer コードベース解説
+# これを読めばゼロからこのアプリを書き直せるレベルを目指した解説ファイル
+################################################################################
+
+meta:
+  name: manga-viewer
+  description: ローカルのマンガ画像・ZIPアーカイブを閲覧するデスクトップアプリ
+  stack:
+    desktop_shell: Tauri 2          # Rust製のデスクトップアプリフレーム
+    frontend: Next.js 14 (SSG)      # React / TypeScript。サーバーなしで静的ファイルとして動く
+    state: Zustand                  # Reactの状態管理ライブラリ（Reduxより軽量）
+    dnd: "@dnd-kit"                 # ドラッグ&ドロップライブラリ
+    animation: "motion/react"       # アニメーションライブラリ
+    persistence: tauri-plugin-store # JSONファイルにデータを永続化
+    styling: Tailwind CSS
+
+################################################################################
+# ディレクトリ構成
+################################################################################
+
+directory_structure: |
+  new_view_app/
+  ├── src/                          フロントエンド（React/TypeScript）
+  │   ├── app/page.tsx              アプリのエントリポイント（画面切り替え）
+  │   ├── types/index.ts            全型定義
+  │   ├── lib/
+  │   │   ├── tauri.ts              Rustコマンドの呼び出しラッパー
+  │   │   └── cn.ts                 clsx + tailwind-merge のユーティリティ
+  │   ├── stores/
+  │   │   ├── playlistStore.ts      プレイリスト・チャンク管理（Zustand）
+  │   │   └── viewerStore.ts        ビューア状態管理（Zustand）
+  │   ├── hooks/
+  │   │   └── usePersistence.ts     起動時読み込み・自動保存
+  │   └── components/
+  │       ├── playlist/
+  │       │   ├── PlaylistPanel.tsx  プレイリスト管理UI
+  │       │   ├── ChunkCard.tsx      チャンク1件の表示・編集カード
+  │       │   ├── ChunkForm.tsx      チャンク追加フォーム
+  │       │   ├── SortableChunkList.tsx dnd-kit ラッパー
+  │       │   └── FileBrowserDialog.tsx ファイルエクスプローラーダイアログ
+  │       ├── viewer/
+  │       │   └── ViewerCanvas.tsx   フルスクリーン画像ビューア
+  │       ├── ImageFilePicker.tsx    パス入力＋参照ボタン
+  │       └── ui/
+  │           ├── Button.tsx
+  │           ├── Input.tsx
+  │           ├── ConfirmDialog.tsx
+  │           └── ContextMenu.tsx    右クリックメニュー
+  └── src-tauri/src/                バックエンド（Rust）
+      ├── lib.rs                    Tauriアプリ初期化・コマンド登録
+      ├── commands/
+      │   ├── chunk.rs              チャンク解決（画像パスリストの生成）
+      │   ├── filesystem.rs         ディレクトリ・ZIP参照
+      │   └── image.rs              画像をbase64に変換
+      ├── protocol/
+      │   └── manga.rs              manga://カスタムプロトコルハンドラ
+      ├── reader/
+      │   ├── directory.rs          ファイルシステムから画像を読む
+      │   └── zip.rs                ZIPから画像を読む
+      └── utils/
+          ├── paths.rs              ZIPパス境界検出
+          └── sorting.rs            自然順ソート・画像拡張子判定
+
+################################################################################
+# データ型（src/types/index.ts）
+################################################################################
+
+data_types:
+
+  Chunk:
+    description: |
+      ユーザーが登録する「読書範囲」の1単位。
+      開始〜終了パスで画像の範囲を表す。
+    typescript: |
+      interface Chunk {
+        id: string;           // crypto.randomUUID() で生成
+        name?: string;        // 任意の表示名。なければ #1, #2... と表示
+        startPath: string;    // "D:/manga/001.jpg" や "D:/manga/" や "D:/manga.zip"
+        endPath: string;      // 空文字 = startPath全体を対象
+      }
+
+  Playlist:
+    description: 複数Chunkを束ねたプレイリスト。名前をつけて管理する。
+    typescript: |
+      interface Playlist {
+        id: string;
+        name: string;
+        chunks: Chunk[];
+        createdAt: number;    // Date.now()
+        updatedAt: number;
+      }
+
+  FileEntry:
+    description: |
+      FileBrowserDialog でファイル一覧を表示するときの1件分のデータ。
+      Rustの browse_directory / browse_zip コマンドが返す。
+    typescript: |
+      interface FileEntry {
+        name: string;              // 表示名（Shift-JIS対応済み）
+        path: string;              // 実パス or "zip_path/entry_name"
+        is_dir: boolean;
+        is_zip: boolean;
+        is_image: boolean;
+        thumbnail_url: string | null;   // 常にnull（フロントで遅延取得）
+        is_hidden: boolean;
+        modified_at: number | null;     // Unixタイムスタンプ（秒）
+      }
+
+  ViewerSettings:
+    description: ビューアの表示設定。永続化される。
+    typescript: |
+      interface ViewerSettings {
+        spreadMode: boolean;     // true=見開き2枚 / false=1枚
+        rightToLeft: boolean;    // true=右→左（日本マンガ）
+        pageTransition: boolean; // ページ遷移アニメーション
+      }
+
+################################################################################
+# データフロー（全体の処理の流れ）
+################################################################################
+
+data_flow:
+
+  overview: |
+    ユーザー操作 → React UI → Zustand Store → Rust コマンド(invoke)
+    → Rust が画像パスを解決 → フロントが manga:// URL で表示
+
+  step1_register_chunk:
+    what: チャンクを登録する
+    code: |
+      // ChunkForm.tsx
+      function handleSubmit(e) {
+        onAdd(startPath, endPath, name);  // PlaylistPanel に通知
+      }
+
+      // PlaylistPanel.tsx
+      <ChunkForm onAdd={(start, end, name) =>
+        addChunk(activePlaylist.id, start, end, name)
+      />
+
+      // playlistStore.ts
+      addChunk: (playlistId, startPath, endPath, name) => {
+        const newChunk = { id: crypto.randomUUID(), name, startPath, endPath };
+        // playlists配列を更新 → usePersistence が自動保存
+      }
+
+  step2_open_viewer:
+    what: 「ビューアで開く」を押したとき
+    code: |
+      // PlaylistPanel.tsx
+      async function handleStartViewer() {
+        await loadImagesForPlaylist(activePlaylistId);  // 画像パスを解決
+        onStartViewer();  // page.tsx の view を "viewer" に切り替え
+      }
+
+  step3_resolve_images:
+    what: |
+      各チャンクの startPath/endPath から実際の画像パス一覧を生成する。
+      これがこのアプリの核心ロジック。
+    code: |
+      // viewerStore.ts
+      for (const chunk of playlist.chunks) {
+        const paths = await resolveChunkImages(chunk.startPath, chunk.endPath);
+        // invoke("resolve_chunk_images", { startPath, endPath })
+        allImagePaths.push(...paths);
+      }
+
+      // 各パスを base64 data URL に変換
+      const dataUrls = await Promise.all(
+        allImagePaths.map(path => readImageAsDataUrl(path))
+      );
+      set({ flatImageList: dataUrls, totalPages: dataUrls.length });
+
+  step4_rust_resolves:
+    what: Rust側で startPath/endPath を画像パスリストに変換する
+    code: |
+      // commands/chunk.rs
+      pub async fn resolve_chunk_images(start_path, end_path) {
+        // end_path が空 → start_path をフォルダ全体として解決
+        if end_path.trim().is_empty() {
+            return resolve_from_start_only(&start_path);
+        }
+        // 両方あれば validate_chunk で範囲を解決
+        let result = validate_chunk(start_path, end_path).await?;
+        Ok(result.image_paths)
+      }
+
+      // パスの種別を判定
+      fn classify_path(path: &str) -> PathType {
+        // "D:/manga.zip/ch1/001.jpg" → ZipEntry("D:/manga.zip", "ch1/001.jpg")
+        // "D:/manga/001.jpg"         → File("D:/manga", "001.jpg")
+        // "D:/manga/"                → Directory("D:/manga")
+        // "D:/manga.zip"             → ZipWhole("D:/manga.zip")
+      }
+
+  step5_display:
+    what: ViewerCanvas が画像を表示する
+    code: |
+      // ViewerCanvas.tsx
+      const { flatImageList, currentPageIndex, settings } = useViewerStore();
+
+      // 見開きモードなら2枚表示
+      const rightPage = flatImageList[currentPageIndex];
+      const leftPage = settings.spreadMode
+        ? flatImageList[currentPageIndex + 1]
+        : null;
+
+      return (
+        <img src={rightPage} />   // base64 data URL を直接 src に指定
+        {leftPage && <img src={leftPage} />}
+      );
+
+################################################################################
+# フロントエンド詳細
+################################################################################
+
+frontend:
+
+  page_tsx:
+    path: src/app/page.tsx
+    role: アプリ全体のルート。2画面を切り替えるだけ。
+    code: |
+      export default function Home() {
+        const [view, setView] = useState<"playlist" | "viewer">("playlist");
+        usePersistence();  // 起動時に保存データを読み込む
+
+        if (view === "viewer") {
+          return <ViewerCanvas onBack={() => setView("playlist")} />;
+        }
+        return <PlaylistPanel onStartViewer={() => setView("viewer")} />;
+      }
+
+  playlistStore:
+    path: src/stores/playlistStore.ts
+    role: |
+      プレイリストとチャンクのCRUD操作をすべて担う。
+      Zustand は create() で状態とアクションをひとまとめに定義する。
+    key_patterns:
+      update_helper: |
+        # プレイリスト内のチャンクを変更するヘルパー
+        # 毎回 playlists.map() で該当プレイリストだけを更新する
+        function updatePlaylistChunks(playlists, playlistId, updater) {
+          return playlists.map(pl => {
+            if (pl.id !== playlistId) return pl;
+            return { ...pl, chunks: updater(pl.chunks), updatedAt: Date.now() };
+          });
+        }
+    code: |
+      export const usePlaylistStore = create<PlaylistState>((set, get) => ({
+        playlists: [],
+        activePlaylistId: null,
+
+        addChunk: (playlistId, startPath, endPath, name) => {
+          const newChunk = {
+            id: crypto.randomUUID(),
+            ...(name?.trim() ? { name: name.trim() } : {}),
+            startPath,
+            endPath,
+          };
+          set(state => ({
+            playlists: updatePlaylistChunks(state.playlists, playlistId,
+              chunks => [...chunks, newChunk]
+            )
+          }));
+        },
+
+        reorderChunks: (playlistId, fromIndex, toIndex) => {
+          set(state => ({
+            playlists: updatePlaylistChunks(state.playlists, playlistId, chunks => {
+              const newChunks = [...chunks];
+              const [moved] = newChunks.splice(fromIndex, 1);
+              newChunks.splice(toIndex, 0, moved);
+              return newChunks;
+            })
+          }));
+        },
+
+        hydrate: (playlists) => set({ playlists }),  // 起動時の復元用
+      }));
+
+  viewerStore:
+    path: src/stores/viewerStore.ts
+    role: |
+      表示する画像リストとページ位置を管理する。
+      loadImagesForPlaylist だけが非同期処理を持つ。
+    important_note: |
+      ページ遷移は currentPageIndex を変えるだけ。
+      spreadMode なら step=2、1枚表示なら step=1 で進む。
+    code: |
+      nextSpread: () => {
+        const { currentPageIndex, totalPages, settings } = get();
+        const step = settings.spreadMode ? 2 : 1;
+        const nextIdx = Math.min(currentPageIndex + step, totalPages - 1);
+        set({ currentPageIndex: nextIdx });
+      },
+
+      // loadImagesForPlaylist の流れ
+      loadImagesForPlaylist: async (playlistId) => {
+        set({ isLoading: true });
+        for (const chunk of playlist.chunks) {
+          const paths = await resolveChunkImages(chunk.startPath, chunk.endPath);
+          allImagePaths.push(...paths);
+        }
+        // base64変換（manga://プロトコルは使わず全部base64）
+        const dataUrls = await Promise.all(
+          allImagePaths.map(path => readImageAsDataUrl(path))
+        );
+        set({ flatImageList: dataUrls.filter(u => u !== ""), isLoading: false });
+      }
+
+  usePersistence:
+    path: src/hooks/usePersistence.ts
+    role: |
+      tauri-plugin-store を使い "playlists.json" にデータを保存・復元する。
+      起動時1回だけ読む / プレイリスト変更時は500msデバウンスで自動保存。
+    key_patterns:
+      debounce: |
+        # setTimeout を使った簡易デバウンス
+        # 変更のたびに前のタイマーをクリアして新しいタイマーをセット
+        saveTimeoutRef.current = setTimeout(async () => {
+          const store = await getStore();
+          await store.set("playlists", playlists);
+          await store.save();
+        }, 500);
+      hydration_guard: |
+        # isHydrated フラグで「読み込み前の保存」を防ぐ
+        # Reactのレンダリング時にstoreがundefinedでもエラーにならない
+        const isHydrated = useRef(false);
+        // 起動時読み込み完了後に true にする
+        if (!isHydrated.current) return;  // 保存をスキップ
+
+  FileBrowserDialog:
+    path: src/components/playlist/FileBrowserDialog.tsx
+    role: |
+      OS標準ダイアログを使わず、アプリ内にエクスプローラーを実装したもの。
+      ディレクトリとZIPの両方をシームレスにナビゲートできる。
+    state: |
+      locationStack: Location[]  // 訪れた場所の履歴スタック（戻るボタン用）
+      entries: FileEntry[]       // 現在の場所にある項目一覧
+      drives: string[]           // 左サイドバーのドライブ一覧
+      sortField: "name" | "date"
+      sortDir: "asc" | "desc"
+      viewMode: "list" | "grid"
+      navDir: 1 | -1             // アニメーション方向（前進/後退）
+    key_function_pathToLocation: |
+      // パス文字列から Location オブジェクトを生成する
+      // 重要: ZIP内部パス（.zip/フォルダ名）も isZip: true にする
+      function pathToLocation(path: string): Location {
+        const normalized = path.replace(/\\/g, "/").replace(/\/+$/, "");
+        const name = normalized.split("/").filter(Boolean).pop() || normalized;
+        const lower = normalized.toLowerCase();
+        const isZip =
+          lower.endsWith(".zip") || lower.endsWith(".cbz") ||
+          lower.includes(".zip/") || lower.includes(".cbz/");  // ← ZIP内部パスも対応
+        return { path: normalized, name, isZip };
+      }
+    key_function_loadLocation: |
+      // isZip かどうかで呼ぶAPIを切り替える
+      const loadLocation = useCallback(async (loc: Location) => {
+        const result = loc.isZip
+          ? await browseZip(loc.path)      // ZIP内部のディレクトリ一覧
+          : await browseDirectory(loc.path); // OSのディレクトリ一覧
+        setEntries(result);
+      }, []);
+    key_function_goBack: |
+      function goBack() {
+        if (locationStack.length === 1) {
+          // スタックが1つ = 最初の場所から戻る
+          // → ルート画面ではなく親ディレクトリへ移動
+          const parentPath = normalized.slice(0, normalized.lastIndexOf("/"));
+          setLocationStack([pathToLocation(parentPath)]);
+          return;
+        }
+        setLocationStack(prev => prev.slice(0, -1));  // 末尾を削除して戻る
+      }
+    sorting_code: |
+      const filteredEntries = entries
+        .filter(e => showHidden || !e.is_hidden)
+        .filter(e => e.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        .slice()
+        .sort((a, b) => {
+          if (a.is_dir !== b.is_dir) return a.is_dir ? -1 : 1;  // フォルダ優先
+          let cmp = sortField === "name"
+            ? a.name.localeCompare(b.name, "ja", { numeric: true })
+            : (a.modified_at ?? 0) - (b.modified_at ?? 0);
+          return sortDir === "asc" ? cmp : -cmp;
+        });
+
+  ChunkCard:
+    path: src/components/playlist/ChunkCard.tsx
+    role: チャンク1件の表示・編集カード。dnd-kitでドラッグ対応。
+    dnd_kit_usage: |
+      // useSortable フックでドラッグ対応になる
+      const { attributes, listeners, setNodeRef, transform, transition, isDragging }
+        = useSortable({ id: chunk.id });
+
+      // transform と transition を style に適用するだけ
+      <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }}>
+        <button {...attributes} {...listeners}>  {/* ドラッグハンドル */}
+    context_menu: |
+      // カード全体を右クリックで編集・削除メニュー
+      <div onContextMenu={(e) => {
+        e.preventDefault();
+        setContextMenu({ x: e.clientX, y: e.clientY });
+      }}>
+    isDirectoryLike: |
+      // 開始パスがフォルダ/ZIP全体かどうか判定
+      // 判定基準: 拡張子がない or 画像拡張子でない
+      function isDirectoryLike(path: string): boolean {
+        const lastSegment = path.replace(/\\/g, "/").replace(/\/+$/, "")
+          .split("/").pop() ?? "";
+        const dotIdx = lastSegment.lastIndexOf(".");
+        if (dotIdx < 0) return true;  // 拡張子なし → フォルダ
+        const ext = lastSegment.slice(dotIdx + 1).toLowerCase();
+        return !IMAGE_EXTENSIONS.includes(ext);  // 画像でなければフォルダ扱い
+      }
+
+  ViewerCanvas:
+    path: src/components/viewer/ViewerCanvas.tsx
+    role: フルスクリーン画像ビューア。キーボード・マウスホイール・クリックで操作。
+    wheel_handler: |
+      // マウスホイールは300msスロットリングして誤操作を防ぐ
+      const lastWheelTime = useRef(0);
+      const handleWheel = useCallback((e: WheelEvent) => {
+        e.preventDefault();  // ページスクロールをキャンセル
+        const now = Date.now();
+        if (now - lastWheelTime.current < 300) return;  // スロットル
+        lastWheelTime.current = now;
+        if (e.deltaY > 0) nextSpread(); else prevSpread();
+      }, [nextSpread, prevSpread]);
+
+      // passive: false にしないと preventDefault が効かない
+      window.addEventListener("wheel", handleWheel, { passive: false });
+    keyboard_handler: |
+      function handleKeyDown(e: KeyboardEvent) {
+        switch (e.key) {
+          case "ArrowLeft": case "ArrowUp":   nextSpread(); break;
+          case "ArrowRight": case "ArrowDown": prevSpread(); break;
+          case " ": e.shiftKey ? prevSpread() : nextSpread(); break;
+          case "Home": goToFirst(); break;
+          case "End":  goToLast();  break;
+          case "s": case "S": updateSettings({ spreadMode: !settings.spreadMode }); break;
+          case "Escape": onBack(); break;
+        }
+      }
+    animation: |
+      // motion/react でスライドアニメーション
+      // navDirection で左右どちらにスライドするか決まる
+      <AnimatePresence mode="wait" custom={navDirection}>
+        <motion.div
+          key={currentPageIndex}   // keyが変わるとアニメーション発動
+          custom={navDirection}
+          variants={{
+            enter: (dir) => ({ x: dir * 100 + "%" }),
+            center: { x: 0 },
+            exit: (dir) => ({ x: dir * -100 + "%" }),
+          }}
+          initial="enter" animate="center" exit="exit"
+        >
+          <img src={flatImageList[currentPageIndex]} />
+        </motion.div>
+      </AnimatePresence>
+
+  ContextMenu:
+    path: src/components/ui/ContextMenu.tsx
+    role: 右クリック位置にフローティングメニューを表示する汎用コンポーネント
+    code: |
+      interface ContextMenuProps {
+        x: number;             // クリックしたX座標
+        y: number;             // クリックしたY座標
+        items: ContextMenuEntry[];
+        onClose: () => void;
+      }
+
+      // 外側クリック・Escapeで閉じる
+      useEffect(() => {
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", handleEscape);
+        return () => { /* クリーンアップ */ };
+      }, [onClose]);
+
+      // 画面端補正：メニューが画面外にはみ出さないように位置を調整
+      useEffect(() => {
+        const rect = menuRef.current.getBoundingClientRect();
+        if (rect.right > window.innerWidth)
+          menuRef.current.style.left = `${window.innerWidth - rect.width - 8}px`;
+      }, [x, y]);
+
+################################################################################
+# バックエンド詳細（Rust）
+################################################################################
+
+backend:
+
+  lib_rs:
+    path: src-tauri/src/lib.rs
+    role: Tauriアプリの初期化。プラグイン登録とコマンド登録。
+    code: |
+      pub fn run() {
+        tauri::Builder::default()
+          .plugin(tauri_plugin_store::Builder::default().build())
+          .plugin(tauri_plugin_dialog::init())
+          .register_uri_scheme_protocol("manga", |_ctx, request| {
+            protocol::manga::handle_manga_request(&request)
+          })
+          .invoke_handler(tauri::generate_handler![
+            validate_chunk,
+            resolve_chunk_images,
+            browse_directory,
+            browse_zip,
+            list_drives,
+            read_image_as_data_url,
+            convert_to_manga_urls,
+          ])
+          .run(tauri::generate_context!())
+          .expect("error while running tauri application");
+      }
+
+  commands_chunk_rs:
+    path: src-tauri/src/commands/chunk.rs
+    role: |
+      このアプリの最も重要なロジック。
+      startPath/endPath を解析して画像ファイルパス一覧を返す。
+    PathType_enum: |
+      // パスを4種類に分類する
+      enum PathType {
+        Directory(String),           // "D:/manga/"
+        File(String, String),        // dir="D:/manga", file="001.jpg"
+        ZipWhole(String),            // "D:/manga.zip"
+        ZipEntry(String, String),    // zip="D:/manga.zip", entry="ch1/001.jpg"
+      }
+    classify_path: |
+      fn classify_path(path: &str) -> PathType {
+        let normalized = path.replace('\\', "/");
+
+        // パストラバーサル防止
+        if normalized.split('/').any(|seg| seg == "..") {
+          return PathType::File(String::new(), String::new());
+        }
+
+        // ZIP境界を検出（例: "D:/manga.zip/ch1" → zip="D:/manga.zip", entry="ch1"）
+        if let Some((zip_path, inner)) = find_zip_boundary(&normalized) {
+          return match inner {
+            Some(entry) => PathType::ZipEntry(zip_path, entry),
+            None => PathType::ZipWhole(zip_path),
+          };
+        }
+
+        // OSパスとして解析
+        let p = Path::new(&normalized);
+        if p.is_dir() {
+          PathType::Directory(normalized)
+        } else {
+          let dir = p.parent().map(|d| d.to_string_lossy().to_string()).unwrap_or_default();
+          let file = p.file_name().and_then(|n| n.to_str()).unwrap_or("").to_string();
+          PathType::File(dir, file)
+        }
+      }
+    resolve_chunk_images: |
+      #[tauri::command]
+      pub async fn resolve_chunk_images(start_path: String, end_path: String)
+        -> Result<Vec<String>, String>
+      {
+        // endPathが空 = startPathをフォルダ全体として解決
+        if end_path.trim().is_empty() {
+          return resolve_from_start_only(&start_path);
+        }
+        let result = validate_chunk(start_path, end_path).await?;
+        Ok(result.image_paths)
+      }
+
+      // endPathが空のときの処理
+      fn resolve_from_start_only(start_path: &str) -> Result<Vec<String>, String> {
+        match classify_path(start_path) {
+          PathType::Directory(dir) => {
+            let images = directory::list_images_in_directory(Path::new(&dir))?;
+            Ok(images.iter().map(|p| p.to_string_lossy().to_string()).collect())
+          }
+          PathType::ZipWhole(zip) => {
+            let images = zip_reader::list_images_in_zip(Path::new(&zip))?;
+            Ok(images.iter().map(|e| format!("zip://{}///{}", zip, e)).collect())
+          }
+          PathType::ZipEntry(zip, entry) => {
+            if is_image_entry(&entry) {
+              Ok(vec![format!("zip://{}///{}", zip, entry)])  // 単一画像
+            } else {
+              // サブディレクトリ扱い
+              let images = zip_reader::list_images_in_zip_prefix(Path::new(&zip), &entry)?;
+              Ok(images.iter().map(|e| format!("zip://{}///{}", zip, e)).collect())
+            }
+          }
+          PathType::File(dir, file) => Ok(vec![format!("{}/{}", dir, file)]),
+        }
+      }
+    note_zip_url_format: |
+      # ZIPの画像パスは "zip://ZIPファイルパス///エントリ名" という形式
+      # "///" 区切りを使う理由: ZIPファイル名やエントリ名に "/" が含まれる可能性があるため
+      # 例: "zip://D:/manga.zip///ch1/001.jpg"
+
+  commands_filesystem_rs:
+    path: src-tauri/src/commands/filesystem.rs
+    role: FileBrowserDialog にファイル一覧を提供する
+    browse_directory: |
+      #[tauri::command]
+      pub async fn browse_directory(path: String) -> Result<Vec<FileEntry>, String> {
+        // "D:" → "D:/" に正規化（Windowsでドライブルートを正しく読むため）
+        let path = if path.len() == 2 && path.ends_with(':') {
+          format!("{}/", path)
+        } else { path };
+
+        let entries: Vec<FileEntry> = fs::read_dir(&path)?
+          .filter_map(|entry| entry.ok())
+          .filter_map(|entry| {
+            let is_dir = detect_is_dir(&entry, &entry_path);
+            let is_zip = !is_dir && is_zip_like(&entry_path);
+            let is_image = !is_dir && !is_zip && is_image_file(&entry_path);
+            if !(is_dir || is_zip || is_image) { return None; }  // 関係ないファイルは除外
+            // ... FileEntry を組み立てて返す
+          })
+          .collect();
+        // ディレクトリ優先 → 自然順ソート
+      }
+    browse_zip: |
+      #[tauri::command]
+      pub async fn browse_zip(zip_path: String) -> Result<Vec<FileEntry>, String> {
+        // "D:/manga.zip/ch1" → zip_file="D:/manga.zip", current_dir="ch1"
+        let (zip_file, current_dir) = find_zip_boundary(&zip_path)?;
+
+        // ZIPエントリを走査して現在ディレクトリの直下だけ収集
+        // Shift-JIS対応: by_index_raw() で生バイト列を取得し decode_zip_name() でデコード
+        for i in 0..archive.len() {
+          let (path_name, raw_name) = archive.by_index_raw(i)?;
+          if !path_name.starts_with(&prefix) { continue; }
+
+          let display_name = decode_zip_name(raw_segments[target_segment_idx]);
+
+          if rest.contains('/') {
+            subdirs.insert(dir_key, display_name);  // サブディレクトリ
+          } else if is_image_entry(&path_name) {
+            images.push((path_name, display_name)); // 画像ファイル
+          }
+        }
+      }
+    decode_zip_name: |
+      // Shift-JIS ZIP対応の核心
+      fn decode_zip_name(raw: &[u8]) -> String {
+        // まずUTF-8として試みる
+        if let Ok(s) = std::str::from_utf8(raw) { return s.to_string(); }
+        // 失敗したらShift-JISとしてデコード
+        let (cow, _, had_errors) = encoding_rs::SHIFT_JIS.decode(raw);
+        if !had_errors { return cow.into_owned(); }
+        // それも失敗したらlossyなUTF-8
+        String::from_utf8_lossy(raw).into_owned()
+      }
+
+  protocol_manga_rs:
+    path: src-tauri/src/protocol/manga.rs
+    role: |
+      manga:// カスタムプロトコルハンドラ。
+      <img src="manga://..."> のリクエストを受けて画像バイトを返す。
+    url_format: |
+      # 通常ファイル: manga://localhost/dir/{base64エンコードしたパス}
+      # ZIPエントリ:  manga://localhost/zip/{base64のZIPパス}/{base64のエントリ名}
+    code: |
+      fn process_request(request) -> Result<Response> {
+        // URL解析 → セグメントに分割
+        let segments: Vec<&str> = clean_path.splitn(3, '/').collect();
+
+        match segments.first().copied() {
+          Some("dir") => {
+            let image_path_str = decode_base64(segments[1])?;
+            // パストラバーサル防止
+            if image_path.components().any(|c| c == ParentDir) {
+              return Err("パストラバーサルは許可されていません");
+            }
+            let data = directory::read_image_from_directory(&image_path)?;
+            Ok(build_ok_response(data, guess_content_type(&image_path_str)))
+          }
+          Some("zip") => {
+            let zip_path_str = decode_base64(segments[1])?;
+            let entry_name = decode_base64(segments[2])?;
+            let data = zip_reader::read_image_from_zip(&zip_path, &entry_name)?;
+            Ok(build_ok_response(data, guess_content_type(&entry_name)))
+          }
+        }
+      }
+    note: |
+      なぜ manga:// プロトコルを使うのか？
+      → TauriはデフォルトでローカルファイルへのXHRをCSPで禁止している。
+      → カスタムプロトコルを登録することで <img src> が使えるようになる。
+      → ただし現在の実装では readImageAsDataUrl で base64変換してから表示しており、
+        manga://プロトコルは内部的なパイプとして機能している。
+
+  reader_zip_rs:
+    path: src-tauri/src/reader/zip.rs
+    role: ZIPファイルから画像を列挙・読み込む
+    important_function: |
+      // Zip Slip 対策（セキュリティ）
+      // エントリ名に ".." が含まれていたらエラー
+      pub fn read_image_from_zip(zip_path: &Path, entry_name: &str) -> Result<Vec<u8>, String> {
+        if Path::new(entry_name).components().any(|c| c == Component::ParentDir) {
+          return Err("不正なZIPエントリパスです".to_string());
+        }
+        // 200MB上限（DoS対策）
+        if zip_file.size() > 200 * 1024 * 1024 {
+          return Err("ZIPエントリが大きすぎます".to_string());
+        }
+        let mut buffer = Vec::new();
+        zip_file.read_to_end(&mut buffer)?;
+        Ok(buffer)
+      }
+
+  utils_paths_rs:
+    path: src-tauri/src/utils/paths.rs
+    role: |
+      パス文字列からZIPファイルの境界を見つける。
+      "D:/manga.zip/ch1/001.jpg" → zip="D:/manga.zip", entry="ch1/001.jpg"
+    code: |
+      pub fn find_zip_boundary(path: &str) -> Option<(String, Option<String>)> {
+        let parts: Vec<&str> = path.replace('\\', "/").split('/').collect();
+        let mut zip_path_parts: Vec<&str> = Vec::new();
+
+        for (i, part) in parts.iter().enumerate() {
+          zip_path_parts.push(part);
+          if part.to_lowercase().ends_with(".zip") || part.to_lowercase().ends_with(".cbz") {
+            let zip_path = zip_path_parts.join("/");
+            let inner = if i + 1 < parts.len() {
+              Some(parts[i+1..].join("/"))
+            } else { None };
+            return Some((zip_path, inner));
+          }
+        }
+        None  // ZIPが見つからなかった
+      }
+
+  utils_sorting_rs:
+    path: src-tauri/src/utils/sorting.rs
+    role: 自然順ソートと画像ファイル判定
+    natural_sort_explanation: |
+      # 通常のソート: "10.jpg" < "2.jpg"（文字コード順）
+      # 自然順ソート: "2.jpg" < "10.jpg"（数値として比較）
+      # natord クレートの natural_compare を使う
+    code: |
+      pub fn natural_compare(a: &str, b: &str) -> std::cmp::Ordering {
+        natord::compare(a, b)
+      }
+
+      pub fn is_image_file(path: &Path) -> bool {
+        path.extension()
+          .and_then(|ext| ext.to_str())
+          .map(|ext| matches!(ext.to_lowercase().as_str(),
+            "jpg" | "jpeg" | "png" | "gif" | "bmp" | "webp" | "avif" | "tiff" | "tif"
+          ))
+          .unwrap_or(false)
+      }
+
+################################################################################
+# 重要なパターン・テクニック
+################################################################################
+
+patterns:
+
+  zustand_pattern:
+    description: Zustandの基本パターン
+    code: |
+      // create() の中に 状態（値） と アクション（関数） を一緒に定義する
+      const useStore = create<State>((set, get) => ({
+        count: 0,
+        increment: () => set(state => ({ count: state.count + 1 })),
+        getDoubled: () => get().count * 2,  // get() で現在の状態を読む
+      }));
+
+      // コンポーネントで使うとき
+      const count = useStore(s => s.count);         // 必要な値だけ取る（再レンダリング最適化）
+      const increment = useStore(s => s.increment);
+
+  tauri_invoke_pattern:
+    description: RustコマンドをTypeScriptから呼ぶ
+    code: |
+      // src/lib/tauri.ts にラッパーを集約する
+      import { invoke } from "@tauri-apps/api/core";
+
+      export async function resolveChunkImages(startPath: string, endPath: string) {
+        return invoke<string[]>("resolve_chunk_images", { startPath, endPath });
+        // 引数名はRust側の snake_case と合わせる必要がある
+      }
+
+      // Rust側
+      #[tauri::command]
+      pub async fn resolve_chunk_images(
+        start_path: String,   // ← camelCase → snake_case に自動変換
+        end_path: String,
+      ) -> Result<Vec<String>, String> { ... }
+
+  dnd_kit_pattern:
+    description: dnd-kitでドラッグ&ドロップを実装する
+    code: |
+      // リスト側（SortableChunkList）
+      <DndContext onDragEnd={handleDragEnd}>
+        <SortableContext items={chunks.map(c => c.id)}>
+          {chunks.map((chunk, i) => <ChunkCard key={chunk.id} ... />)}
+        </SortableContext>
+      </DndContext>
+
+      function handleDragEnd(event) {
+        const oldIndex = chunks.findIndex(c => c.id === event.active.id);
+        const newIndex = chunks.findIndex(c => c.id === event.over.id);
+        onReorder(oldIndex, newIndex);
+      }
+
+      // カード側（ChunkCard）
+      const { attributes, listeners, setNodeRef, transform, transition }
+        = useSortable({ id: chunk.id });
+      // setNodeRef: ドラッグ対象要素のref
+      // attributes/listeners: ドラッグハンドルに渡す（onMouseDown等）
+      // transform/transition: 現在の位置を style に適用
+
+  context_menu_pattern:
+    description: 右クリックメニューの実装パターン
+    code: |
+      // 状態管理
+      const [contextMenu, setContextMenu] = useState<{x: number, y: number} | null>(null);
+
+      // 右クリックで座標を記録
+      <div onContextMenu={(e) => {
+        e.preventDefault();  // ブラウザのデフォルトメニューをキャンセル
+        setContextMenu({ x: e.clientX, y: e.clientY });
+      }}>
+
+      // ContextMenu コンポーネントを表示
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+          items={[
+            { label: "編集", onClick: handleEdit },
+            { separator: true },
+            { label: "削除", danger: true, onClick: handleDelete },
+          ]}
+        />
+      )}
+
+  debounce_pattern:
+    description: 保存処理のデバウンス（頻繁な変更をまとめて保存）
+    code: |
+      const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+      useEffect(() => {
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = setTimeout(async () => {
+          await save(data);
+        }, 500);  // 最後の変更から500ms後に保存
+        return () => {
+          if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        };
+      }, [data]);
+
+  animation_pattern:
+    description: motion/react でページ遷移アニメーション
+    code: |
+      // key が変わるたびに enter/exit アニメーションが発動する
+      // custom でアニメーションに渡す値（方向）を制御
+      <AnimatePresence mode="wait" custom={direction}>
+        <motion.div
+          key={currentPage}         // ← これが変わるとアニメーション
+          custom={direction}        // ← variants に渡る値
+          variants={{
+            enter: (dir) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),
+            center: { x: 0, opacity: 1 },
+            exit: (dir) => ({ x: dir > 0 ? "-100%" : "100%", opacity: 0 }),
+          }}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ duration: 0.2 }}
+        />
+      </AnimatePresence>
+
+################################################################################
+# セキュリティ対策のまとめ
+################################################################################
+
+security:
+
+  path_traversal:
+    threat: 悪意あるパス（../../etc/passwd 等）でシステムファイルへアクセス
+    defense: |
+      // Rust: ".." セグメントを含むパスを即座に拒否
+      if normalized.split('/').any(|seg| seg == "..") {
+        return Err("パストラバーサルは許可されていません");
+      }
+      // manga://プロトコルでも同様にチェック
+      if path.components().any(|c| c == Component::ParentDir) {
+        return Err("不正なパス");
+      }
+
+  zip_slip:
+    threat: |
+      ZIPに "../../../evil.exe" のようなエントリを仕込み、
+      展開先で上位ディレクトリに書き込む攻撃
+    defense: |
+      // read_image_from_zip でエントリ名を事前チェック
+      if Path::new(entry_name).components().any(|c| c == Component::ParentDir) {
+        return Err("Zip Slip 検出");
+      }
+
+  dos_protection:
+    threat: 巨大ファイルを指定してメモリを枯渇させる
+    defense: |
+      const MAX_ZIP_ENTRY_SIZE: u64 = 200 * 1024 * 1024;  // 200MB
+      if zip_file.size() > MAX_ZIP_ENTRY_SIZE {
+        return Err("ファイルが大きすぎます");
+      }
+
+  xss:
+    threat: フロントエンドで悪意あるHTMLが実行される
+    defense: |
+      // React は {} で囲んだ値を自動エスケープする
+      // dangerouslySetInnerHTML は使用しない
+      <span>{entry.name}</span>  // 安全（エスケープされる）
+      // <span dangerouslySetInnerHTML={{ __html: entry.name }} />  // 危険（使わない）
+
+################################################################################
+# よくある疑問と回答
+################################################################################
+
+faq:
+
+  why_base64_not_manga_protocol:
+    q: なぜ <img src="manga://..."> でなく base64 data URL を使っているのか？
+    a: |
+      viewerStore.ts の loadImagesForPlaylist で readImageAsDataUrl を呼んで
+      全画像を事前に base64 変換している。
+      これにより画像の読み込みエラーを事前に検出でき、
+      ビューア表示中に画像が壊れることを防げる。
+
+  why_custom_explorer:
+    q: なぜOSのファイルダイアログを使わずアプリ内エクスプローラーを作ったのか？
+    a: |
+      OS標準ダイアログはフォルダ選択とファイル選択を同時にできない場合がある。
+      また、ZIP内部のファイルを選択させるにはカスタムUIが必要。
+      さらにソート・フィルタ・サムネイル表示などの機能を追加したかった。
+
+  why_zip_url_format:
+    q: zip://D:/manga.zip///ch1/001.jpg の "///" は何？
+    a: |
+      ZIPファイルパスとZIP内エントリパスを区切るセパレータ。
+      ZIPファイル名やエントリ名に "/" が含まれる可能性があるため、
+      通常の "/" では分割できない。そのため "///" という珍しい区切りを使っている。
+
+  why_shift_jis:
+    q: なぜShift-JIS対応が必要なのか？
+    a: |
+      日本のZIPファイルは古いWindows標準に従い、
+      ファイル名をShift-JIS(CP932)でエンコードしているものが多い。
+      ZIPライブラリはデフォルトでUTF-8として読むため文字化けする。
+      by_index_raw() で生バイト列を取得し、encoding_rs でShift-JISデコードする。
+
+  why_locationStack_not_history:
+    q: FileBrowserDialogで戻る操作にlocationStackを使っているのはなぜ？
+    a: |
+      ブラウザの history APIは使えない（Tauriアプリはシングルページ）。
+      locationStack は訪れた場所を順番に積んでいく配列で、
+      goBack() は末尾を削除するだけ（pop）。
+      スタックが1つのときは親ディレクトリを計算して遷移する。

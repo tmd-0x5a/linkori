@@ -127,6 +127,9 @@ function Hero(){
               <Ico name="gh" size={16}/>{COPY.hero.ghost[lang]}
             </a>
           </div>
+          <div className="reveal" style={{'--d':'280ms', fontSize: 11, color: 'var(--fg-mute)', marginTop: 8}}>
+            {COPY.download.note[lang]}
+          </div>
           <div className="hero-meta reveal" style={{'--d':'320ms'}}>
             <span><b>OS</b> {COPY.hero.meta1[lang]}</span>
             <span><b>ARCH</b> {COPY.hero.meta3[lang]}</span>

@@ -1,0 +1,2364 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Linkori — コードベースガイド v0.6.0（フォルダ対応版）</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ─── Apple Design System ─── */
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --black: #000000;
+        --near-black: #1d1d1f;
+        --light-gray: #f5f5f7;
+        --mid-gray: #e8e8ed;
+        --text-secondary: rgba(0, 0, 0, 0.55);
+        --apple-blue: #0071e3;
+        --apple-blue-dark: #2997ff;
+        --link-light: #0066cc;
+        --link-dark: #2997ff;
+        --white: #ffffff;
+        --dark-surface: #1c1c1e;
+        --dark-surface-2: #2c2c2e;
+        --dark-border: rgba(255, 255, 255, 0.12);
+        --code-bg: #1c1c1e;
+        --code-bg-light: #f0f0f5;
+        --sans: "Inter", "Noto Sans JP", "Helvetica Neue", Arial, sans-serif;
+        --mono: "JetBrains Mono", "SF Mono", "Menlo", monospace;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: var(--sans);
+        background: var(--black);
+        color: var(--white);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      svg {
+        display: block;
+      }
+      img {
+        max-width: 100%;
+        display: block;
+      }
+
+      /* ── Nav ── */
+      .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        height: 48px;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: saturate(180%) blur(20px);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .nav-inner {
+        width: 100%;
+        max-width: 980px;
+        padding: 0 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+      .nav-brand {
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: rgba(255, 255, 255, 0.85);
+        white-space: nowrap;
+      }
+      .nav-brand em {
+        color: var(--apple-blue-dark);
+        font-style: normal;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+      }
+      .nav-links a {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.72);
+        padding: 6px 10px;
+        border-radius: 6px;
+        white-space: nowrap;
+        transition:
+          color 0.15s,
+          background 0.15s;
+      }
+      .nav-links a:hover {
+        color: var(--white);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      /* ── Hero ── */
+      .hero {
+        padding: 120px 22px 100px;
+        background: var(--black);
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .hero-eyebrow {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        color: var(--apple-blue-dark);
+        text-transform: uppercase;
+        margin-bottom: 16px;
+      }
+      .hero h1 {
+        font-size: clamp(36px, 6vw, 64px);
+        font-weight: 600;
+        line-height: 1.07;
+        letter-spacing: -0.028em;
+        color: var(--white);
+        margin-bottom: 18px;
+      }
+      .hero-sub {
+        font-size: clamp(17px, 2vw, 21px);
+        font-weight: 400;
+        line-height: 1.4;
+        letter-spacing: -0.01em;
+        color: rgba(255, 255, 255, 0.65);
+        max-width: 680px;
+        margin: 0 auto 32px;
+      }
+      .pill-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        color: var(--link-dark);
+        padding: 8px 20px;
+        border: 1px solid rgba(41, 151, 255, 0.5);
+        border-radius: 980px;
+        letter-spacing: -0.01em;
+        transition:
+          background 0.2s,
+          border-color 0.2s;
+      }
+      .pill-link:hover {
+        background: rgba(41, 151, 255, 0.1);
+        border-color: var(--link-dark);
+      }
+
+      /* ── Badge chips ── */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        font-size: 11px;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: 980px;
+        letter-spacing: 0.02em;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.75);
+      }
+      .badge.blue {
+        background: rgba(0, 113, 227, 0.2);
+        color: var(--apple-blue-dark);
+      }
+      .badge.green {
+        background: rgba(52, 199, 89, 0.2);
+        color: #34c759;
+      }
+      .badge.orange {
+        background: rgba(255, 159, 10, 0.2);
+        color: #ff9f0a;
+      }
+      .badge.pink {
+        background: rgba(252, 121, 129, 0.2);
+        color: #fc7981;
+      }
+
+      /* ── Sections alternating ── */
+      .section-dark {
+        background: var(--black);
+        color: var(--white);
+        padding: 80px 22px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .section-light {
+        background: var(--light-gray);
+        color: var(--near-black);
+        padding: 80px 22px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      }
+      .section-dark-alt {
+        background: #0a0a0a;
+        color: var(--white);
+        padding: 80px 22px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+      }
+
+      /* ── Section headings ── */
+      .section-tag {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--apple-blue);
+        margin-bottom: 12px;
+      }
+      .section-dark .section-tag,
+      .section-dark-alt .section-tag {
+        color: var(--apple-blue-dark);
+      }
+      .section-h2 {
+        font-size: clamp(28px, 4vw, 48px);
+        font-weight: 600;
+        line-height: 1.1;
+        letter-spacing: -0.025em;
+        margin-bottom: 16px;
+      }
+      .section-dark .section-h2,
+      .section-dark-alt .section-h2 {
+        color: var(--white);
+      }
+      .section-light .section-h2 {
+        color: var(--near-black);
+      }
+      .section-lead {
+        font-size: 17px;
+        line-height: 1.6;
+        letter-spacing: -0.02em;
+        max-width: 700px;
+        margin-bottom: 56px;
+      }
+      .section-dark .section-lead,
+      .section-dark-alt .section-lead {
+        color: rgba(255, 255, 255, 0.65);
+      }
+      .section-light .section-lead {
+        color: rgba(0, 0, 0, 0.65);
+      }
+
+      /* ── Card grid ── */
+      .grid {
+        display: grid;
+        gap: 18px;
+      }
+      .g2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .g3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      /* ── Cards (dark section) ── */
+      .card-d {
+        background: var(--dark-surface);
+        border-radius: 12px;
+        padding: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .card-d h3 {
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        color: var(--white);
+        margin-bottom: 8px;
+      }
+      .card-d p,
+      .card-d li {
+        font-size: 14px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: -0.01em;
+      }
+      .card-d ul {
+        list-style: none;
+        display: grid;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .card-d ul li {
+        padding-left: 16px;
+        position: relative;
+      }
+      .card-d ul li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.6em;
+        width: 6px;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      /* ── Cards (light section) ── */
+      .card-l {
+        background: var(--white);
+        border-radius: 12px;
+        padding: 28px;
+        box-shadow: rgba(0, 0, 0, 0.1) 0 2px 12px;
+      }
+      .card-l h3 {
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        color: var(--near-black);
+        margin-bottom: 8px;
+      }
+      .card-l p,
+      .card-l li {
+        font-size: 14px;
+        line-height: 1.6;
+        color: rgba(0, 0, 0, 0.6);
+        letter-spacing: -0.01em;
+      }
+      .card-l ul {
+        list-style: none;
+        display: grid;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .card-l ul li {
+        padding-left: 16px;
+        position: relative;
+      }
+      .card-l ul li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.6em;
+        width: 6px;
+        height: 1px;
+        background: rgba(0, 0, 0, 0.25);
+      }
+
+      /* ── File tree ── */
+      .tree {
+        background: var(--code-bg);
+        border-radius: 12px;
+        padding: 24px 28px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.8;
+        overflow-x: auto;
+        white-space: pre; /* ★スマホでフォルダ構成が崩れるのを防ぐために追加 */
+      }
+      .tree-light {
+        background: #f0f0f5;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+      .tree-light .tr,
+      .tree-light .td,
+      .tree-light .tf {
+        color: var(--near-black);
+      }
+      .tree-light .tc {
+        color: rgba(0, 0, 0, 0.4);
+      }
+      .tree-light .th {
+        color: var(--apple-blue);
+        font-weight: 600;
+      }
+      .tr {
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .td {
+        color: var(--apple-blue-dark);
+        font-weight: 500;
+      }
+      .tf {
+        color: rgba(255, 255, 255, 0.55);
+      }
+      .tc {
+        color: rgba(255, 255, 255, 0.3);
+      }
+      .th {
+        color: var(--apple-blue-dark);
+        font-weight: 600;
+      }
+      .tb {
+        color: #ff9f0a;
+      }
+      .tg {
+        color: #34c759;
+      }
+
+      /* ── Code blocks ── */
+      .code {
+        background: var(--code-bg);
+        border-radius: 10px;
+        padding: 20px 24px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.85);
+        overflow-x: auto;
+        white-space: pre;
+      }
+      .code-light {
+        background: #f0f0f5;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        color: var(--near-black);
+      }
+      .ck {
+        color: #c792ea;
+      } /* keyword */
+      .cs {
+        color: #c3e88d;
+      } /* string */
+      .cf {
+        color: #82aaff;
+      } /* function / type */
+      .cn {
+        color: #f78c6c;
+      } /* number / decorator */
+      .cj {
+        color: #ffcb6b;
+      } /* json key */
+      .cg {
+        color: #89ddff;
+      } /* operator / arrow */
+      .cm {
+        color: rgba(255, 255, 255, 0.35);
+      } /* comment */
+      .code-light .ck {
+        color: #7e57c2;
+      }
+      .code-light .cs {
+        color: #388e3c;
+      }
+      .code-light .cf {
+        color: #1976d2;
+      }
+      .code-light .cn {
+        color: #d84315;
+      }
+      .code-light .cj {
+        color: #bf8800;
+      }
+      .code-light .cg {
+        color: #0277bd;
+      }
+      .code-light .cm {
+        color: rgba(0, 0, 0, 0.4);
+      }
+
+      /* ── Flow diagram ── */
+      .flow {
+        display: flex;
+        gap: 0;
+        align-items: stretch;
+        overflow-x: auto;
+        margin: 32px 0;
+      }
+      .flow-node {
+        background: var(--dark-surface);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 16px 20px;
+        min-width: 140px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 6px;
+      }
+      .flow-node span:first-child {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.45);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .flow-node strong {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--white);
+      }
+      .flow-node small {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.4);
+        font-family: var(--mono);
+      }
+      .flow-arrow {
+        display: flex;
+        align-items: center;
+        padding: 0 6px;
+        color: rgba(255, 255, 255, 0.25);
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+      .flow-node.blue {
+        border-color: rgba(0, 113, 227, 0.5);
+        background: rgba(0, 113, 227, 0.12);
+      }
+      .flow-node.blue strong {
+        color: var(--apple-blue-dark);
+      }
+      .flow-node.green {
+        border-color: rgba(52, 199, 89, 0.4);
+        background: rgba(52, 199, 89, 0.08);
+      }
+      .flow-node.green strong {
+        color: #34c759;
+      }
+      .flow-node.orange {
+        border-color: rgba(255, 159, 10, 0.4);
+        background: rgba(255, 159, 10, 0.08);
+      }
+      .flow-node.orange strong {
+        color: #ff9f0a;
+      }
+
+      /* ── Command reference table ── */
+      .table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 24px;
+      }
+      .cmd-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .cmd-table th {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.45);
+        padding: 10px 16px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .cmd-table td {
+        font-size: 13px;
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        vertical-align: top;
+      }
+      .cmd-table tr:last-child td {
+        border-bottom: none;
+      }
+      .cmd-name {
+        font-family: var(--mono);
+        color: var(--apple-blue-dark);
+        font-weight: 500;
+      }
+      .cmd-type {
+        font-family: var(--mono);
+        color: #34c759;
+        font-size: 12px;
+      }
+      .cmd-desc {
+        color: rgba(255, 255, 255, 0.65);
+      }
+
+      .light-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .light-table th {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(0, 0, 0, 0.4);
+        padding: 10px 16px;
+        text-align: left;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      }
+      .light-table td {
+        font-size: 13px;
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        vertical-align: top;
+        color: rgba(0, 0, 0, 0.7);
+      }
+      .light-table tr:last-child td {
+        border-bottom: none;
+      }
+      .lt-name {
+        font-family: var(--mono);
+        color: var(--apple-blue);
+        font-weight: 500;
+      }
+      .lt-type {
+        font-family: var(--mono);
+        color: #078a52;
+        font-size: 12px;
+      }
+
+      /* ── Info box ── */
+      .info-box {
+        border-radius: 10px;
+        padding: 20px 24px;
+        margin: 24px 0;
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+      }
+      .info-box.blue {
+        background: rgba(41, 151, 255, 0.12);
+        border: 1px solid rgba(41, 151, 255, 0.3);
+      }
+      .info-box.orange {
+        background: rgba(255, 159, 10, 0.1);
+        border: 1px solid rgba(255, 159, 10, 0.3);
+      }
+      .info-box.green {
+        background: rgba(52, 199, 89, 0.1);
+        border: 1px solid rgba(52, 199, 89, 0.3);
+      }
+      .info-box .ico {
+        font-size: 20px;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+      .info-box p {
+        font-size: 14px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.78);
+        letter-spacing: -0.01em;
+      }
+      .info-box.light p {
+        color: rgba(0, 0, 0, 0.68);
+      }
+      .info-box strong {
+        color: var(--white);
+      }
+      .info-box.light strong {
+        color: var(--near-black);
+      }
+
+      /* ── Inline code ── */
+      code {
+        font-family: var(--mono);
+        font-size: 0.88em;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2px 6px;
+        border-radius: 5px;
+        color: var(--apple-blue-dark);
+      }
+      .section-light code {
+        background: rgba(0, 0, 0, 0.07);
+        color: var(--apple-blue);
+      }
+
+      /* ── Divider ── */
+      .divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+        margin: 40px 0;
+      }
+      .divider-light {
+        height: 1px;
+        background: rgba(0, 0, 0, 0.1);
+        margin: 40px 0;
+      }
+
+      /* ── Heading in content ── */
+      .h3 {
+        font-size: 21px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin-bottom: 16px;
+        margin-top: 40px;
+      }
+      .h4 {
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin-bottom: 10px;
+        margin-top: 28px;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .section-light .h3 {
+        color: var(--near-black);
+      }
+      .section-light .h4 {
+        color: rgba(0, 0, 0, 0.7);
+      }
+
+      /* ── TOC ── */
+      .toc {
+        background: var(--dark-surface);
+        border-radius: 12px;
+        padding: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 48px;
+      }
+      .toc h2 {
+        font-size: 15px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.5);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+      }
+      .toc ol {
+        list-style: none;
+        display: grid;
+        gap: 4px;
+        counter-reset: toc;
+      }
+      .toc ol li {
+        counter-increment: toc;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .toc ol li::before {
+        content: counter(toc, decimal-leading-zero);
+        font-family: var(--mono);
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.3);
+        flex-shrink: 0;
+      }
+      .toc ol li a {
+        font-size: 14px;
+        color: var(--link-dark);
+        letter-spacing: -0.01em;
+      }
+      .toc ol li a:hover {
+        text-decoration: underline;
+      }
+
+      /* ── Rust primer ── */
+      .rust-primer {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 12px 20px;
+        background: rgba(0, 113, 227, 0.08);
+        border: 1px solid rgba(41, 151, 255, 0.25);
+        border-radius: 12px;
+        padding: 22px 26px;
+        margin: 20px 0 32px;
+      }
+      .rust-primer dt {
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--apple-blue-dark);
+        font-weight: 500;
+      }
+      .rust-primer dd {
+        font-size: 13px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.75);
+      }
+      .section-light .rust-primer {
+        background: rgba(0, 113, 227, 0.07);
+        border-color: rgba(0, 113, 227, 0.25);
+      }
+      .section-light .rust-primer dt {
+        color: var(--apple-blue);
+      }
+      .section-light .rust-primer dd {
+        color: rgba(0, 0, 0, 0.68);
+      }
+
+      /* ── Footer ── */
+      .footer {
+        padding: 60px 22px;
+        background: var(--black);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        text-align: center;
+      }
+      .footer-brand {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin-bottom: 12px;
+      }
+      .footer-brand em {
+        color: var(--apple-blue-dark);
+        font-style: normal;
+      }
+      .footer p {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.35);
+      }
+      .footer a {
+        color: var(--link-dark);
+      }
+      .footer a:hover {
+        text-decoration: underline;
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 768px) {
+        .nav-links {
+          display: none;
+        }
+        .g2,
+        .g3 {
+          grid-template-columns: 1fr;
+        }
+        .flow {
+          flex-direction: column;
+        }
+        .flow-arrow {
+          transform: rotate(90deg);
+        }
+        .hero {
+          padding: 90px 18px 60px;
+        }
+        .section-dark,
+        .section-light,
+        .section-dark-alt {
+          padding: 60px 18px;
+        }
+        .wrap {
+          padding: 0;
+        }
+        .rust-primer {
+          grid-template-columns: 1fr;
+          gap: 4px 0;
+        }
+        .rust-primer dt {
+          margin-top: 8px;
+        }
+
+        /* ★スマホ用の微調整 */
+        .tree,
+        .code {
+          padding: 16px;
+          font-size: 11px;
+        }
+        .card-d,
+        .card-l,
+        .toc {
+          padding: 20px;
+        }
+        .cmd-table th,
+        .cmd-table td,
+        .light-table th,
+        .light-table td {
+          white-space: nowrap; /* テーブルをスマホで折り返さない */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Nav -->
+    <nav class="nav">
+      <div class="nav-inner">
+        <div class="nav-brand">
+          Link<em>ori</em>
+          <span style="color: rgba(255, 255, 255, 0.3)"
+            >/ コードベースガイド v0.6.0</span
+          >
+        </div>
+        <div class="nav-links">
+          <a href="#overview">概要</a>
+          <a href="#structure">構成</a>
+          <a href="#types">型</a>
+          <a href="#state">状態</a>
+          <a href="#tauri">ブリッジ</a>
+          <a href="#rust">Rust</a>
+          <a href="#folder">フォルダ対応</a>
+          <a href="#components">UI</a>
+          <a href="#data-flow">データフロー</a>
+          <a href="#build">ビルド</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-eyebrow">
+        Linkori v0.6.0 · Codebase Guide（フォルダ対応版）
+      </div>
+      <h1>Rustを知らなくても<br />1から作れるコードベース</h1>
+      <p class="hero-sub">
+        Next.js（React）× Tauri 2 × Rust で動くローカル漫画ビューア Linkori
+        の全体設計と、 v0.6.0 で追加された「フォルダ / ZIP 分割候補」「フォルダ
+        / ZIP サムネ自動生成」「要分割 UX」までを、 実コード付きで解説します。
+      </p>
+      <div
+        style="
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          flex-wrap: wrap;
+        "
+      >
+        <a href="#overview" class="pill-link">読みはじめる →</a>
+        <a href="#folder" class="pill-link">v0.6.0 で何が変わった？</a>
+      </div>
+    </section>
+
+    <!-- 1. Overview -->
+    <section class="section-dark" id="overview">
+      <div class="wrap">
+        <div class="section-tag">01 — Overview</div>
+        <h2 class="section-h2">Linkori とは何か</h2>
+        <p class="section-lead">
+          ローカルにある画像フォルダ・ZIP / CBZ・PDF
+          を、<strong>チャンク</strong>と呼ぶ連続区間に切り分けてまとめ、シームレスに読める
+          Windows 向けデスクトップアプリです。
+        </p>
+
+        <div class="toc">
+          <h2>目次</h2>
+          <ol>
+            <li><a href="#overview">Linkori の全体像と技術スタック</a></li>
+            <li><a href="#structure">フォルダ構成を読む</a></li>
+            <li><a href="#types">型定義 — データの骨格</a></li>
+            <li><a href="#state">状態管理 — Zustand ストア</a></li>
+            <li><a href="#tauri">Tauri 連携 — invoke の仕組み</a></li>
+            <li><a href="#rust">Rust バックエンドのコマンド一覧</a></li>
+            <li><a href="#folder">v0.6.0 フォルダ対応の実装</a></li>
+            <li><a href="#components">フロントエンドコンポーネント</a></li>
+            <li><a href="#data-flow">起動から画像表示までの全体フロー</a></li>
+            <li><a href="#build">開発・ビルド手順</a></li>
+          </ol>
+        </div>
+
+        <div class="grid g3" style="margin-bottom: 40px">
+          <div class="card-d">
+            <h3>🖥️ フロントエンド</h3>
+            <p>
+              Next.js 15 / React 19 / TypeScript。Tailwind CSS v4 と Zustand
+              で状態を素直に扱う。
+            </p>
+            <ul>
+              <li>Next.js（<code>output: "export"</code> で静的書き出し）</li>
+              <li>Zustand：playlist / viewer / settings ストア</li>
+              <li>dnd-kit：チャンク並び替え</li>
+              <li>motion：ページめくりアニメーション</li>
+              <li>pdf.js：PDF を画像ページに展開</li>
+            </ul>
+          </div>
+          <div class="card-d">
+            <h3>🔗 ブリッジ層</h3>
+            <p>
+              Tauri 2 が WebView と Rust を接続。JS から
+              <code>invoke("cmd", args)</code> 1 行で Rust を呼べる。
+            </p>
+            <ul>
+              <li><code>@tauri-apps/api/core</code> の <code>invoke</code></li>
+              <li><code>lib/tauri.ts</code> に型付きラッパーを集約</li>
+              <li>画像は <code>manga://</code> カスタムプロトコルで直送</li>
+              <li>設定保存は <code>tauri-plugin-store</code></li>
+            </ul>
+          </div>
+          <div class="card-d">
+            <h3>⚙️ バックエンド</h3>
+            <p>
+              Rust + Tauri。ファイル走査・ZIP 展開・サムネ生成など「OS
+              に触る仕事」を担当。
+            </p>
+            <ul>
+              <li><code>commands/</code>：フロント呼び出し可能な関数群</li>
+              <li><code>reader/</code>：フォルダ / ZIP の抽象</li>
+              <li><code>protocol/manga.rs</code>：画像配信プロトコル</li>
+              <li><code>utils/sorting.rs</code>：自然順ソート（natord）</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 class="h3">v0.6.0 で新しくなったところ（このガイドの主役）</h3>
+        <div class="grid g2">
+          <div class="card-d">
+            <h3>📂 フォルダ / ZIP の分割候補</h3>
+            <p>
+              1 つのフォルダをドラッグしたチャンクを、右クリック
+              →「サブフォルダで分割」で、<strong
+                >子フォルダと子 ZIP / CBZ を 1 チャンクずつ</strong
+              >に割ってくれる。巻ごとに ZIP
+              で固めている書庫を一発でプレイリスト化できる。
+            </p>
+          </div>
+          <div class="card-d">
+            <h3>🖼️ フォルダ / ZIP のサムネ自動生成</h3>
+            <p>
+              ファイルブラウザーでフォルダや ZIP
+              をグリッド表示したとき、自然順で最初に見つかった画像を縮小してカードに表示。中身が想像できるので迷わない。
+            </p>
+          </div>
+          <div class="card-d">
+            <h3>🚫 「要分割」バッジと親切エラー</h3>
+            <p>
+              フォルダ直下に画像がなく ZIP や子フォルダしかない場合、赤い NG
+              ではなく<strong>青い「要分割」</strong>バッジに切り替わり、ツールチップで分解を促す。
+            </p>
+          </div>
+          <div class="card-d">
+            <h3>🎯 <code>read_directory_thumbnail</code> の追加</h3>
+            <p>
+              フォルダ / ZIP どちらでも、先頭 1 枚の縮小 JPEG
+              を返す新コマンド。フロントの
+              <code>useFileThumbnail</code> が内部で呼び分ける。
+            </p>
+          </div>
+        </div>
+
+        <div class="info-box blue" style="margin-top: 40px">
+          <span class="ico">💡</span>
+          <div>
+            <p>
+              <strong>このガイドの読み方</strong><br />
+              上から順に読めば、空のプロジェクトから Linkori v0.6.0
+              相当のアプリを組み直せるだけの情報が揃うように並べています。<strong
+                >Rust の構文で戸惑ったら、各節の「Rust 初見メモ」</strong
+              >を先に流し読みしてください。書いてあることは、ほぼ「関数の宣言方法」と「エラーの書き方」の
+              2 点です。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Folder Structure -->
+    <section class="section-light" id="structure">
+      <div class="wrap">
+        <div class="section-tag">02 — Project Layout</div>
+        <h2 class="section-h2">プロジェクトのフォルダ構成</h2>
+        <p class="section-lead">
+          リポジトリのトップは「フロントエンド（<code>src/</code>）」「バックエンド（<code>src-tauri/</code>）」の
+          2 本立てです。<strong>フロントは画面、Rust は OS 仕事</strong
+          >と覚えれば迷いません。
+        </p>
+
+        <div class="tree tree-light">
+          <span class="td">new_view_app/</span>
+          ├── <span class="th">src/</span>
+          <span class="tc"># フロントエンド（Next.js）</span> │ ├──
+          <span class="tr">app/</span> │ │ ├── <span class="tf">page.tsx</span>
+          <span class="tc"># 唯一のページ（プレイリスト管理）</span> │ │ ├──
+          <span class="tf">layout.tsx</span> │ │ └──
+          <span class="tf">globals.css</span> │ ├──
+          <span class="tr">components/</span> │ │ ├──
+          <span class="tr">playlist/</span>
+          <span class="tc"># プレイリスト / チャンク UI</span> │ │ │ ├──
+          <span class="tf">PlaylistPanel.tsx</span> │ │ │ ├──
+          <span class="tf">ChunkCard.tsx</span> │ │ │ ├──
+          <span class="tf">ChunkForm.tsx</span> │ │ │ ├──
+          <span class="tf">FileBrowserDialog.tsx</span> │ │ │ ├──
+          <span class="tf">FileGridCard.tsx</span> │ │ │ ├──
+          <span class="tf">FileRow.tsx</span> │ │ │ └──
+          <span class="tf">TagEditor.tsx</span> │ │ ├──
+          <span class="tr">viewer/</span>
+          <span class="tc"># ビューア画面</span> │ │ │ ├──
+          <span class="tf">ViewerCanvas.tsx</span> │ │ │ └──
+          <span class="tf">ChunkSidebar.tsx</span> │ │ └──
+          <span class="tr">ui/</span> <span class="tc"># 共通 UI</span> │ ├──
+          <span class="tr">hooks/</span> │ │ ├──
+          <span class="tf">useFileThumbnail.ts</span>
+          <span class="tc"
+            ># 画像 / フォルダ / ZIP のサムネ取得（v0.6.0 で拡張）</span
+          >
+          │ │ ├── <span class="tf">usePersistence.ts</span> │ │ ├──
+          <span class="tf">useSplitUndo.ts</span> │ │ └──
+          <span class="tf">useDeleteUndo.ts</span> │ ├──
+          <span class="tr">stores/</span> │ │ ├──
+          <span class="tf">playlistStore.ts</span>
+          <span class="tc"># プレイリスト + タグ</span> │ │ ├──
+          <span class="tf">viewerStore.ts</span>
+          <span class="tc"># ビューアの画像・ページ状態</span> │ │ └──
+          <span class="tf">settingsStore.ts</span> │ ├──
+          <span class="tr">lib/</span> │ │ ├── <span class="tf">tauri.ts</span>
+          <span class="tc"># invoke を型付きでラップ</span> │ │ ├──
+          <span class="tf">mangaUrl.ts</span>
+          <span class="tc"># manga:// URL を組み立てる</span> │ │ └──
+          <span class="tf">paths.ts</span> │ └──
+          <span class="tr">types/index.ts</span>
+          <span class="tc"># Chunk / Playlist / FileEntry 等</span> │ ├──
+          <span class="th">src-tauri/</span>
+          <span class="tc"># バックエンド（Rust + Tauri）</span> │ ├──
+          <span class="tf">Cargo.toml</span> │ ├──
+          <span class="tf">tauri.conf.json</span>
+          <span class="tc"># CSP と manga:// スキーム宣言</span> │ └──
+          <span class="tr">src/</span> │ ├── <span class="tf">lib.rs</span>
+          <span class="tc"># invoke_handler にコマンド登録</span> │ ├──
+          <span class="tr">commands/</span> │ │ ├──
+          <span class="tr">filesystem/</span>
+          <span class="tc"># ファイル / ZIP / 分割候補</span> │ │ │ ├──
+          <span class="tf">mod.rs</span> │ │ │ ├──
+          <span class="tf">directory.rs</span> │ │ │ ├──
+          <span class="tf">archive.rs</span> │ │ │ ├──
+          <span class="tf">meta.rs</span>
+          <span class="tc"># list_split_candidates（v0.6.0 で ZIP 追加）</span>
+          │ │ │ └── <span class="tf">helpers.rs</span> │ │ ├──
+          <span class="tf">chunk.rs</span>
+          <span class="tc"># validate_chunk / resolve_chunk_images</span> │ │
+          └── <span class="tf">image.rs</span>
+          <span class="tc"
+            ># サムネ生成（v0.6.0 で read_directory_thumbnail 追加）</span
+          >
+          │ ├── <span class="tr">protocol/</span> │ │ └──
+          <span class="tf">manga.rs</span>
+          <span class="tc"># manga:// プロトコルハンドラ</span> │ ├──
+          <span class="tr">reader/</span> │ │ ├──
+          <span class="tf">directory.rs</span> │ │ └──
+          <span class="tf">zip.rs</span>
+          <span class="tc"># LRU キャッシュ付き ZIP リーダー</span> │ └──
+          <span class="tr">utils/</span> │ ├──
+          <span class="tf">sorting.rs</span> │ ├──
+          <span class="tf">paths.rs</span> │ └──
+          <span class="tf">encoding.rs</span>
+          <span class="tc"># Shift-JIS の ZIP エントリ名を復号</span> │ ├──
+          <span class="tf">package.json</span> └──
+          <span class="tf">next.config.ts</span>
+        </div>
+
+        <div class="info-box blue light" style="margin-top: 32px">
+          <span class="ico">📌</span>
+          <div>
+            <p>
+              <strong>1 ページだけのアプリ</strong>。<code
+                >src/app/page.tsx</code
+              >
+              が全画面を司り、プレイリスト画面とビューア画面はここの状態で切り替わります。ページ遷移がないので、ルーティングのことは忘れて
+              OK。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Types -->
+    <section class="section-dark-alt" id="types">
+      <div class="wrap">
+        <div class="section-tag">03 — Types</div>
+        <h2 class="section-h2">型定義 — データの骨格</h2>
+        <p class="section-lead">
+          どのコンポーネントも、下の 5
+          つの型さえ押さえれば全部読めます。実ファイルは
+          <code>src/types/index.ts</code>。
+        </p>
+
+        <h3 class="h3">Chunk と Playlist</h3>
+        <p
+          style="
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          <strong>Chunk</strong>（連続区間）は <code>startPath</code> と
+          <code>endPath</code> の 2 点だけで区間を表します。<code>endPath</code>
+          が空文字なら「<code>startPath</code>
+          丸ごと」という意味になります（フォルダ全体・ZIP 全体・PDF 全体）。
+        </p>
+
+        <pre class="code"><span class="cm">// src/types/index.ts</span>
+<span class="ck">export interface</span> <span class="cf">Chunk</span> {
+  <span class="cj">id</span>: <span class="cf">string</span>;
+  <span class="cj">name</span>?: <span class="cf">string</span>;              <span class="cm">// 表示名（空なら #1 のようにインデックス表示）</span>
+  <span class="cj">startPath</span>: <span class="cf">string</span>;          <span class="cm">// フォルダ / ZIP / 画像ファイル のパス</span>
+  <span class="cj">endPath</span>: <span class="cf">string</span>;            <span class="cm">// 空なら start 丸ごと</span>
+}
+
+<span class="ck">export interface</span> <span class="cf">Playlist</span> {
+  <span class="cj">id</span>: <span class="cf">string</span>;
+  <span class="cj">name</span>: <span class="cf">string</span>;
+  <span class="cj">chunks</span>: <span class="cf">Chunk</span>[];
+  <span class="cj">createdAt</span>: <span class="cf">number</span>;
+  <span class="cj">updatedAt</span>: <span class="cf">number</span>;
+  <span class="cj">isFavorite</span>?: <span class="cf">boolean</span>;
+  <span class="cj">tags</span>?: <span class="cf">string</span>[];
+  <span class="cj">accent</span>?: <span class="cf">AccentKey</span>;           <span class="cm">// 背表紙色（タグ色パレット）</span>
+}</pre>
+
+        <h3 class="h3">FileEntry — ブラウザで 1 行に対応する</h3>
+        <p
+          style="
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          <code>browse_directory</code> と
+          <code>browse_zip</code> がこの配列を返します。<code
+            >is_dir / is_zip / is_image / is_pdf</code
+          >
+          で「何のアイコンを出すか」を UI 側が決めます。
+        </p>
+
+        <pre
+          class="code"
+        ><span class="ck">export interface</span> <span class="cf">FileEntry</span> {
+  <span class="cj">name</span>: <span class="cf">string</span>;
+  <span class="cj">path</span>: <span class="cf">string</span>;
+  <span class="cj">is_dir</span>: <span class="cf">boolean</span>;
+  <span class="cj">is_zip</span>: <span class="cf">boolean</span>;
+  <span class="cj">is_image</span>: <span class="cf">boolean</span>;
+  <span class="cj">is_pdf</span>: <span class="cf">boolean</span>;
+  <span class="cj">thumbnail_url</span>: <span class="cf">string</span> | <span class="ck">null</span>;   <span class="cm">// サーバー側からは null、フロントで取得して代入</span>
+  <span class="cj">is_hidden</span>: <span class="cf">boolean</span>;
+  <span class="cj">modified_at</span>: <span class="cf">number</span> | <span class="ck">null</span>;     <span class="cm">// Unix 秒</span>
+}</pre>
+
+        <h3 class="h3">ChunkValidationResult — 親切エラーの置き場</h3>
+        <p
+          style="
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          Rust 側の <code>validate_chunk</code> はこの形で応答します。<strong
+            >v0.6.0 では
+            <code>error_message</code>
+            に「分割してください」等の日本語ヒントが入る</strong
+          >ので、フロントはそれを見て UI を切り替えます。
+        </p>
+
+        <pre
+          class="code"
+        ><span class="ck">export interface</span> <span class="cf">ChunkValidationResult</span> {
+  <span class="cj">is_valid</span>: <span class="cf">boolean</span>;
+  <span class="cj">image_count</span>: <span class="cf">number</span>;
+  <span class="cj">error_message</span>: <span class="cf">string</span> | <span class="ck">null</span>;
+  <span class="cj">image_paths</span>: <span class="cf">string</span>[];            <span class="cm">// manga:// 解決用（fullscreen 表示前に preload）</span>
+}</pre>
+
+        <h3 class="h3">ViewerSettings</h3>
+        <pre
+          class="code"
+        ><span class="ck">export interface</span> <span class="cf">ViewerSettings</span> {
+  <span class="cj">spreadMode</span>: <span class="cf">boolean</span>;           <span class="cm">// 2 ページ見開き</span>
+  <span class="cj">rightToLeft</span>: <span class="cf">boolean</span>;          <span class="cm">// 漫画用の右→左送り</span>
+  <span class="cj">pageTransition</span>: <span class="cf">boolean</span>;       <span class="cm">// ページめくり演出</span>
+}</pre>
+      </div>
+    </section>
+
+    <!-- 4. State Management -->
+    <section class="section-dark" id="state">
+      <div class="wrap">
+        <div class="section-tag">04 — State</div>
+        <h2 class="section-h2">状態管理 — Zustand ストア</h2>
+        <p class="section-lead">
+          状態は Redux 相当、ただし<strong>ボイラープレート無し</strong>で書ける
+          Zustand を使っています。ストアは 3 つだけ。
+        </p>
+
+        <div class="grid g3">
+          <div class="card-d">
+            <h3><code>playlistStore</code></h3>
+            <p>
+              プレイリスト一覧 / アクティブ ID / チャンク CRUD / お気に入り /
+              タグ。<br /><br />ここが唯一の「真実の源」で、<code
+                >ChunkCard</code
+              >
+              も <code>PlaylistPanel</code> もこの store しか触らない。
+            </p>
+          </div>
+          <div class="card-d">
+            <h3><code>viewerStore</code></h3>
+            <p>
+              現在見ている画像パス配列、ページ番号、見開きや RTL の設定。<br /><br />ビューアに入るときに
+              <code>resolveChunkImages</code> の結果をここに流し込む。
+            </p>
+          </div>
+          <div class="card-d">
+            <h3><code>settingsStore</code></h3>
+            <p>
+              アプリ全体設定（テーマ、言語、既定のビューア挙動）。<br /><br />永続化対象なので
+              <code>usePersistence</code> hook がディスクに同期する。
+            </p>
+          </div>
+        </div>
+
+        <h3 class="h3"><code>playlistStore</code> の抜粋</h3>
+        <pre
+          class="code"
+        ><span class="cm">// src/stores/playlistStore.ts（抜粋）</span>
+<span class="ck">import</span> { <span class="cf">create</span> } <span class="ck">from</span> <span class="cs">"zustand"</span>;
+<span class="ck">import type</span> { <span class="cf">Chunk</span>, <span class="cf">Playlist</span> } <span class="ck">from</span> <span class="cs">"@/types"</span>;
+
+<span class="ck">interface</span> <span class="cf">PlaylistState</span> {
+  <span class="cj">playlists</span>: <span class="cf">Playlist</span>[];
+  <span class="cj">activePlaylistId</span>: <span class="cf">string</span> | <span class="ck">null</span>;
+
+  <span class="cj">createPlaylist</span>: (<span class="cj">name</span>: <span class="cf">string</span>) <span class="cg">=&gt;</span> <span class="cf">Playlist</span>;
+  <span class="cj">addChunk</span>: (<span class="cj">playlistId</span>: <span class="cf">string</span>, <span class="cj">startPath</span>: <span class="cf">string</span>, <span class="cj">endPath</span>: <span class="cf">string</span>) <span class="cg">=&gt;</span> <span class="ck">void</span>;
+  <span class="cj">removeChunk</span>: (<span class="cj">playlistId</span>: <span class="cf">string</span>, <span class="cj">chunkId</span>: <span class="cf">string</span>) <span class="cg">=&gt;</span> <span class="ck">void</span>;
+  <span class="cj">insertChunksAt</span>: (<span class="cj">playlistId</span>: <span class="cf">string</span>, <span class="cj">index</span>: <span class="cf">number</span>, <span class="cj">chunks</span>: <span class="cf">Chunk</span>[]) <span class="cg">=&gt;</span> <span class="ck">void</span>;
+  <span class="cm">// 他 CRUD / 並び替え / お気に入り ...</span>
+}
+
+<span class="ck">export const</span> <span class="cf">usePlaylistStore</span> <span class="cg">=</span> <span class="cf">create</span>&lt;<span class="cf">PlaylistState</span>&gt;()(( <span class="cj">set</span>, <span class="cj">get</span> ) <span class="cg">=&gt;</span> ({
+  <span class="cj">playlists</span>: [],
+  <span class="cj">activePlaylistId</span>: <span class="ck">null</span>,
+
+  <span class="cj">createPlaylist</span>: (<span class="cj">name</span>) <span class="cg">=&gt;</span> {
+    <span class="ck">const</span> <span class="cj">pl</span>: <span class="cf">Playlist</span> <span class="cg">=</span> {
+      <span class="cj">id</span>: <span class="cf">crypto</span>.<span class="cf">randomUUID</span>(),
+      <span class="cj">name</span>,
+      <span class="cj">chunks</span>: [],
+      <span class="cj">createdAt</span>: <span class="cf">Date</span>.<span class="cf">now</span>(),
+      <span class="cj">updatedAt</span>: <span class="cf">Date</span>.<span class="cf">now</span>(),
+    };
+    <span class="cf">set</span>((<span class="cj">s</span>) <span class="cg">=&gt;</span> ({ <span class="cj">playlists</span>: [<span class="cg">...</span><span class="cj">s</span>.<span class="cj">playlists</span>, <span class="cj">pl</span>] }));
+    <span class="ck">return</span> <span class="cj">pl</span>;
+  },
+
+  <span class="cj">insertChunksAt</span>: (<span class="cj">playlistId</span>, <span class="cj">index</span>, <span class="cj">newChunks</span>) <span class="cg">=&gt;</span> {
+    <span class="cf">set</span>((<span class="cj">s</span>) <span class="cg">=&gt;</span> ({
+      <span class="cj">playlists</span>: <span class="cj">s</span>.<span class="cj">playlists</span>.<span class="cf">map</span>((<span class="cj">p</span>) <span class="cg">=&gt;</span>
+        <span class="cj">p</span>.<span class="cj">id</span> <span class="cg">!==</span> <span class="cj">playlistId</span>
+          ? <span class="cj">p</span>
+          : { <span class="cg">...</span><span class="cj">p</span>, <span class="cj">chunks</span>: [<span class="cg">...</span><span class="cj">p</span>.<span class="cj">chunks</span>.<span class="cf">slice</span>(<span class="cn">0</span>, <span class="cj">index</span>), <span class="cg">...</span><span class="cj">newChunks</span>, <span class="cg">...</span><span class="cj">p</span>.<span class="cj">chunks</span>.<span class="cf">slice</span>(<span class="cj">index</span>)] }
+      ),
+    }));
+  },
+  <span class="cm">// ...</span>
+}));</pre>
+
+        <div class="info-box orange">
+          <span class="ico">⚠️</span>
+          <div>
+            <p>
+              <strong>永続化は store 内ではやらない</strong>。<code
+                >usePersistence</code
+              >
+              hook が store の変化を購読して
+              <code>tauri-plugin-store</code>
+              に書き込みます。これで<strong>ストアは純粋なメモリ操作に専念でき、テストもしやすい</strong>構造になっています。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Tauri Bridge -->
+    <section class="section-light" id="tauri">
+      <div class="wrap">
+        <div class="section-tag">05 — Bridge</div>
+        <h2 class="section-h2">Tauri 連携 — <code>invoke</code> 1 行の世界</h2>
+        <p class="section-lead">
+          Rust の関数を呼ぶときは、常に同じ形です。<code
+            >invoke("コマンド名", { 引数 })</code
+          >。戻り値は <code>Promise</code>。JS から見れば、<strong
+            >ただの async 関数</strong
+          >にしか見えません。
+        </p>
+
+        <h3 class="h3">薄いラッパー <code>src/lib/tauri.ts</code></h3>
+        <p
+          style="
+            color: rgba(0, 0, 0, 0.7);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          全ての
+          <code>invoke</code>
+          はここを通します。コンポーネント側は<strong>型付きの関数名だけ呼べばよい</strong>。Rust
+          コマンド名が変わってもここ 1 カ所で追従できる。
+        </p>
+
+        <pre
+          class="code code-light"
+        ><span class="cm">// src/lib/tauri.ts（v0.6.0 抜粋）</span>
+<span class="ck">import</span> { <span class="cf">invoke</span> } <span class="ck">from</span> <span class="cs">"@tauri-apps/api/core"</span>;
+<span class="ck">import type</span> { <span class="cf">FileEntry</span>, <span class="cf">ChunkValidationResult</span> } <span class="ck">from</span> <span class="cs">"@/types"</span>;
+
+<span class="ck">export async function</span> <span class="cf">validateChunk</span>(
+  <span class="cj">startPath</span>: <span class="cf">string</span>, <span class="cj">endPath</span>: <span class="cf">string</span>
+): <span class="cf">Promise</span>&lt;<span class="cf">ChunkValidationResult</span>&gt; {
+  <span class="ck">return</span> <span class="cf">invoke</span>&lt;<span class="cf">ChunkValidationResult</span>&gt;(<span class="cs">"validate_chunk"</span>, { <span class="cj">startPath</span>, <span class="cj">endPath</span> });
+}
+
+<span class="ck">export async function</span> <span class="cf">browseDirectory</span>(<span class="cj">path</span>: <span class="cf">string</span>): <span class="cf">Promise</span>&lt;<span class="cf">FileEntry</span>[]&gt; {
+  <span class="ck">return</span> <span class="cf">invoke</span>&lt;<span class="cf">FileEntry</span>[]&gt;(<span class="cs">"browse_directory"</span>, { <span class="cj">path</span> });
+}
+
+<span class="cm">// v0.6.0 で追加された 2 つ</span>
+<span class="ck">export async function</span> <span class="cf">listSplitCandidates</span>(
+  <span class="cj">path</span>: <span class="cf">string</span>
+): <span class="cf">Promise</span>&lt;<span class="cf">Array</span>&lt;{ <span class="cj">name</span>: <span class="cf">string</span>; <span class="cj">path</span>: <span class="cf">string</span>; <span class="cj">kind</span>: <span class="cs">"folder"</span> | <span class="cs">"zip"</span> }&gt;&gt; {
+  <span class="ck">return</span> <span class="cf">invoke</span>(<span class="cs">"list_split_candidates"</span>, { <span class="cj">path</span> });
+}
+
+<span class="ck">export async function</span> <span class="cf">readDirectoryThumbnail</span>(
+  <span class="cj">path</span>: <span class="cf">string</span>, <span class="cj">maxSize</span>: <span class="cf">number</span> <span class="cg">=</span> <span class="cn">120</span>
+): <span class="cf">Promise</span>&lt;<span class="cf">string</span>&gt; {
+  <span class="ck">return</span> <span class="cf">invoke</span>(<span class="cs">"read_directory_thumbnail"</span>, { <span class="cj">path</span>, <span class="cj">maxSize</span> });
+}</pre>
+
+        <div class="info-box blue light">
+          <span class="ico">🧭</span>
+          <div>
+            <p>
+              <strong>命名規約：</strong> JS 側は <code>camelCase</code>、Rust
+              側は <code>snake_case</code>。<br />
+              Tauri が<strong>自動で変換</strong>してくれるので、<code
+                >maxSize</code
+              >
+              は Rust 引数 <code>max_size</code> に、<code>startPath</code> は
+              <code>start_path</code>
+              に、<strong>何もしなくて繋がります</strong>。
+            </p>
+          </div>
+        </div>
+
+        <h3 class="h3">
+          画像は <code>invoke</code> じゃなく <code>manga://</code> で
+        </h3>
+        <p
+          style="
+            color: rgba(0, 0, 0, 0.7);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          数百枚の画像バイト列を JS に渡すのは重い。だから<strong
+            >画像だけは <code>&lt;img src="manga://..."&gt;</code></strong
+          >で Rust から WebView に直送します。JS は URL を組み立てるだけ。
+        </p>
+
+        <pre
+          class="code code-light"
+        ><span class="cm">// src/lib/mangaUrl.ts（考え方だけ抜粋）</span>
+<span class="ck">export function</span> <span class="cf">imagePathToMangaUrl</span>(<span class="cj">path</span>: <span class="cf">string</span>): <span class="cf">string</span> {
+  <span class="cm">// ZIP 内エントリの場合： zip://D:/foo.zip///chapter/001.jpg</span>
+  <span class="cm">// 通常ファイルの場合： D:/foo/001.jpg</span>
+  <span class="cm">// どちらも base64 化してクエリに乗せる</span>
+  <span class="ck">return</span> <span class="cs">`manga://localhost/</span><span class="cg">${</span><span class="cj">kind</span><span class="cg">}</span><span class="cs">/</span><span class="cg">${</span><span class="cf">b64</span>(<span class="cj">path</span>)<span class="cg">}</span><span class="cs">`</span>;
+}</pre>
+      </div>
+    </section>
+
+    <!-- 6. Rust Backend -->
+    <section class="section-dark-alt" id="rust">
+      <div class="wrap">
+        <div class="section-tag">06 — Rust Backend</div>
+        <h2 class="section-h2">Rust バックエンド — 仕事の取り仕切り</h2>
+        <p class="section-lead">
+          ここから Rust コードが出てきます。身構えなくて大丈夫。<strong
+            >使う構文は 8 個だけ</strong
+          >です。
+        </p>
+
+        <dl class="rust-primer">
+          <dt>fn 関数名</dt>
+          <dd>
+            関数宣言。引数と戻り値の型を書く。<code
+              >fn add(a: i32) -&gt; i32 { ... }</code
+            >
+          </dd>
+          <dt>async fn</dt>
+          <dd>await できる関数。Tauri コマンドは async にしておくと安全。</dd>
+          <dt>#[tauri::command]</dt>
+          <dd>「この関数を JS から invoke で呼べるようにする」印。</dd>
+          <dt>Result&lt;T, E&gt;</dt>
+          <dd>
+            成功なら <code>Ok(T)</code>、失敗なら
+            <code>Err(E)</code>。関数の戻り値でエラーを運ぶ。
+          </dd>
+          <dt>?</dt>
+          <dd>
+            <code>Result</code> を「成功なら取り出し、失敗なら早期
+            return」するショートカット。
+          </dd>
+          <dt>match</dt>
+          <dd>強化版 switch。列挙型を全パターン捌く。</dd>
+          <dt>Option&lt;T&gt;</dt>
+          <dd>あるなし。<code>Some(値)</code> か <code>None</code> か。</dd>
+          <dt>&amp;str / String</dt>
+          <dd>
+            文字列スライス（読み取り用）と、所有権付き文字列（書き換え可）。
+          </dd>
+        </dl>
+
+        <h3 class="h3"><code>lib.rs</code> — コマンド登録の中央管制</h3>
+        <p
+          style="
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          Rust 関数を <code>#[tauri::command]</code> で印付けしても、<strong
+            >この <code>lib.rs</code> に名前を書かないと JS
+            から呼べません</strong
+          >。新しいコマンドを追加したら必ずここに追記。
+        </p>
+
+        <pre
+          class="code"
+        ><span class="cm">// src-tauri/src/lib.rs（v0.6.0 抜粋）</span>
+<span class="ck">use</span> <span class="cj">commands</span>::<span class="cj">chunk</span>::{<span class="cf">validate_chunk</span>, <span class="cf">resolve_chunk_images</span>};
+<span class="ck">use</span> <span class="cj">commands</span>::<span class="cj">filesystem</span>::{
+    <span class="cf">browse_directory</span>, <span class="cf">browse_zip</span>, <span class="cf">list_drives</span>,
+    <span class="cf">read_file_as_base64</span>, <span class="cf">get_path_meta</span>, <span class="cf">list_split_candidates</span>,
+};
+<span class="ck">use</span> <span class="cj">commands</span>::<span class="cj">image</span>::{
+    <span class="cf">read_image_as_data_url</span>, <span class="cf">read_image_thumbnail</span>,
+    <span class="cf">read_directory_thumbnail</span>,                    <span class="cm">// v0.6.0 で追加</span>
+    <span class="cf">validate_image_file</span>,
+};
+
+<span class="ck">pub fn</span> <span class="cf">run</span>() {
+    <span class="cf">tauri</span>::<span class="cf">Builder</span>::<span class="cf">default</span>()
+        .<span class="cf">plugin</span>(<span class="cf">tauri_plugin_store</span>::<span class="cf">Builder</span>::<span class="cf">default</span>().<span class="cf">build</span>())
+        .<span class="cf">plugin</span>(<span class="cf">tauri_plugin_dialog</span>::<span class="cf">init</span>())
+        .<span class="cf">register_uri_scheme_protocol</span>(<span class="cs">"manga"</span>, |<span class="cj">_ctx</span>, <span class="cj">request</span>| {
+            <span class="cj">protocol</span>::<span class="cj">manga</span>::<span class="cf">handle_manga_request</span>(<span class="cg">&amp;</span><span class="cj">request</span>)
+        })
+        .<span class="cf">invoke_handler</span>(<span class="cf">tauri</span>::<span class="cf">generate_handler</span>![
+            <span class="cf">validate_chunk</span>,
+            <span class="cf">resolve_chunk_images</span>,
+            <span class="cf">browse_directory</span>,
+            <span class="cf">browse_zip</span>,
+            <span class="cf">list_drives</span>,
+            <span class="cf">list_split_candidates</span>,            <span class="cm">// v0.6.0 で ZIP も候補化</span>
+            <span class="cf">read_image_as_data_url</span>,
+            <span class="cf">read_image_thumbnail</span>,
+            <span class="cf">read_directory_thumbnail</span>,          <span class="cm">// v0.6.0 追加</span>
+            <span class="cf">read_file_as_base64</span>,
+            <span class="cf">get_path_meta</span>,
+            <span class="cf">validate_image_file</span>,
+        ])
+        .<span class="cf">run</span>(<span class="cf">tauri</span>::<span class="cf">generate_context</span>!())
+        .<span class="cf">expect</span>(<span class="cs">"error while running tauri application"</span>);
+}</pre>
+
+        <h3 class="h3">コマンド一覧（全 12 個）</h3>
+        <div class="table-wrap">
+          <table class="cmd-table">
+            <thead>
+              <tr>
+                <th>コマンド名</th>
+                <th>戻り値</th>
+                <th>役割</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="cmd-name">validate_chunk</td>
+                <td class="cmd-type">ChunkValidationResult</td>
+                <td class="cmd-desc">
+                  start/end が同一フォルダ・同一 ZIP
+                  にあるかを確認し、画像枚数とエラーメッセージを返す
+                </td>
+              </tr>
+              <tr>
+                <td class="cmd-name">resolve_chunk_images</td>
+                <td class="cmd-type">Vec&lt;String&gt;</td>
+                <td class="cmd-desc">
+                  チャンクを画像パスの平坦な配列に展開。ビューアはこれを
+                  manga:// に変換するだけ
+                </td>
+              </tr>
+              <tr>
+                <td class="cmd-name">browse_directory</td>
+                <td class="cmd-type">Vec&lt;FileEntry&gt;</td>
+                <td class="cmd-desc">
+                  ディレクトリを 1 階層走査。画像 / ZIP / PDF /
+                  フォルダだけ拾って返す
+                </td>
+              </tr>
+              <tr>
+                <td class="cmd-name">browse_zip</td>
+                <td class="cmd-type">Vec&lt;FileEntry&gt;</td>
+                <td class="cmd-desc">
+                  ZIP 内部をフォルダ感覚で 1 階層走査。Shift-JIS 名も復号
+                </td>
+              </tr>
+              <tr>
+                <td class="cmd-name">list_drives</td>
+                <td class="cmd-type">Vec&lt;String&gt;</td>
+                <td class="cmd-desc">
+                  Windows のドライブレターを列挙（C:, D: ...）
+                </td>
+              </tr>
+              <tr>
+                <td class="cmd-name">
+                  <span
+                    class="badge pink"
+                    style="font-size: 10px; margin-left: -2px"
+                    >new</span
+                  >
+                  list_split_candidates
+                </td>
+                <td class="cmd-type">Vec&lt;SplitCandidate&gt;</td>
+                <td class="cmd-desc">
+                  v0.6.0：サブフォルダに加え
+                  <strong>.zip / .cbz も候補化</strong>。kind で種別を返す
+                </td>
+              </tr>
+              <tr>
+                <td class="cmd-name">read_image_as_data_url</td>
+                <td class="cmd-type">String</td>
+                <td class="cmd-desc">
+                  画像 1 枚を base64 data URL にして返す（サムネ以外の用途）
+                </td>
+              </tr>
+              <tr>
+                <td class="cmd-name">read_image_thumbnail</td>
+                <td class="cmd-type">String</td>
+                <td class="cmd-desc">
+                  画像を縮小 JPEG 化（シークバーホバー用）
+                </td>
+              </tr>
+              <tr>
+                <td class="cmd-name">
+                  <span
+                    class="badge pink"
+                    style="font-size: 10px; margin-left: -2px"
+                    >new</span
+                  >
+                  read_directory_thumbnail
+                </td>
+                <td class="cmd-type">String</td>
+                <td class="cmd-desc">
+                  v0.6.0：フォルダ / ZIP の <strong>先頭画像</strong>をサムネ化
+                </td>
+              </tr>
+              <tr>
+                <td class="cmd-name">read_file_as_base64</td>
+                <td class="cmd-type">String</td>
+                <td class="cmd-desc">
+                  PDF など、ページ展開に原本バイトが要るファイル向け
+                </td>
+              </tr>
+              <tr>
+                <td class="cmd-name">get_path_meta</td>
+                <td class="cmd-type">PathMeta</td>
+                <td class="cmd-desc">
+                  更新日時 / 作成日時（Unix 秒）。チャンクの日時ソートに使う
+                </td>
+              </tr>
+              <tr>
+                <td class="cmd-name">validate_image_file</td>
+                <td class="cmd-type">ImageFileInfo</td>
+                <td class="cmd-desc">画像ファイル単体の検証。幅・高さ・形式</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="h3"><code>chunk.rs</code> — 検証ロジックの要</h3>
+        <p
+          style="
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          渡されたパスを 4 種類の
+          <strong><code>PathType</code></strong> に分類してから検証します。<code
+            >enum</code
+          >
+          は列挙型。<code>match</code>
+          で全部のパターンを漏れなく書くと、ビルド時に「漏れたパターンあるよ」と
+          Rust が教えてくれます（型安全）。
+        </p>
+
+        <pre
+          class="code"
+        ><span class="cm">// src-tauri/src/commands/chunk.rs（要点だけ）</span>
+<span class="ck">enum</span> <span class="cf">PathType</span> {
+    <span class="cf">Directory</span>(<span class="cf">String</span>),
+    <span class="cf">File</span>(<span class="cf">String</span>, <span class="cf">String</span>),            <span class="cm">// (ディレクトリ, ファイル名)</span>
+    <span class="cf">ZipWhole</span>(<span class="cf">String</span>),                 <span class="cm">// ZIP ファイル全体</span>
+    <span class="cf">ZipEntry</span>(<span class="cf">String</span>, <span class="cf">String</span>),        <span class="cm">// (ZIP パス, 内部エントリ)</span>
+}
+
+<span class="ck">fn</span> <span class="cf">classify_path</span>(<span class="cj">path</span>: <span class="cg">&amp;</span><span class="cf">str</span>) <span class="cg">-&gt;</span> <span class="cf">PathType</span> {
+    <span class="ck">let</span> <span class="cj">normalized</span> <span class="cg">=</span> <span class="cj">path</span>.<span class="cf">replace</span>(<span class="cs">'\\'</span>, <span class="cs">"/"</span>);
+    <span class="ck">if let</span> <span class="cf">Some</span>((<span class="cj">zip</span>, <span class="cj">inner</span>)) <span class="cg">=</span> <span class="cf">find_zip_boundary</span>(<span class="cg">&amp;</span><span class="cj">normalized</span>) {
+        <span class="ck">match</span> <span class="cj">inner</span> {
+            <span class="cf">Some</span>(<span class="cj">e</span>) <span class="cg">=&gt;</span> <span class="cf">PathType</span>::<span class="cf">ZipEntry</span>(<span class="cj">zip</span>, <span class="cj">e</span>),
+            <span class="cf">None</span>     <span class="cg">=&gt;</span> <span class="cf">PathType</span>::<span class="cf">ZipWhole</span>(<span class="cj">zip</span>),
+        }
+    } <span class="ck">else if</span> <span class="cf">Path</span>::<span class="cf">new</span>(<span class="cg">&amp;</span><span class="cj">normalized</span>).<span class="cf">is_dir</span>() {
+        <span class="cf">PathType</span>::<span class="cf">Directory</span>(<span class="cj">normalized</span>)
+    } <span class="ck">else</span> {
+        <span class="cm">/* File 分岐 ... */</span>
+    }
+}
+
+<span class="cm">// v0.6.0: フォルダ直下に ZIP / サブフォルダがあるか？</span>
+<span class="ck">fn</span> <span class="cf">has_splittable_children</span>(<span class="cj">dir</span>: <span class="cg">&amp;</span><span class="cf">Path</span>) <span class="cg">-&gt;</span> <span class="cf">bool</span> {
+    <span class="ck">let</span> <span class="cf">Ok</span>(<span class="cj">rd</span>) <span class="cg">=</span> <span class="cf">fs</span>::<span class="cf">read_dir</span>(<span class="cj">dir</span>) <span class="ck">else</span> { <span class="ck">return</span> <span class="ck">false</span>; };
+    <span class="ck">for</span> <span class="cj">entry</span> <span class="ck">in</span> <span class="cj">rd</span>.<span class="cf">flatten</span>() {
+        <span class="ck">let</span> <span class="cj">p</span> <span class="cg">=</span> <span class="cj">entry</span>.<span class="cf">path</span>();
+        <span class="ck">if</span> <span class="cj">p</span>.<span class="cf">is_dir</span>() { <span class="ck">return</span> <span class="ck">true</span>; }
+        <span class="ck">if</span> <span class="cj">p</span>.<span class="cf">is_file</span>() <span class="cg">&amp;&amp;</span> <span class="cf">is_zip_like</span>(<span class="cg">&amp;</span><span class="cj">p</span>) { <span class="ck">return</span> <span class="ck">true</span>; }
+    }
+    <span class="ck">false</span>
+}
+
+<span class="ck">const</span> <span class="cj">SPLIT_HINT_MSG</span>: <span class="cg">&amp;</span><span class="cf">str</span> <span class="cg">=</span>
+    <span class="cs">"フォルダ直下に画像がありません。ZIP/CBZ やサブフォルダを含むため、\
+     右クリックメニューから『サブフォルダで分割』してください"</span>;
+
+<span class="ck">fn</span> <span class="cf">validate_dir_pair</span>(<span class="cj">dir1</span>: <span class="cg">&amp;</span><span class="cf">str</span>, <span class="cj">dir2</span>: <span class="cg">&amp;</span><span class="cf">str</span>) <span class="cg">-&gt;</span> <span class="cf">ChunkValidationResult</span> {
+    <span class="ck">if</span> <span class="cj">dir1</span> <span class="cg">!=</span> <span class="cj">dir2</span> { <span class="ck">return</span> <span class="cf">err_result</span>(<span class="cs">"異なるディレクトリ"</span>); }
+    <span class="ck">let</span> <span class="cj">p</span> <span class="cg">=</span> <span class="cf">Path</span>::<span class="cf">new</span>(<span class="cj">dir1</span>);
+    <span class="ck">match</span> <span class="cf">directory</span>::<span class="cf">list_images_recursively</span>(<span class="cj">p</span>) {
+        <span class="cf">Ok</span>(<span class="cj">images</span>) <span class="ck">if</span> <span class="cg">!</span><span class="cj">images</span>.<span class="cf">is_empty</span>() <span class="cg">=&gt;</span> <span class="cf">ok_result</span>(<span class="cm">/* paths */</span>),
+        <span class="cf">Ok</span>(<span class="cj">_</span>) <span class="cg">=&gt;</span> {
+            <span class="ck">if</span> <span class="cf">has_splittable_children</span>(<span class="cj">p</span>) { <span class="cf">err_result</span>(<span class="cj">SPLIT_HINT_MSG</span>) }
+            <span class="ck">else</span> { <span class="cf">err_result</span>(<span class="cs">"画像ファイルが見つかりません"</span>) }
+        }
+        <span class="cf">Err</span>(<span class="cj">e</span>) <span class="cg">=&gt;</span> <span class="cf">err_result</span>(<span class="cj">e</span>),
+    }
+}</pre>
+
+        <div class="info-box green">
+          <span class="ico">🎯</span>
+          <div>
+            <p>
+              <strong>このヒントメッセージ 1 つで UX が激変</strong
+              >しました。フロント側はメッセージに「分割」という単語が含まれるかだけ見て、赤
+              NG から<strong>青「要分割」バッジ</strong>に切り替えます（詳しくは
+              08 UI 節）。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Folder Support (v0.6.0) -->
+    <section class="section-dark" id="folder">
+      <div class="wrap">
+        <div class="section-tag">07 — v0.6.0</div>
+        <h2 class="section-h2">フォルダ対応 — v0.6.0 の目玉実装</h2>
+        <p class="section-lead">
+          ここでは 3 つの新機能を、<strong>Rust → TypeScript → UI</strong
+          >の順で全部見ていきます。これを読めば、同じ機能をゼロから再実装できます。
+        </p>
+
+        <h3 class="h3">
+          ① <code>list_split_candidates</code> を ZIP 対応に拡張
+        </h3>
+        <p
+          style="
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          <strong>実ファイル：</strong>
+          <code>src-tauri/src/commands/filesystem/meta.rs</code
+          ><br />フォルダ直下の<strong>サブフォルダ</strong>と<strong
+            >.zip / .cbz</strong
+          >を自然順で 1 つの配列に混ぜて返します。UI
+          が「フォルダアイコン」か「ZIP アイコン」か出し分けるために
+          <code>kind</code> フィールドを付けます。
+        </p>
+
+        <pre
+          class="code"
+        ><span class="cm">// src-tauri/src/commands/filesystem/mod.rs</span>
+<span class="ck">#[derive(Debug, Serialize)]</span>
+<span class="ck">pub struct</span> <span class="cf">SplitCandidate</span> {
+    <span class="ck">pub</span> <span class="cj">name</span>: <span class="cf">String</span>,
+    <span class="ck">pub</span> <span class="cj">path</span>: <span class="cf">String</span>,
+    <span class="cm">/// "folder" | "zip" — UI 側のアイコン切替用</span>
+    <span class="ck">pub</span> <span class="cj">kind</span>: <span class="cg">&amp;</span><span class="ck">'static</span> <span class="cf">str</span>,
+}</pre>
+
+        <pre
+          class="code"
+        ><span class="cm">// src-tauri/src/commands/filesystem/meta.rs（v0.6.0 新版）</span>
+<span class="ck">#[tauri::command]</span>
+<span class="ck">pub async fn</span> <span class="cf">list_split_candidates</span>(<span class="cj">path</span>: <span class="cf">String</span>) <span class="cg">-&gt;</span> <span class="cf">Result</span>&lt;<span class="cf">Vec</span>&lt;<span class="cf">SplitCandidate</span>&gt;, <span class="cf">String</span>&gt; {
+    <span class="ck">let</span> <span class="cj">normalized</span> <span class="cg">=</span> <span class="cj">path</span>.<span class="cf">replace</span>(<span class="cs">'\\'</span>, <span class="cs">"/"</span>);
+    <span class="ck">let</span> <span class="cj">dir</span> <span class="cg">=</span> <span class="cf">std</span>::<span class="cf">path</span>::<span class="cf">Path</span>::<span class="cf">new</span>(<span class="cg">&amp;</span><span class="cj">normalized</span>);
+    <span class="ck">if</span> <span class="cg">!</span><span class="cj">dir</span>.<span class="cf">is_dir</span>() {
+        <span class="ck">return</span> <span class="cf">Err</span>(<span class="cf">format</span>!(<span class="cs">"ディレクトリが存在しません: </span><span class="cg">{path}</span><span class="cs">"</span>));
+    }
+
+    <span class="ck">let mut</span> <span class="cj">entries</span>: <span class="cf">Vec</span>&lt;(<span class="cf">std</span>::<span class="cf">path</span>::<span class="cf">PathBuf</span>, <span class="cg">&amp;</span><span class="ck">'static</span> <span class="cf">str</span>)&gt; <span class="cg">=</span> <span class="cf">fs</span>::<span class="cf">read_dir</span>(<span class="cj">dir</span>)
+        .<span class="cf">map_err</span>(|<span class="cj">e</span>| <span class="cf">format</span>!(<span class="cs">"読み取り失敗: </span><span class="cg">{e}</span><span class="cs">"</span>))<span class="cg">?</span>
+        .<span class="cf">filter_map</span>(|<span class="cj">e</span>| <span class="cj">e</span>.<span class="cf">ok</span>())
+        .<span class="cf">map</span>(|<span class="cj">e</span>| <span class="cj">e</span>.<span class="cf">path</span>())
+        .<span class="cf">filter_map</span>(|<span class="cj">p</span>| {
+            <span class="ck">let</span> <span class="cj">name</span> <span class="cg">=</span> <span class="cj">p</span>.<span class="cf">file_name</span>().<span class="cf">and_then</span>(|<span class="cj">n</span>| <span class="cj">n</span>.<span class="cf">to_str</span>()).<span class="cf">unwrap_or</span>(<span class="cs">""</span>);
+            <span class="ck">if</span> <span class="cj">name</span>.<span class="cf">is_empty</span>() <span class="cg">||</span> <span class="cf">detect_is_hidden</span>(<span class="cg">&amp;</span><span class="cj">p</span>, <span class="cj">name</span>) { <span class="ck">return</span> <span class="cf">None</span>; }
+            <span class="ck">if</span> <span class="cj">p</span>.<span class="cf">is_dir</span>()           { <span class="cf">Some</span>((<span class="cj">p</span>, <span class="cs">"folder"</span>)) }
+            <span class="ck">else if</span> <span class="cj">p</span>.<span class="cf">is_file</span>() <span class="cg">&amp;&amp;</span> <span class="cf">is_zip_like</span>(<span class="cg">&amp;</span><span class="cj">p</span>) { <span class="cf">Some</span>((<span class="cj">p</span>, <span class="cs">"zip"</span>)) }
+            <span class="ck">else</span> { <span class="cf">None</span> }
+        })
+        .<span class="cf">collect</span>();
+
+    <span class="cm">// 自然順（001, 002, ..., 10 ではなく 001, 002, 010 の並び）</span>
+    <span class="cj">entries</span>.<span class="cf">sort_by</span>(|<span class="cj">a</span>, <span class="cj">b</span>| {
+        <span class="ck">let</span> <span class="cj">na</span> <span class="cg">=</span> <span class="cj">a</span>.<span class="cn">0</span>.<span class="cf">file_name</span>().<span class="cf">and_then</span>(|<span class="cj">n</span>| <span class="cj">n</span>.<span class="cf">to_str</span>()).<span class="cf">unwrap_or</span>(<span class="cs">""</span>);
+        <span class="ck">let</span> <span class="cj">nb</span> <span class="cg">=</span> <span class="cj">b</span>.<span class="cn">0</span>.<span class="cf">file_name</span>().<span class="cf">and_then</span>(|<span class="cj">n</span>| <span class="cj">n</span>.<span class="cf">to_str</span>()).<span class="cf">unwrap_or</span>(<span class="cs">""</span>);
+        <span class="cf">natural_compare</span>(<span class="cj">na</span>, <span class="cj">nb</span>)
+    });
+
+    <span class="cf">Ok</span>(<span class="cj">entries</span>.<span class="cf">into_iter</span>().<span class="cf">map</span>(|(<span class="cj">p</span>, <span class="cj">kind</span>)| <span class="cf">SplitCandidate</span> {
+        <span class="cj">name</span>: <span class="cj">p</span>.<span class="cf">file_name</span>().<span class="cf">and_then</span>(|<span class="cj">n</span>| <span class="cj">n</span>.<span class="cf">to_str</span>()).<span class="cf">unwrap_or</span>(<span class="cs">""</span>).<span class="cf">to_string</span>(),
+        <span class="cj">path</span>: <span class="cj">p</span>.<span class="cf">to_string_lossy</span>().<span class="cf">replace</span>(<span class="cs">'\\'</span>, <span class="cs">"/"</span>),
+        <span class="cj">kind</span>,
+    }).<span class="cf">collect</span>())
+}</pre>
+
+        <h3 class="h3">
+          ② <code>read_directory_thumbnail</code> — フォルダ / ZIP のサムネ
+        </h3>
+        <p
+          style="
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          <strong>実ファイル：</strong>
+          <code>src-tauri/src/commands/image.rs</code
+          ><br />フォルダなら直下の画像、ZIP なら内部の画像を<strong
+            >自然順で先頭 1 枚</strong
+          >取り、長辺 120px の JPEG（quality=25）に縮めて data URL
+          で返します。速度優先。
+        </p>
+
+        <pre
+          class="code"
+        ><span class="cm">// src-tauri/src/commands/image.rs（v0.6.0 で追加）</span>
+<span class="ck">#[tauri::command]</span>
+<span class="ck">pub async fn</span> <span class="cf">read_directory_thumbnail</span>(<span class="cj">path</span>: <span class="cf">String</span>, <span class="cj">max_size</span>: <span class="cf">u32</span>) <span class="cg">-&gt;</span> <span class="cf">Result</span>&lt;<span class="cf">String</span>, <span class="cf">String</span>&gt; {
+    <span class="ck">let</span> <span class="cj">normalized</span> <span class="cg">=</span> <span class="cj">path</span>.<span class="cf">replace</span>(<span class="cs">'\\'</span>, <span class="cs">"/"</span>);
+    <span class="ck">let</span> <span class="cj">p</span> <span class="cg">=</span> <span class="cf">Path</span>::<span class="cf">new</span>(<span class="cg">&amp;</span><span class="cj">normalized</span>);
+
+    <span class="ck">let</span> (<span class="cj">bytes</span>, <span class="cj">mime_path</span>) <span class="cg">=</span> <span class="ck">if</span> <span class="cj">p</span>.<span class="cf">is_dir</span>() {
+        <span class="ck">let</span> <span class="cj">images</span> <span class="cg">=</span> <span class="cf">directory</span>::<span class="cf">list_images_in_directory</span>(<span class="cj">p</span>)<span class="cg">?</span>;
+        <span class="ck">let</span> <span class="cf">Some</span>(<span class="cj">first</span>) <span class="cg">=</span> <span class="cj">images</span>.<span class="cf">into_iter</span>().<span class="cf">next</span>() <span class="ck">else</span> {
+            <span class="ck">return</span> <span class="cf">Ok</span>(<span class="cf">String</span>::<span class="cf">new</span>());       <span class="cm">// 画像 0 枚なら空文字</span>
+        };
+        (<span class="cf">directory</span>::<span class="cf">read_image_from_directory</span>(<span class="cg">&amp;</span><span class="cj">first</span>)<span class="cg">?</span>, <span class="cj">first</span>.<span class="cf">to_string_lossy</span>().<span class="cf">to_string</span>())
+    } <span class="ck">else if</span> <span class="cj">p</span>.<span class="cf">is_file</span>() <span class="cg">&amp;&amp;</span> <span class="cf">is_zip_like</span>(<span class="cj">p</span>) {
+        <span class="ck">let</span> <span class="cj">entries</span> <span class="cg">=</span> <span class="cf">zip_reader</span>::<span class="cf">list_images_in_zip</span>(<span class="cj">p</span>)<span class="cg">?</span>;
+        <span class="ck">let</span> <span class="cf">Some</span>(<span class="cj">first</span>) <span class="cg">=</span> <span class="cj">entries</span>.<span class="cf">into_iter</span>().<span class="cf">next</span>() <span class="ck">else</span> {
+            <span class="ck">return</span> <span class="cf">Ok</span>(<span class="cf">String</span>::<span class="cf">new</span>());
+        };
+        (<span class="cf">zip_reader</span>::<span class="cf">read_image_from_zip</span>(<span class="cj">p</span>, <span class="cg">&amp;</span><span class="cj">first</span>)<span class="cg">?</span>, <span class="cj">first</span>)
+    } <span class="ck">else</span> {
+        <span class="ck">return</span> <span class="cf">Err</span>(<span class="cs">"対象はフォルダまたは ZIP/CBZ ファイルである必要があります"</span>.<span class="cf">to_string</span>());
+    };
+
+    <span class="cm">// imagesize でヘッダだけ読んで寸法を得る（全デコード前に判定する軽量版）</span>
+    <span class="ck">let</span> <span class="cj">threshold</span> <span class="cg">=</span> <span class="cj">max_size</span> <span class="cg">*</span> <span class="cn">3</span>;
+    <span class="ck">if let</span> <span class="cf">Ok</span>(<span class="cj">size</span>) <span class="cg">=</span> <span class="cf">imagesize</span>::<span class="cf">blob_size</span>(<span class="cg">&amp;</span><span class="cj">bytes</span>) {
+        <span class="ck">if</span> (<span class="cj">size</span>.<span class="cj">width</span>.<span class="cf">max</span>(<span class="cj">size</span>.<span class="cj">height</span>) <span class="ck">as</span> <span class="cf">u32</span>) <span class="cg">&lt;=</span> <span class="cj">threshold</span> {
+            <span class="cm">// すでに十分小さい → そのまま data URL に</span>
+            <span class="ck">let</span> <span class="cj">mime</span> <span class="cg">=</span> <span class="cf">mime_guess</span>::<span class="cf">from_path</span>(<span class="cg">&amp;</span><span class="cj">mime_path</span>).<span class="cf">first_or_octet_stream</span>().<span class="cf">to_string</span>();
+            <span class="ck">let</span> <span class="cj">b64</span> <span class="cg">=</span> <span class="cf">base64</span>::<span class="cf">engine</span>::<span class="cf">general_purpose</span>::<span class="cf">STANDARD</span>.<span class="cf">encode</span>(<span class="cg">&amp;</span><span class="cj">bytes</span>);
+            <span class="ck">return</span> <span class="cf">Ok</span>(<span class="cf">format</span>!(<span class="cs">"data:</span><span class="cg">{mime}</span><span class="cs">;base64,</span><span class="cg">{b64}</span><span class="cs">"</span>));
+        }
+    }
+
+    <span class="cm">// 大きい画像はデコード → 長辺 max_size に縮小 → JPEG q25 エンコード</span>
+    <span class="ck">let</span> <span class="cj">img</span> <span class="cg">=</span> <span class="cf">image</span>::<span class="cf">load_from_memory</span>(<span class="cg">&amp;</span><span class="cj">bytes</span>).<span class="cf">map_err</span>(|<span class="cj">e</span>| <span class="cf">format</span>!(<span class="cs">"画像デコードエラー: </span><span class="cg">{e}</span><span class="cs">"</span>))<span class="cg">?</span>;
+    <span class="ck">let</span> (<span class="cj">w</span>, <span class="cj">h</span>) <span class="cg">=</span> (<span class="cj">img</span>.<span class="cf">width</span>(), <span class="cj">img</span>.<span class="cf">height</span>());
+    <span class="ck">let</span> <span class="cj">scale</span> <span class="cg">=</span> (<span class="cj">max_size</span> <span class="ck">as</span> <span class="cf">f32</span> <span class="cg">/</span> <span class="cj">w</span>.<span class="cf">max</span>(<span class="cj">h</span>) <span class="ck">as</span> <span class="cf">f32</span>).<span class="cf">min</span>(<span class="cn">1.0</span>);
+    <span class="ck">let</span> <span class="cj">thumb</span> <span class="cg">=</span> <span class="cj">img</span>.<span class="cf">resize_exact</span>(
+        ((<span class="cj">w</span> <span class="ck">as</span> <span class="cf">f32</span> <span class="cg">*</span> <span class="cj">scale</span>) <span class="ck">as</span> <span class="cf">u32</span>).<span class="cf">max</span>(<span class="cn">1</span>),
+        ((<span class="cj">h</span> <span class="ck">as</span> <span class="cf">f32</span> <span class="cg">*</span> <span class="cj">scale</span>) <span class="ck">as</span> <span class="cf">u32</span>).<span class="cf">max</span>(<span class="cn">1</span>),
+        <span class="cf">image</span>::<span class="cf">imageops</span>::<span class="cf">FilterType</span>::<span class="cf">Nearest</span>,
+    );
+    <span class="ck">let mut</span> <span class="cj">out</span>: <span class="cf">Vec</span>&lt;<span class="cf">u8</span>&gt; <span class="cg">=</span> <span class="cf">Vec</span>::<span class="cf">new</span>();
+    <span class="cf">image</span>::<span class="cf">codecs</span>::<span class="cf">jpeg</span>::<span class="cf">JpegEncoder</span>::<span class="cf">new_with_quality</span>(<span class="cf">Cursor</span>::<span class="cf">new</span>(<span class="cg">&amp;mut</span> <span class="cj">out</span>), <span class="cn">25</span>)
+        .<span class="cf">encode_image</span>(<span class="cg">&amp;</span><span class="cj">thumb</span>)
+        .<span class="cf">map_err</span>(|<span class="cj">e</span>| <span class="cf">format</span>!(<span class="cs">"サムネイル生成エラー: </span><span class="cg">{e}</span><span class="cs">"</span>))<span class="cg">?</span>;
+    <span class="ck">let</span> <span class="cj">b64</span> <span class="cg">=</span> <span class="cf">base64</span>::<span class="cf">engine</span>::<span class="cf">general_purpose</span>::<span class="cf">STANDARD</span>.<span class="cf">encode</span>(<span class="cg">&amp;</span><span class="cj">out</span>);
+    <span class="cf">Ok</span>(<span class="cf">format</span>!(<span class="cs">"data:image/jpeg;base64,</span><span class="cg">{b64}</span><span class="cs">"</span>))
+}</pre>
+
+        <h3 class="h3">③ フロント側の <code>useFileThumbnail</code> を拡張</h3>
+        <p
+          style="
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          <strong>実ファイル：</strong>
+          <code>src/hooks/useFileThumbnail.ts</code><br />画像 / フォルダ / ZIP
+          の 3 通りを同じ呼び方で扱える hook にしました。<code>FileEntry</code>
+          の flag を見て、内部で呼ぶ Rust コマンドを切り替えます。
+        </p>
+
+        <pre
+          class="code"
+        ><span class="cm">// src/hooks/useFileThumbnail.ts（v0.6.0）</span>
+<span class="ck">interface</span> <span class="cf">ThumbTarget</span> {
+  <span class="cj">path</span>: <span class="cf">string</span>; <span class="cj">is_image</span>: <span class="cf">boolean</span>; <span class="cj">is_dir</span>: <span class="cf">boolean</span>; <span class="cj">is_zip</span>: <span class="cf">boolean</span>;
+}
+
+<span class="ck">export function</span> <span class="cf">useFileThumbnail</span>(<span class="cj">entry</span>: <span class="cf">ThumbTarget</span>): <span class="cf">string</span> | <span class="ck">null</span> {
+  <span class="ck">const</span> [<span class="cj">src</span>, <span class="cj">setSrc</span>] <span class="cg">=</span> <span class="cf">useState</span>&lt;<span class="cf">string</span> | <span class="ck">null</span>&gt;(<span class="ck">null</span>);
+
+  <span class="cf">useEffect</span>(() <span class="cg">=&gt;</span> {
+    <span class="ck">let</span> <span class="cj">cancelled</span> <span class="cg">=</span> <span class="ck">false</span>;
+    <span class="ck">const</span> <span class="cj">loader</span> <span class="cg">=</span> <span class="cj">entry</span>.<span class="cj">is_image</span>
+      ? <span class="cf">readImageAsDataUrl</span>(<span class="cj">entry</span>.<span class="cj">path</span>)
+      : (<span class="cj">entry</span>.<span class="cj">is_dir</span> <span class="cg">||</span> <span class="cj">entry</span>.<span class="cj">is_zip</span>)
+        ? <span class="cf">readDirectoryThumbnail</span>(<span class="cj">entry</span>.<span class="cj">path</span>, <span class="cn">120</span>)
+        : <span class="ck">null</span>;
+    <span class="ck">if</span> (<span class="cg">!</span><span class="cj">loader</span>) <span class="ck">return</span>;
+    <span class="cj">loader</span>.<span class="cf">then</span>((<span class="cj">url</span>) <span class="cg">=&gt;</span> { <span class="ck">if</span> (<span class="cg">!</span><span class="cj">cancelled</span> <span class="cg">&amp;&amp;</span> <span class="cj">url</span>) <span class="cf">setSrc</span>(<span class="cj">url</span>); }).<span class="cf">catch</span>(() <span class="cg">=&gt;</span> {});
+    <span class="ck">return</span> () <span class="cg">=&gt;</span> { <span class="cj">cancelled</span> <span class="cg">=</span> <span class="ck">true</span>; };
+  }, [<span class="cj">entry</span>.<span class="cj">path</span>, <span class="cj">entry</span>.<span class="cj">is_image</span>, <span class="cj">entry</span>.<span class="cj">is_dir</span>, <span class="cj">entry</span>.<span class="cj">is_zip</span>]);
+
+  <span class="ck">return</span> <span class="cj">src</span>;
+}</pre>
+
+        <h3 class="h3">④ 「要分割」バッジ — エラーを UX に変換</h3>
+        <p
+          style="
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          <strong>実ファイル：</strong>
+          <code>src/components/playlist/ChunkCard.tsx</code><br />Rust が返す
+          <code>error_message</code>
+          に「分割」という文字が含まれていたら、<strong
+            >赤 NG バッジではなく青い「要分割」バッジ</strong
+          >に差し替え、ホバー時にヒントを出します。
+        </p>
+
+        <pre
+          class="code"
+        ><span class="cm">// src/components/playlist/ChunkCard.tsx（抜粋）</span>
+<span class="ck">const</span> [<span class="cj">errorMessage</span>, <span class="cj">setErrorMessage</span>] <span class="cg">=</span> <span class="cf">useState</span>&lt;<span class="cf">string</span> | <span class="ck">null</span>&gt;(<span class="ck">null</span>);
+
+<span class="cf">useEffect</span>(() <span class="cg">=&gt;</span> {
+  <span class="ck">const</span> <span class="cj">timer</span> <span class="cg">=</span> <span class="cf">setTimeout</span>(<span class="ck">async</span> () <span class="cg">=&gt;</span> {
+    <span class="ck">const</span> <span class="cj">r</span> <span class="cg">=</span> <span class="ck">await</span> <span class="cf">validateChunkTauri</span>(<span class="cj">chunk</span>.<span class="cj">startPath</span>, <span class="cj">chunk</span>.<span class="cj">endPath</span>);
+    <span class="ck">if</span> (<span class="cj">r</span>.<span class="cj">is_valid</span>)  { <span class="cf">setImageCount</span>(<span class="cj">r</span>.<span class="cj">image_count</span>); <span class="cf">setErrorMessage</span>(<span class="ck">null</span>); }
+    <span class="ck">else</span>             { <span class="cf">setCountInvalid</span>(<span class="ck">true</span>); <span class="cf">setErrorMessage</span>(<span class="cj">r</span>.<span class="cj">error_message</span> <span class="cg">??</span> <span class="ck">null</span>); }
+  }, <span class="cn">500</span>);                                    <span class="cm">// 500ms デバウンス</span>
+  <span class="ck">return</span> () <span class="cg">=&gt;</span> <span class="cf">clearTimeout</span>(<span class="cj">timer</span>);
+}, [<span class="cj">chunk</span>.<span class="cj">startPath</span>, <span class="cj">chunk</span>.<span class="cj">endPath</span>]);
+
+<span class="ck">const</span> <span class="cj">needsSplit</span> <span class="cg">=</span> <span class="cg">!!</span><span class="cj">errorMessage</span> <span class="cg">&amp;&amp;</span> <span class="cj">errorMessage</span>.<span class="cf">includes</span>(<span class="cs">"分割"</span>);
+
+<span class="cm">// JSX：NG バッジ vs 要分割バッジを切り替え</span>
+{<span class="cj">countInvalid</span> <span class="cg">&amp;&amp;</span> (<span class="cj">needsSplit</span>
+  ? &lt;<span class="cf">span</span> <span class="cj">className</span>=<span class="cs">"badge blue"</span> <span class="cj">title</span>={<span class="cj">errorMessage</span> <span class="cg">??</span> <span class="ck">undefined</span>}&gt;要分割&lt;/<span class="cf">span</span>&gt;
+  : &lt;<span class="cf">span</span> <span class="cj">className</span>=<span class="cs">"badge pink"</span> <span class="cj">title</span>={<span class="cj">errorMessage</span> <span class="cg">??</span> <span class="ck">undefined</span>}&gt;NG&lt;/<span class="cf">span</span>&gt;
+)}</pre>
+
+        <h3 class="h3">⑤ 分解の実処理 — <code>handleSplitChunk</code></h3>
+        <p
+          style="
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          <strong>実ファイル：</strong>
+          <code>src/components/playlist/PlaylistPanel.tsx</code>
+        </p>
+
+        <pre
+          class="code"
+        ><span class="ck">const</span> <span class="cj">handleSplitChunk</span> <span class="cg">=</span> <span class="cf">useCallback</span>(<span class="ck">async</span> (<span class="cj">chunkId</span>: <span class="cf">string</span>) <span class="cg">=&gt;</span> {
+  <span class="ck">const</span> <span class="cj">idx</span> <span class="cg">=</span> <span class="cj">playlist</span>.<span class="cj">chunks</span>.<span class="cf">findIndex</span>((<span class="cj">c</span>) <span class="cg">=&gt;</span> <span class="cj">c</span>.<span class="cj">id</span> <span class="cg">===</span> <span class="cj">chunkId</span>);
+  <span class="ck">const</span> <span class="cj">original</span> <span class="cg">=</span> <span class="cj">playlist</span>.<span class="cj">chunks</span>[<span class="cj">idx</span>];
+  <span class="ck">const</span> <span class="cj">candidates</span> <span class="cg">=</span> <span class="ck">await</span> <span class="cf">listSplitCandidates</span>(<span class="cj">original</span>.<span class="cj">startPath</span>);
+  <span class="ck">if</span> (<span class="cj">candidates</span>.<span class="cj">length</span> <span class="cg">===</span> <span class="cn">0</span>) <span class="ck">return</span>;
+
+  <span class="cm">// folder / zip を問わず、各候補を 1 チャンクに変換</span>
+  <span class="ck">const</span> <span class="cj">newChunks</span>: <span class="cf">Chunk</span>[] <span class="cg">=</span> <span class="cj">candidates</span>.<span class="cf">map</span>((<span class="cj">c</span>) <span class="cg">=&gt;</span> ({
+    <span class="cj">id</span>: <span class="cf">crypto</span>.<span class="cf">randomUUID</span>(),
+    <span class="cj">name</span>: <span class="cj">c</span>.<span class="cj">name</span>,
+    <span class="cj">startPath</span>: <span class="cj">c</span>.<span class="cj">path</span>,
+    <span class="cj">endPath</span>: <span class="cs">""</span>,                              <span class="cm">// 空 = 丸ごと</span>
+  }));
+
+  <span class="cf">removeChunk</span>(<span class="cj">playlist</span>.<span class="cj">id</span>, <span class="cj">chunkId</span>);
+  <span class="cf">insertChunksAt</span>(<span class="cj">playlist</span>.<span class="cj">id</span>, <span class="cj">idx</span>, <span class="cj">newChunks</span>);
+  <span class="cf">splitUndo</span>.<span class="cf">recordSplit</span>({ <span class="cj">originalChunk</span>: <span class="cj">original</span>, <span class="cj">addedIds</span>: <span class="cj">newChunks</span>.<span class="cf">map</span>((<span class="cj">c</span>) <span class="cg">=&gt;</span> <span class="cj">c</span>.<span class="cj">id</span>) });
+}, [<span class="cj">playlist</span>]);</pre>
+
+        <div class="info-box green">
+          <span class="ico">✅</span>
+          <div>
+            <p>
+              <strong>これで 5 つの機能が揃います。</strong>Rust の 2
+              コマンド（<code>list_split_candidates</code> 拡張 /
+              <code>read_directory_thumbnail</code> 新設）、TypeScript の 2
+              ラッパー、hook 1 つ、UI 1 箇所。合計
+              <strong>200 行程度の差分</strong>でフォルダ対応は完成します。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Frontend Components -->
+    <section class="section-light" id="components">
+      <div class="wrap">
+        <div class="section-tag">08 — UI Layer</div>
+        <h2 class="section-h2">フロントエンドコンポーネント</h2>
+        <p class="section-lead">
+          主要な画面は 3 つだけです。プレイリスト管理 / ファイルブラウザ /
+          ビューア。
+        </p>
+
+        <div class="grid g3">
+          <div class="card-l">
+            <h3>PlaylistPanel</h3>
+            <p>
+              プレイリスト一覧と、アクティブなプレイリストのチャンク群を表示。ドラッグで並び替え、選択、複製、削除、分割
+              undo まで全部ここ。
+            </p>
+          </div>
+          <div class="card-l">
+            <h3>ChunkCard</h3>
+            <p>
+              1 チャンク分のカード。編集 / 検証 / プレビュー /
+              右クリックメニュー（分割など）。
+            </p>
+          </div>
+          <div class="card-l">
+            <h3>FileBrowserDialog</h3>
+            <p>
+              フォルダ / ZIP を 1 階層ずつ辿るダイアログ。グリッド表示では
+              <code>FileGridCard</code>、リスト表示では
+              <code>FileRow</code> が使われます。
+            </p>
+          </div>
+        </div>
+
+        <h3 class="h3"><code>FileGridCard</code> — サムネ付きタイル</h3>
+        <p
+          style="
+            color: rgba(0, 0, 0, 0.7);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          <code>entry</code> を
+          <code>useFileThumbnail</code> に丸ごと渡すのがポイント。画像 /
+          フォルダ / ZIP のどれでも、hook
+          が適切なコマンドを呼び分けてサムネを埋めます。
+        </p>
+
+        <pre
+          class="code code-light"
+        ><span class="cm">// src/components/playlist/FileGridCard.tsx（抜粋）</span>
+<span class="ck">function</span> <span class="cf">FileGridCardInner</span>({ <span class="cj">entry</span>, <span class="cj">onNavigateEntry</span>, <span class="cj">onSelectEntry</span> }: <span class="cf">FileGridCardProps</span>) {
+  <span class="ck">const</span> <span class="cj">isNavigable</span> <span class="cg">=</span> <span class="cj">entry</span>.<span class="cj">is_dir</span> <span class="cg">||</span> <span class="cj">entry</span>.<span class="cj">is_zip</span>;
+  <span class="ck">const</span> <span class="cj">imgSrc</span> <span class="cg">=</span> <span class="cf">useFileThumbnail</span>(<span class="cj">entry</span>);  <span class="cm">// v0.6.0：これ 1 行でフォルダも ZIP も対応</span>
+
+  <span class="ck">return</span> (
+    &lt;<span class="cf">div</span> <span class="cj">onClick</span>={<span class="cj">isNavigable</span> ? () <span class="cg">=&gt;</span> <span class="cf">onNavigateEntry</span>(<span class="cj">entry</span>) : () <span class="cg">=&gt;</span> <span class="cf">onSelectEntry</span>(<span class="cj">entry</span>)}&gt;
+      {<span class="cj">imgSrc</span>
+        ? &lt;<span class="cf">img</span> <span class="cj">src</span>={<span class="cj">imgSrc</span>} <span class="cj">alt</span>={<span class="cj">entry</span>.<span class="cj">name</span>} /&gt;
+        : <span class="cm">/* アイコン（フォルダ・ZIP・PDF・ファイル）*/</span>
+      }
+      &lt;<span class="cf">span</span>&gt;{<span class="cj">entry</span>.<span class="cj">name</span>}&lt;/<span class="cf">span</span>&gt;
+    &lt;/<span class="cf">div</span>&gt;
+  );
+}</pre>
+
+        <h3 class="h3"><code>ViewerCanvas</code> の要点</h3>
+        <p
+          style="
+            color: rgba(0, 0, 0, 0.7);
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+          "
+        >
+          <code>viewerStore.imagePaths</code> を <code>manga://</code> URL
+          に変換して <code>&lt;img&gt;</code> に並べるだけ。見開き / RTL /
+          ページ送りアニメは <code>ViewerSettings</code> と motion
+          ライブラリの組み合わせ。
+        </p>
+
+        <pre
+          class="code code-light"
+        ><span class="cm">// src/components/viewer/ViewerCanvas.tsx（考え方）</span>
+<span class="ck">const</span> <span class="cj">urls</span> <span class="cg">=</span> <span class="cf">useMemo</span>(() <span class="cg">=&gt;</span> <span class="cf">imagePathsToMangaUrls</span>(<span class="cj">imagePaths</span>), [<span class="cj">imagePaths</span>]);
+<span class="ck">return</span> <span class="cj">urls</span>.<span class="cf">map</span>((<span class="cj">url</span>) <span class="cg">=&gt;</span> &lt;<span class="cf">img</span> <span class="cj">key</span>={<span class="cj">url</span>} <span class="cj">src</span>={<span class="cj">url</span>} /&gt;);
+<span class="cm">// Rust 側の protocol/manga.rs が URL を受け取って画像バイトを返す</span></pre>
+      </div>
+    </section>
+
+    <!-- 9. Data Flow -->
+    <section class="section-dark" id="data-flow">
+      <div class="wrap">
+        <div class="section-tag">09 — Data Flow</div>
+        <h2 class="section-h2">起動から画像表示までの全体フロー</h2>
+        <p class="section-lead">
+          「ユーザー操作 → Zustand → invoke → Rust → manga:// →
+          WebView」の順で、すべてのやり取りが流れます。
+        </p>
+
+        <div class="flow">
+          <div class="flow-node">
+            <span>User</span><strong>プレイリスト作成</strong
+            ><small>PlaylistPanel</small>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node blue">
+            <span>Store</span><strong>playlistStore</strong
+            ><small>createPlaylist</small>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">
+            <span>User</span><strong>チャンク追加</strong
+            ><small>FileBrowserDialog</small>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node green">
+            <span>Rust</span><strong>validate_chunk</strong
+            ><small>commands/chunk.rs</small>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node blue">
+            <span>UI</span><strong>バッジ表示</strong><small>ChunkCard</small>
+          </div>
+        </div>
+
+        <h3 class="h3">ビューアに入るときの流れ</h3>
+        <div class="flow">
+          <div class="flow-node">
+            <span>User</span><strong>「ビューアで開く」</strong
+            ><small>PlaylistPanel</small>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node green">
+            <span>Rust</span><strong>resolve_chunk_images</strong
+            ><small>全チャンクを展開</small>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node blue">
+            <span>Store</span><strong>viewerStore</strong
+            ><small>imagePaths セット</small>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node orange">
+            <span>URL</span><strong>manga:// 変換</strong
+            ><small>mangaUrl.ts</small>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node green">
+            <span>Rust</span><strong>handle_manga_request</strong
+            ><small>protocol/manga.rs</small>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">
+            <span>UI</span><strong>&lt;img&gt;</strong
+            ><small>ViewerCanvas</small>
+          </div>
+        </div>
+
+        <h3 class="h3">分解フロー（v0.6.0）</h3>
+        <div class="flow">
+          <div class="flow-node">
+            <span>User</span><strong>右クリック → 分割</strong
+            ><small>ChunkCard</small>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node green">
+            <span>Rust</span><strong>list_split_candidates</strong
+            ><small>folder + zip 候補</small>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node blue">
+            <span>Front</span><strong>handleSplitChunk</strong
+            ><small>PlaylistPanel</small>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node blue">
+            <span>Store</span><strong>insertChunksAt</strong
+            ><small>1 チャンク → N チャンク</small>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node orange">
+            <span>Undo</span><strong>splitUndo</strong
+            ><small>Ctrl+Z で復元</small>
+          </div>
+        </div>
+
+        <div class="info-box blue">
+          <span class="ico">🔁</span>
+          <div>
+            <p>
+              <strong
+                >UI からフロント → Rust → UI のループは、常に同じ 3
+                層構造</strong
+              >です。<br />
+              Zustand で状態を書き換え →（必要なら）<code>invoke</code> で Rust
+              に問い合わせ → 戻ってきた値でまた Zustand を更新。<br />
+              この 1
+              本道を守る限り、どれだけ機能が増えても読みやすさが壊れません。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. Build -->
+    <section class="section-light" id="build">
+      <div class="wrap">
+        <div class="section-tag">10 — Build</div>
+        <h2 class="section-h2">開発・ビルド手順</h2>
+        <p class="section-lead">
+          CLAUDE.md に書いてある通り。このまま写せば動きます。
+        </p>
+
+        <h3 class="h3">開発ループ</h3>
+        <pre
+          class="code code-light"
+        ><span class="cm"># フロント単独（Tauri なしで軽く画面だけ確認）</span>
+npm run dev
+
+<span class="cm"># Tauri デスクトップ（Rust ホットリロード含む）</span>
+npm run tauri dev
+
+<span class="cm"># Rust の型だけチェック</span>
+cd src-tauri &amp;&amp; cargo check</pre>
+
+        <h3 class="h3">本番ビルド</h3>
+        <pre
+          class="code code-light"
+        ><span class="cm"># 1. Next.js を static export（./out に書き出す。Tauri ビルド前に必須）</span>
+npm run build
+
+<span class="cm"># 2. Tauri で .exe / .msi バンドル生成</span>
+npm run tauri build</pre>
+
+        <h3 class="h3">
+          Tauri 設定の要点 — <code>src-tauri/tauri.conf.json</code>
+        </h3>
+        <pre class="code code-light">{
+  <span class="cj">"app"</span>: {
+    <span class="cj">"security"</span>: {
+      <span class="cj">"csp"</span>: <span class="cs">"default-src 'self' manga: https://manga.localhost; img-src 'self' data: manga: https://manga.localhost;"</span>
+    }
+  },
+  <span class="cj">"bundle"</span>: {
+    <span class="cj">"targets"</span>: [<span class="cs">"nsis"</span>, <span class="cs">"msi"</span>]
+  }
+}</pre>
+
+        <div class="info-box orange light">
+          <span class="ico">🛠️</span>
+          <div>
+            <p>
+              <strong>Next.js キャッシュが壊れたら</strong><br />
+              <code>.next/</code> と <code>.next-build/</code> を消してから
+              <code>npm run dev</code>。文字化けした CSS
+              エラーが出るときの定番対処です。
+            </p>
+          </div>
+        </div>
+
+        <h3 class="h3">プロジェクトの追加方針</h3>
+        <div class="table-wrap">
+          <table class="light-table">
+            <thead>
+              <tr>
+                <th>やりたいこと</th>
+                <th>触る場所</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>新しい Rust コマンドを生やす</td>
+                <td>
+                  <code>src-tauri/src/commands/</code> にファイルを足し、<code
+                    >lib.rs</code
+                  >
+                  の <code>invoke_handler!</code> に名前を追加
+                </td>
+              </tr>
+              <tr>
+                <td>フロントから新コマンドを呼ぶ</td>
+                <td><code>src/lib/tauri.ts</code> に型付きラッパーを追加</td>
+              </tr>
+              <tr>
+                <td>チャンクに新しいフィールドを付ける</td>
+                <td>
+                  <code>src/types/index.ts</code> → <code>playlistStore</code> →
+                  <code>ChunkCard</code> の順
+                </td>
+              </tr>
+              <tr>
+                <td>ビューアの挙動を変える</td>
+                <td>
+                  <code>ViewerSettings</code> に項目追加 →
+                  <code>settingsStore</code> → <code>ViewerCanvas</code>
+                </td>
+              </tr>
+              <tr>
+                <td>新しい拡張子をサポート</td>
+                <td>
+                  <code>utils/sorting.rs</code> の
+                  <code>is_image_file</code>、または <code>helpers.rs</code> の
+                  <code>is_zip_like</code>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-brand">Link<em>ori</em></div>
+      <p>v0.6.0 · Codebase Guide — Next.js × Tauri 2 × Rust</p>
+      <p style="margin-top: 8px">
+        このガイドは
+        <a href="../DESIGNAPPLE.md">DESIGNAPPLE.md</a>
+        のデザイン指針に沿って組まれています。
+      </p>
+    </footer>
+  </body>
+</html>

@@ -173,12 +173,12 @@ function ChunksSec() {
           <div className="section-counter">chain · range · reverse</div>
         </div>
 
-        {/* Chunk chain visualization */}
+        {/* Range chain visualization */}
         <div
           className="reveal"
-          style={{ overflowX: "auto", overflowY: "hidden", marginBottom: 60 }}
+          style={{ marginBottom: 60 }}
         >
-          <div className="chain-track" style={{ paddingBottom: 20 }}>
+          <div className="chain-track" style={{ paddingTop: 12, paddingBottom: 20, justifyContent: "center" }}>
             {[
               { n: "01", name: "Vol.01 — prologue", meta: "ZIP · 42p" },
               { n: "02", name: "Vol.01 — arc A", meta: "Folder · 86p" },
@@ -520,15 +520,14 @@ function NewSec() {
   );
 }
 
-// ─── 08 Formats + Download CTA ───
-function DownloadSec() {
+// ─── 07 Formats ───
+function FormatsSec() {
   const { lang } = uC(LangCtx);
   const ref = uR(null);
   useReveal(ref);
   const c = COPY.formats;
-  const d = COPY.download;
   return (
-    <section className="section" id="download" ref={ref}>
+    <section className="section" id="formats" ref={ref}>
       <div className="wrap">
         <div className="section-head-row reveal">
           <div className="section-head">
@@ -544,8 +543,21 @@ function DownloadSec() {
             </span>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
 
-        <div className="download-card reveal" style={{ "--d": "120ms" }}>
+// ─── Download CTA ───
+function DownloadSec() {
+  const { lang } = uC(LangCtx);
+  const ref = uR(null);
+  useReveal(ref);
+  const d = COPY.download;
+  return (
+    <section className="section" id="download" ref={ref}>
+      <div className="wrap">
+        <div className="download-card reveal">
           <div>
             <h3>{mapLang(d.title, lang)}</h3>
             <p>{mapLang(d.sub, lang)}</p>
@@ -559,7 +571,7 @@ function DownloadSec() {
               <Ico name="dl" size={18} />
               <span>{mapLang(d.cta, lang)}</span>
             </DownloadAnchor>
-            <div style={{ fontSize: 11, color: "var(--fg-mute)", textAlign: "center" }}>
+            <div style={{ fontSize: 12, color: "var(--fg-dim)", textAlign: "center", marginTop: 4 }}>
               {mapLang(d.note, lang)}
             </div>
           </div>
@@ -1317,7 +1329,8 @@ window.PlaylistSec = PlaylistSec;
 window.ChunksSec = ChunksSec;
 window.BrowserSec = BrowserSec;
 window.ViewerSec = ViewerSec;
-window.ShortcutsSec = ShortcutsSec;
 window.NewSec = NewSec;
+window.FormatsSec = FormatsSec;
+window.ShortcutsSec = ShortcutsSec;
 window.DownloadSec = DownloadSec;
 window.Footer = Footer;

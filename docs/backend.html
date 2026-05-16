@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Linkori Backend: Code Map</title>
+    <style>
+        :root {
+            --apple-blue: #0071e3;
+            --bg-light: #f5f5f7;
+            --bg-dark: #1d1d1f;
+            --text-dark: #1d1d1f;
+            --text-light: #f5f5f7;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-light: #000000;
+                --text-dark: #f5f5f7;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 40px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .module-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .module-card { background: #1c1c1e; }
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            padding-bottom: 15px;
+        }
+
+        .file-path {
+            font-family: "SF Mono", monospace;
+            font-size: 14px;
+            color: var(--apple-blue);
+            background: rgba(0,113,227,0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .function-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .function-item {
+            padding: 15px;
+            border-radius: 12px;
+            background: #f9f9fb;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .function-item { background: #2c2c2e; }
+        }
+
+        .func-name {
+            font-family: "SF Mono", monospace;
+            font-weight: 600;
+            color: #d12121;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .func-name { color: #ff6b6b; }
+        }
+
+        .func-desc {
+            font-size: 15px;
+            color: var(--text-dark);
+            opacity: 0.8;
+        }
+
+        .tag {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 700;
+            background: #86868b;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .tag-speed { background: #34c759; }
+        .tag-core { background: var(--apple-blue); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Linkori Backend: Function Map</h1>
+
+    <div class="module-card">
+        <div class="module-header">
+            <h2>画像処理 & 検証</h2>
+            <span class="file-path">commands/image.rs</span>
+        </div>
+        <div class="function-grid">
+            <div class="function-item">
+                <span class="func-name">read_image_as_data_url</span>
+                <p class="func-desc">画像をBase64形式で取得する。ブラウザで即座に表示したい単体画像用。</p>
+            </div>
+            <div class="function-item">
+                <span class="func-name"><span class="tag tag-speed">高速化</span>read_image_thumbnail</span>
+                <p class="func-desc">シークバー等のホバー時に使う縮小画像を生成。ヘッダーのみ読み取りで高速化。</p>
+            </div>
+            <div class="function-item">
+                <span class="func-name">read_directory_thumbnail</span>
+                <p class="func-desc">フォルダやZIPの表紙画像（1枚目）を取得する。</p>
+            </div>
+            <div class="function-item">
+                <span class="func-name">validate_image_file</span>
+                <p class="func-desc">画像の存在・形式・縦横サイズをチェックする。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="module-card">
+        <div class="module-header">
+            <h2>チャンク (範囲選択) ロジック</h2>
+            <span class="file-path">commands/chunk.rs</span>
+        </div>
+        <div class="function-grid">
+            <div class="function-item">
+                <span class="func-name"><span class="tag tag-core">核心</span>validate_chunk</span>
+                <p class="func-desc">「AからBまで」という範囲が正常かチェックし、中身のリストを返す。Linkoriの心臓部。</p>
+            </div>
+            <div class="function-item">
+                <span class="func-name">resolve_chunk_images</span>
+                <p class="func-desc">ビューア起動時に、指定された範囲に含まれる全画像パスを確定させる。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="module-card">
+        <div class="module-header">
+            <h2>配信プロトコル</h2>
+            <span class="file-path">protocol/manga.rs</span>
+        </div>
+        <div class="function-grid">
+            <div class="function-item">
+                <span class="func-name"><span class="tag tag-speed">高速化</span>handle_manga_request</span>
+                <p class="func-desc">manga:// スキームのリクエストを処理。Base64の33%肥大化を避け、バイナリを直接流す。</p>
+            </div>
+            <div class="function-item">
+                <span class="func-name">image_path_to_manga_url</span>
+                <p class="func-desc">通常のローカルパスを、ブラウザが表示できる manga:// URL に変換する。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="module-card">
+        <div class="module-header">
+            <h2>ZIP解析</h2>
+            <span class="file-path">reader/zip.rs</span>
+        </div>
+        <div class="function-grid">
+            <div class="function-item">
+                <span class="func-name"><span class="tag tag-speed">高速化</span>load_meta</span>
+                <p class="func-desc">ZIPの中身（Central Directory）を解析。LRUキャッシュにより2回目以降は一瞬で終わる。</p>
+            </div>
+            <div class="function-item">
+                <span class="func-name">read_image_from_zip</span>
+                <p class="func-desc">ZIPを解凍せず、メモリ上で対象のエントリ（画像）だけをピンポイントで読み出す。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="module-card">
+        <div class="module-header">
+            <h2>ファイル操作</h2>
+            <span class="file-path">commands/filesystem/*.rs</span>
+        </div>
+        <div class="function-grid">
+            <div class="function-item">
+                <span class="func-name">browse_directory / browse_zip</span>
+                <p class="func-desc">フォルダやZIPの中身をエクスプローラーのように一覧表示する（ブラウジング用）。</p>
+            </div>
+            <div class="function-item">
+                <span class="func-name">get_path_meta</span>
+                <p class="func-desc">ファイルの更新日時等を取得。プレイリストのソートに使用。</p>
+            </div>
+            <div class="function-item">
+                <span class="func-name">list_split_candidates</span>
+                <p class="func-desc">「サブフォルダで分割」機能の際、分割対象となる候補をリストアップする。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="module-card">
+        <div class="module-header">
+            <h2>文字コード & ソート</h2>
+            <span class="file-path">utils/*.rs</span>
+        </div>
+        <div class="function-grid">
+            <div class="function-item">
+                <span class="func-name">decode_zip_path (encoding.rs)</span>
+                <p class="func-desc">ZIP内の文字化け（Shift-JIS/CP437）を自動で正常な日本語に直す。</p>
+            </div>
+            <div class="function-item">
+                <span class="func-name">natural_compare (sorting.rs)</span>
+                <p class="func-desc">「1.jpg, 2.jpg, 10.jpg」の順で並ぶようにする自然順ソートロジック。</p>
+            </div>
+            <div class="function-item">
+                <span class="func-name">find_zip_boundary (paths.rs)</span>
+                <p class="func-desc">パスのどこまでがZIPファイル名で、どこからが内部のフォルダなのかを切り分ける。</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    <p>Linkori Backend Logic Map - Functional View</p>
+</footer>
+
+</body>
+</html>

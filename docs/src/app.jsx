@@ -22,8 +22,9 @@ function App(){
         <BrowserSec/>
         <ViewerSec/>
         <NewSec/>
-        <DownloadSec/>
+        <FormatsSec/>
         <ShortcutsSec/>
+        <DownloadSec/>
       </main>
       <Footer/>
       <Tweaks/>
