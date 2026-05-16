@@ -21,9 +21,9 @@ function App(){
         <ChunksSec/>
         <BrowserSec/>
         <ViewerSec/>
-        <ShortcutsSec/>
         <NewSec/>
         <DownloadSec/>
+        <ShortcutsSec/>
       </main>
       <Footer/>
       <Tweaks/>

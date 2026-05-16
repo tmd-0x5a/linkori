@@ -551,13 +551,18 @@ function DownloadSec() {
             <p>{mapLang(d.sub, lang)}</p>
             <div className="sys">{mapLang(d.sys, lang)}</div>
           </div>
-          <DownloadAnchor
-            className="btn-primary"
-            style={{ fontSize: 16, padding: "18px 28px" }}
-          >
-            <Ico name="dl" size={18} />
-            <span>{mapLang(d.cta, lang)}</span>
-          </DownloadAnchor>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+            <DownloadAnchor
+              className="btn-primary"
+              style={{ fontSize: 16, padding: "18px 28px" }}
+            >
+              <Ico name="dl" size={18} />
+              <span>{mapLang(d.cta, lang)}</span>
+            </DownloadAnchor>
+            <div style={{ fontSize: 11, color: "var(--fg-mute)", textAlign: "center" }}>
+              {mapLang(d.note, lang)}
+            </div>
+          </div>
         </div>
       </div>
     </section>
